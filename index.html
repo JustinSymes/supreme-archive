@@ -84,6 +84,10 @@ body {
 <script>
 const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 let items = [];
+function firstPhoto(imageField){
+  if(!imageField) return "";
+  return imageField.split("|")[0].trim();
+}
 
 function clean(v){
   return (v ?? "")
@@ -123,7 +127,7 @@ function displayItems(list){
     div.className = "card";
     div.innerHTML =
       '<div class="thumb">' +
-        '<img src="' + item.image + '" alt="' + item.name + '">' +
+        '<img src="' + firstPhoto(item.image) + '" alt="' + item.name + '">' +
       '</div>' +
       '<div class="name">' + item.name + '</div>';
 
