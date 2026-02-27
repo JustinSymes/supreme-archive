@@ -1,79 +1,116 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Supreme Archive</title>
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Supreme Archive">
+
 <style>
-body { font-family: Helvetica, Arial, sans-serif; margin:0; background:#fff; }
-.header { padding:20px; text-align:center; font-size:22px; font-weight:bold; }
-.counter { text-align:center; color:#e10600; margin-bottom:10px; }
-.grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap:20px; padding:20px; }
-.card { text-align:center; cursor:pointer; }
-.card img { width:100%; }
-.category-bar { display:flex; overflow:auto; gap:15px; padding:10px 20px; border-bottom:1px solid #eee; }
-.category { cursor:pointer; color:#e10600; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 18px 20px;
+  font-size: 20px;
+  font-weight: 600;
+  border-bottom: 1px solid #f0f0f0;
+  z-index: 10;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.card:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.card img {
+  width: 100%;
+  height: 180px;
+  object-fit: contain;
+}
+
+.item-name {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.counter {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #ff0000;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 30px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
 </style>
 </head>
+
 <body>
 
 <div class="header">Supreme Archive</div>
-<div class="counter" id="counter"></div>
-
-<div class="category-bar">
-<div class="category" onclick="filterCategory('All')">All</div>
-<div class="category" onclick="filterCategory('Tops')">Tops</div>
-<div class="category" onclick="filterCategory('Bottoms')">Bottoms</div>
-<div class="category" onclick="filterCategory('Accessories')">Accessories</div>
-<div class="category" onclick="filterCategory('Bags')">Bags</div>
-<div class="category" onclick="filterCategory('Headwear')">Headwear</div>
-</div>
 
 <div class="grid" id="grid"></div>
 
+<div class="counter" id="counter"></div>
+
 <script>
-const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
-let items = [];
+const items = [
+  {name:"Fruit Tee", image:"fruit_tee.png"},
+  {name:"Duffle Bag", image:"duffle_bag.png"},
+  {name:"Spider Gloves", image:"spider_gloves.png"},
+  {name:"Photo Tee", image:"photo_tee.png"},
+  {name:"Black Tee", image:"black_tee.png"},
+  {name:"Pinstripe Jersey", image:"pinstripe_jersey.png"},
+  {name:"Earflap Cap", image:"earflap_cap.png"},
+  {name:"Boxer Briefs", image:"boxers.png"},
+  {name:"Brown Pants", image:"brown_pants.png"},
+  {name:"Light Wash Jeans", image:"jeans.png"},
+  {name:"Shower Cap", image:"shower_cap.png"},
+  {name:"Grey Box Logo Hoodie", image:"bogo_hoodie.png"}
+];
 
-fetch(sheetURL)
-.then(res => res.text())
-.then(data => {
-const rows = data.split("\n").slice(1);
-items = rows.map(row => {
-const cols = row.split(",");
-return {
-id: cols[0],
-name: cols[1],
-category: cols[2],
-size: cols[3],
-image: cols[8]
-};
-});
-document.getElementById("counter").innerText = `Total Pieces: ${items.length}`;
-displayItems(items);
-});
-
-function displayItems(list){
 const grid = document.getElementById("grid");
-grid.innerHTML = "";
-list.forEach(item => {
-const div = document.createElement("div");
-div.className = "card";
-div.innerHTML = `<img src="${item.image}"><div>${item.name}</div>`;
-div.onclick = () => window.location = `item.html?id=${item.id}`;
-grid.appendChild(div);
-});
-}
+const counter = document.getElementById("counter");
 
-function filterCategory(cat){
-if(cat==="All") return displayItems(items);
-displayItems(items.filter(i=>i.category===cat));
-}
+counter.innerText = items.length + " Items";
+
+items.forEach(item => {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <img src="${item.image}">
+    <div class="item-name">${item.name}</div>
+  `;
+  card.onclick = () => {
+    window.location.href = "item.html?name=" + encodeURIComponent(item.name) + "&image=" + item.image;
+  };
+  grid.appendChild(card);
+});
 </script>
 
 </body>
