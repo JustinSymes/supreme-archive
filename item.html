@@ -8,6 +8,53 @@
 body { font-family: Helvetica, Arial, sans-serif; padding:20px; }
 img { width:100%; max-width:400px; }
 .back { color:#e10600; cursor:pointer; margin-bottom:15px; display:inline-block; }
+.carousel {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 520px;
+  margin: 18px auto 10px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #eee;
+}
+
+.track {
+  display: flex;
+  transition: transform 220ms ease;
+}
+
+.slide {
+  min-width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #ddd;
+}
+
+.dot.active {
+  background: #e10600;
+}
 </style>
 </head>
 <body>
@@ -26,15 +73,62 @@ const rows = data.split("\n").slice(1);
 rows.forEach(row=>{
 const cols = row.split(",");
 if(cols[0]===id){
+const images = cols[8].split("|");
+
 document.getElementById("content").innerHTML = `
 <h2>${cols[1]}</h2>
-<img src="${cols[8]}">
+
+<div class="carousel">
+  <div class="track" id="track"></div>
+</div>
+<div class="dots" id="dots"></div>
+
 <p>Category: ${cols[2]}</p>
 <p>Size: ${cols[3]}</p>
 `;
+
+buildCarousel(images);
 }
 });
 });
+function buildCarousel(images){
+  const track = document.getElementById("track");
+  const dots = document.getElementById("dots");
+
+  track.innerHTML = "";
+  dots.innerHTML = "";
+
+  images.forEach((src, i) => {
+    const slide = document.createElement("div");
+    slide.className = "slide";
+    slide.innerHTML = `<img src="${src}">`;
+    track.appendChild(slide);
+
+    const dot = document.createElement("div");
+    dot.className = "dot" + (i === 0 ? " active" : "");
+    dots.appendChild(dot);
+  });
+
+  let index = 0;
+  const setIndex = (i) => {
+    index = Math.max(0, Math.min(images.length - 1, i));
+    track.style.transform = `translateX(${-index * 100}%)`;
+    [...dots.children].forEach((d, di) =>
+      d.classList.toggle("active", di === index)
+    );
+  };
+
+  let startX = 0;
+  track.parentElement.addEventListener("touchstart", e => {
+    startX = e.touches[0].clientX;
+  });
+
+  track.parentElement.addEventListener("touchend", e => {
+    const endX = e.changedTouches[0].clientX;
+    if (endX < startX - 50) setIndex(index + 1);
+    if (endX > startX + 50) setIndex(index - 1);
+  });
+}
 </script>
 
 </body>
