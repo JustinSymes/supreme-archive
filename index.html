@@ -76,27 +76,41 @@ body {
 
 <div class="grid" id="grid"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
 <script>
 const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 let items = [];
 
+function clean(v){
+  return (v ?? "")
+    .toString()
+    .trim()
+    .replace(/^"+|"+$/g, "");
+}
+
 fetch(sheetURL)
-.then(res => res.text())
-.then(data => {
-const rows = data.split("\n").slice(1);
-items = rows.map(row => {
-const cols = row.split(",");
-return {
-id: cols[0],
-name: cols[1],
-category: cols[2],
-size: cols[3],
-image: cols[8]
-};
-});
-document.getElementById("counter").innerText = `Total Pieces: ${items.length}`;
-displayItems(items);
-});
+  .then(res => res.text())
+  .then(csv => {
+    const parsed = Papa.parse(csv, { skipEmptyLines: true });
+    const rows = parsed.data;
+
+    items = rows.slice(1).map(cols => {
+      cols = cols || [];
+      return {
+        id: clean(cols[0]),
+        name: clean(cols[1]),
+        category: clean(cols[2]),
+        size: clean(cols[3]),
+        image: clean(cols[8])
+      };
+    })
+    .filter(item => item.id && item.name && item.image);
+
+    document.getElementById("counter").innerText = `Total Pieces: ${items.length}`;
+    displayItems(items);
+  });
+
 function displayItems(list){
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
@@ -104,20 +118,20 @@ function displayItems(list){
   list.forEach(item => {
     const div = document.createElement("div");
     div.className = "card";
-
     div.innerHTML =
       '<div class="thumb">' +
         '<img src="' + item.image + '" alt="' + item.name + '">' +
       '</div>' +
       '<div class="name">' + item.name + '</div>';
 
-    div.onclick = () => window.location = "item.html?id=" + item.id;
+    div.onclick = () => window.location = "item.html?id=" + encodeURIComponent(item.id);
     grid.appendChild(div);
   });
 }
+
 function filterCategory(cat){
-if(cat==="All") return displayItems(items);
-displayItems(items.filter(i=>i.category===cat));
+  if(cat==="All") return displayItems(items);
+  displayItems(items.filter(i=>i.category===cat));
 }
 </script>
 
