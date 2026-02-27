@@ -14,9 +14,9 @@ img { width:100%; max-width:400px; }
   width: 100%;
   max-width: 520px;
   margin: 18px auto 10px;
-  border-radius: 16px;
+  /*border-radius: 16px;
   background: #fff;
-  border: 1px solid #eee;
+  border: 1px solid #eee;*/
 }
 
 .track {
@@ -94,20 +94,28 @@ buildCarousel(images);
 function buildCarousel(images){
   const track = document.getElementById("track");
   const dots = document.getElementById("dots");
+  
 
   track.innerHTML = "";
   dots.innerHTML = "";
 
-  images.forEach((src, i) => {
-    const slide = document.createElement("div");
-    slide.className = "slide";
-    slide.innerHTML = `<img src="${src}">`;
-    track.appendChild(slide);
+  if (images.length <= 1) {
+  dots.style.display = "none";
+}
 
+  images.forEach((src, i) => {
+  const slide = document.createElement("div");
+  slide.className = "slide";
+  slide.innerHTML = `<img src="${src.trim()}">`;
+  track.appendChild(slide);
+
+  // ONLY create dots if more than 1 image
+  if (images.length > 1) {
     const dot = document.createElement("div");
     dot.className = "dot" + (i === 0 ? " active" : "");
     dots.appendChild(dot);
-  });
+  }
+});
 
   let index = 0;
   const setIndex = (i) => {
