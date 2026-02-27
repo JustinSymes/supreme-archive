@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Item</title>
+<style>
+body { font-family: Helvetica, Arial, sans-serif; padding:20px; }
+img { width:100%; max-width:400px; }
+.back { color:#e10600; cursor:pointer; margin-bottom:15px; display:inline-block; }
+</style>
+</head>
+<body>
+
+<div class="back" onclick="history.back()">← Back to Archive</div>
+<div id="content"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0")
+.then(res=>res.text())
+.then(data=>{
+const rows = data.split("\n").slice(1);
+rows.forEach(row=>{
+const cols = row.split(",");
+if(cols[0]===id){
+document.getElementById("content").innerHTML = `
+<h2>${cols[1]}</h2>
+<img src="${cols[8]}">
+<p>Category: ${cols[2]}</p>
+<p>Size: ${cols[3]}</p>
+`;
+}
+});
+});
+</script>
+
+</body>
+</html>
