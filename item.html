@@ -55,6 +55,35 @@ img { width:100%; max-width:400px; }
 .dot.active {
   background: #e10600;
 }
+.meta-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  margin-top:14px;
+  margin-bottom:6px;
+}
+
+.meta-left,
+.meta-right{
+  font-size:18px;
+}
+
+.label{
+  color:#666;
+  margin-right:6px;
+}
+
+.price-value{
+  font-weight:800;
+}
+
+.price-toggle{
+  color:#e10600;
+  font-weight:700;
+  cursor:pointer;
+  margin-left:6px;
+  user-select:none;
+}
 </style>
 </head>
 <body>
@@ -74,6 +103,8 @@ rows.forEach(row=>{
 const cols = row.split(",");
 if(cols[0]===id){
 const images = cols[8].split("|");
+const priceCad = cols[10];
+const priceUsd = cols[11];
 
 document.getElementById("content").innerHTML = `
 <h2>${cols[1]}</h2>
@@ -83,11 +114,56 @@ document.getElementById("content").innerHTML = `
 </div>
 <div class="dots" id="dots"></div>
 
-<p>Category: ${cols[2]}</p>
+<div class="meta-row">
+  <div class="meta-left">
+    <span class="label">Category:</span> ${cols[2]}
+  </div>
+
+  <div class="meta-right">
+    <span class="label">Retail:</span>
+    <span class="price-value" id="priceValue"></span>
+    <span class="price-toggle" id="priceToggle">CAD</span>
+  </div>
+</div>
+
 <p>Size: ${cols[3]}</p>
 `;
 
 buildCarousel(images);
+  let currency = "CAD";
+
+function formatMoney(n){
+  const num = Number(String(n).replace(/[^0-9.]/g,""));
+  if (!num) return "";
+  return "$" + (num % 1 === 0 ? num.toFixed(0) : num.toFixed(2));
+}
+
+function renderPrice(){
+  const pv = document.getElementById("priceValue");
+  const pt = document.getElementById("priceToggle");
+
+  // if no CAD price, hide the whole retail area
+  if (!priceCad && !priceUsd){
+    pv.textContent = "";
+    pt.style.display = "none";
+    return;
+  }
+
+  if(currency === "CAD"){
+    pv.textContent = formatMoney(priceCad);
+    pt.textContent = "CAD";
+  } else {
+    pv.textContent = formatMoney(priceUsd);
+    pt.textContent = "USD";
+  }
+}
+
+renderPrice();
+
+document.getElementById("priceToggle").addEventListener("click", () => {
+  currency = currency === "CAD" ? "USD" : "CAD";
+  renderPrice();
+});
 }
 });
 });
