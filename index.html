@@ -35,24 +35,27 @@ html, body {
   display:inline-block;
 }
 
-.fit-btn{
-  position: absolute;
-  right: 18px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 38px;
-  height: 38px;
-  border-radius: 999px;
-  background: #e10600;
-  display: grid;
-  place-items: center;
-  text-decoration: none;
+.counter-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  position:relative;
+  margin-bottom:10px;
 }
 
-.fit-icon{
-  color: #fff;
-  font-size: 18px;
-  line-height: 1;
+.counter{
+  color:#e10600;
+  font-weight:600;
+}
+
+.fit-link{
+  position:absolute;
+  right:18px;
+  color:#e10600;
+  font-weight:700;
+  text-decoration:none;
+  font-size:16px;
+  letter-spacing:0.5px;
 }
 .counter { text-align:center; color:#e10600; margin-bottom:10px; }
 .grid {
@@ -135,11 +138,7 @@ html, body {
 <div class="counter-row">
   <div class="counter" id="counter"></div>
 
-  <a class="fit-btn" href="fit.html" aria-label="Build a fit">
-    <svg viewBox="0 0 24 24" class="fit-svg">
-      <path d="M7 4 L9 2 H15 L17 4 L21 6 L19 10 L17 9 V20 H7 V9 L5 10 L3 6 Z" />
-    </svg>
-  </a>
+  <a class="fit-link" href="fit.html">Fit</a>
 </div>
 
 <div class="category-bar">
