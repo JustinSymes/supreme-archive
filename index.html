@@ -20,14 +20,39 @@ html, body {
   background: #fff;
   font-family: -apple-system, BlinkMacSystemFont, "San Francisco", sans-serif;
 }
-.header {
+.header{
   padding: 20px;
+  position: relative;
   text-align: center;
   font-size: 24px;
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
   font-style: italic;
   letter-spacing: -0.5px;
+}
+
+.header .title{
+  display:inline-block;
+}
+
+.fit-btn{
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: #e10600;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+}
+
+.fit-icon{
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
 }
 .counter { text-align:center; color:#e10600; margin-bottom:10px; }
 .grid {
@@ -75,7 +100,13 @@ html, body {
 </head>
 <body>
 
-<div class="header">Supreme Archive</div>
+<div class="header">
+  <span class="title">Supreme Archive</span>
+
+  <a class="fit-btn" href="fit.html" aria-label="Build a fit">
+    <span class="fit-icon">👕</span>
+  </a>
+</div>
 <div class="counter" id="counter"></div>
 
 <div class="category-bar">
