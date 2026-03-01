@@ -96,18 +96,51 @@ html, body {
 }
 .category-bar { display:flex; overflow:auto; gap:15px; padding:10px 20px; border-bottom:1px solid #eee; }
 .category { cursor:pointer; color:#e10600; }
+.counter-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  position:relative;
+  margin-bottom:10px;
+}
+
+.counter{
+  color:#e10600;
+  font-weight:600;
+}
+
+.fit-btn{
+  position:absolute;
+  right:18px;
+  width:36px;
+  height:36px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.fit-svg{
+  width:26px;
+  height:26px;
+  fill:#e10600;
+}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <span class="title">Supreme Archive</span>
+  Supreme Archive
+</div>
+
+<div class="counter-row">
+  <div class="counter" id="counter"></div>
 
   <a class="fit-btn" href="fit.html" aria-label="Build a fit">
-    <span class="fit-icon">👕</span>
+    <svg viewBox="0 0 24 24" class="fit-svg">
+      <path d="M7 4 L9 2 H15 L17 4 L21 6 L19 10 L17 9 V20 H7 V9 L5 10 L3 6 Z" />
+    </svg>
   </a>
 </div>
-<div class="counter" id="counter"></div>
 
 <div class="category-bar">
 <div class="category" onclick="filterCategory('All')">All</div>
