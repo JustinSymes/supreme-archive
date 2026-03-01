@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fit Builder</title>
+
+<style>
+  body{
+    margin:0;
+    padding:20px;
+    font-family: -apple-system, BlinkMacSystemFont, "San Francisco", Arial, sans-serif;
+    background:#fff;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+  }
+
+  .back{
+    color:#e10600;
+    cursor:pointer;
+    text-decoration:none;
+    font-size:18px;
+  }
+
+  .page-title{
+    font-weight:800;
+    font-size:18px;
+    margin:0;
+  }
+
+  /* Layout:
+     Hat above Top.
+     Bottom under Top.
+     Accessories on the right side.
+  */
+  .fit-layout{
+    display:grid;
+    grid-template-columns: 1fr 150px;
+    gap:14px;
+    align-items:start;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .left-stack{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  .slot{
+    border:1px solid #eee;
+    border-radius:16px;
+    padding:10px;
+  }
+
+  .slot-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    font-weight:700;
+  }
+
+  .hint{
+    font-size:12px;
+    color:#999;
+    font-weight:600;
+  }
+
+  .carousel{
+    position:relative;
+    overflow:hidden;
+    width:100%;
+    border-radius:14px;
+    background:#fff;
+  }
+
+  .track{
+    display:flex;
+    transition: transform 220ms ease;
+    will-change: transform;
+  }
+
+  .slide{
+    min-width:100%;
+    aspect-ratio: 1 / 1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .slide img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+  }
+
+  .slide.blank{
+    background:#fafafa;
+    color:#888;
+    font-weight:700;
+    font-size:14px;
+  }
+
+  .label{
+    margin-top:10px;
+    font-size:14px;
+    line-height:1.2;
+    text-align:center;
+    min-height: 34px;
+  }
+
+  .dots{
+    display:flex;
+    gap:6px;
+    justify-content:center;
+    margin-top:10px;
+  }
+  .dot{
+    width:6px;
+    height:6px;
+    border-radius:999px;
+    background:#ddd;
+  }
+  .dot.active{ background:#e10600; }
+
+  /* Accessories column */
+  .right-col .slot{ position: sticky; top: 14px; }
+  @media (max-width: 520px){
+    .fit-layout{ grid-template-columns: 1fr 130px; }
+  }
+</style>
+</head>
+
+<body>
+  <div class="topbar">
+    <a class="back" href="index.html">← Back</a>
+    <h1 class="page-title">Build a Fit</h1>
+    <div style="width:60px;"></div>
+  </div>
+
+  <div class="fit-layout">
+    <div class="left-stack">
+      <div class="slot" id="slot-hat">
+        <div class="slot-title">
+          <span>Hat</span>
+          <span class="hint">Swipe</span>
+        </div>
+        <div class="carousel"><div class="track" id="track-hat"></div></div>
+        <div class="dots" id="dots-hat"></div>
+        <div class="label" id="label-hat"></div>
+      </div>
+
+      <div class="slot" id="slot-top">
+        <div class="slot-title">
+          <span>Top</span>
+          <span class="hint">Swipe</span>
+        </div>
+        <div class="carousel"><div class="track" id="track-top"></div></div>
+        <div class="dots" id="dots-top"></div>
+        <div class="label" id="label-top"></div>
+      </div>
+
+      <div class="slot" id="slot-bottom">
+        <div class="slot-title">
+          <span>Bottom</span>
+          <span class="hint">Swipe</span>
+        </div>
+        <div class="carousel"><div class="track" id="track-bottom"></div></div>
+        <div class="dots" id="dots-bottom"></div>
+        <div class="label" id="label-bottom"></div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="slot" id="slot-acc">
+        <div class="slot-title">
+          <span>Accessory</span>
+          <span class="hint">Swipe</span>
+        </div>
+        <div class="carousel"><div class="track" id="track-acc"></div></div>
+        <div class="dots" id="dots-acc"></div>
+        <div class="label" id="label-acc"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
+
+function csvSplit(line){
+  // Your sheet is simple, but filenames can contain no commas.
+  // This basic split matches what you already use.
+  return line.split(",");
+}
+
+function firstImage(imgCell){
+  // If you store "photo1.png|photo2.png" return the first one
+  if(!imgCell) return "";
+  return imgCell.split("|")[0].trim();
+}
+
+function buildSwipeCarousel({items, trackEl, dotsEl, labelEl, allowBlank=false}){
+  // items: [{name, image}]
+  const slides = [];
+
+  if(allowBlank){
+    slides.push({ name: "None", image: "" });
+  }
+
+  slides.push(...items);
+
+  trackEl.innerHTML = "";
+  dotsEl.innerHTML = "";
+
+  // Build slides
+  slides.forEach((it, i) => {
+    const slide = document.createElement("div");
+    slide.className = "slide" + (it.image ? "" : " blank");
+    slide.innerHTML = it.image
+      ? `<img src="${it.image}" alt="${it.name}">`
+      : `None`;
+    trackEl.appendChild(slide);
+
+    // dots only if >1 slide
+    if(slides.length > 1){
+      const dot = document.createElement("div");
+      dot.className = "dot" + (i===0 ? " active" : "");
+      dotsEl.appendChild(dot);
+    }
+  });
+
+  // Hide dots if only 1
+  if(slides.length <= 1){
+    dotsEl.style.display = "none";
+  }else{
+    dotsEl.style.display = "flex";
+  }
+
+  let index = 0;
+
+  function setIndex(i){
+    index = Math.max(0, Math.min(slides.length - 1, i));
+    trackEl.style.transform = `translateX(${-index * 100}%)`;
+
+    if(slides.length > 1){
+      [...dotsEl.children].forEach((d, di) => d.classList.toggle("active", di===index));
+    }
+
+    labelEl.textContent = slides[index].name || "";
+  }
+
+  // Init label
+  setIndex(0);
+
+  // Swipe
+  let startX = 0;
+  let startY = 0;
+  let moved = false;
+
+  const viewport = trackEl.parentElement;
+
+  viewport.addEventListener("touchstart", (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    moved = false;
+  }, {passive:true});
+
+  viewport.addEventListener("touchmove", (e) => {
+    const dx = Math.abs(e.touches[0].clientX - startX);
+    const dy = Math.abs(e.touches[0].clientY - startY);
+    if(dx > dy && dx > 10) moved = true;
+  }, {passive:true});
+
+  viewport.addEventListener("touchend", (e) => {
+    const endX = e.changedTouches[0].clientX;
+    const dx = endX - startX;
+
+    // only treat as swipe if horizontal move
+    if(!moved) return;
+
+    if(dx < -45) setIndex(index + 1);
+    if(dx > 45) setIndex(index - 1);
+  }, {passive:true});
+}
+
+fetch(sheetURL)
+  .then(r => r.text())
+  .then(text => {
+    const rows = text.split("\n").slice(1).filter(Boolean);
+
+    const all = rows.map(r => {
+      const c = csvSplit(r);
+      return {
+        id: c[0],
+        name: c[1],
+        category: c[2],
+        image: firstImage(c[8]) // same column you already use
+      };
+    });
+
+    const tops = all.filter(x => x.category === "Tops" && x.image);
+    const bottoms = all.filter(x => x.category === "Bottoms" && x.image);
+    const hats = all.filter(x => x.category === "Headwear" && x.image);
+    const acc = all.filter(x => x.category === "Accessories" && x.image);
+
+    buildSwipeCarousel({
+      items: hats,
+      trackEl: document.getElementById("track-hat"),
+      dotsEl: document.getElementById("dots-hat"),
+      labelEl: document.getElementById("label-hat"),
+      allowBlank: true   // ✅ hats can be blank
+    });
+
+    buildSwipeCarousel({
+      items: tops,
+      trackEl: document.getElementById("track-top"),
+      dotsEl: document.getElementById("dots-top"),
+      labelEl: document.getElementById("label-top"),
+      allowBlank: false
+    });
+
+    buildSwipeCarousel({
+      items: bottoms,
+      trackEl: document.getElementById("track-bottom"),
+      dotsEl: document.getElementById("dots-bottom"),
+      labelEl: document.getElementById("label-bottom"),
+      allowBlank: false
+    });
+
+    buildSwipeCarousel({
+      items: acc,
+      trackEl: document.getElementById("track-acc"),
+      dotsEl: document.getElementById("dots-acc"),
+      labelEl: document.getElementById("label-acc"),
+      allowBlank: true   // ✅ accessories can be blank
+    });
+  });
+</script>
+</body>
+</html>
