@@ -207,8 +207,8 @@ function firstImage(imgCell){
   return imgCell.split("|")[0].trim();
 }
 
-function buildSwipeCarousel({items, trackEl, dotsEl, labelEl, allowBlank=false}){
-  // items: [{name, image}]
+function buildSwipeCarousel({items, trackEl, dotsEl, labelEl, allowBlank=false, storageKey}){
+
   const slides = [];
 
   if(allowBlank){
@@ -220,7 +220,6 @@ function buildSwipeCarousel({items, trackEl, dotsEl, labelEl, allowBlank=false})
   trackEl.innerHTML = "";
   dotsEl.innerHTML = "";
 
-  // Build slides
   slides.forEach((it, i) => {
     const slide = document.createElement("div");
     slide.className = "slide" + (it.image ? "" : " blank");
@@ -229,20 +228,62 @@ function buildSwipeCarousel({items, trackEl, dotsEl, labelEl, allowBlank=false})
       : `None`;
     trackEl.appendChild(slide);
 
-    // dots only if >1 slide
     if(slides.length > 1){
       const dot = document.createElement("div");
-      dot.className = "dot" + (i===0 ? " active" : "");
+      dot.className = "dot";
       dotsEl.appendChild(dot);
     }
   });
 
-  // Hide dots if only 1
   if(slides.length <= 1){
     dotsEl.style.display = "none";
-  }else{
+  } else {
     dotsEl.style.display = "flex";
   }
+
+  let index = 0;
+
+  // 🔥 Load saved selection
+  const saved = localStorage.getItem(storageKey);
+  if(saved !== null){
+    const savedIndex = parseInt(saved);
+    if(savedIndex < slides.length){
+      index = savedIndex;
+    }
+  }
+
+  function setIndex(i){
+    index = Math.max(0, Math.min(slides.length - 1, i));
+    trackEl.style.transform = `translateX(${-index * 100}%)`;
+
+    if(slides.length > 1){
+      [...dotsEl.children].forEach((d, di) =>
+        d.classList.toggle("active", di===index)
+      );
+    }
+
+    labelEl.textContent = slides[index].name || "";
+
+    // 🔥 Save selection
+    localStorage.setItem(storageKey, index);
+  }
+
+  setIndex(index);
+
+  let startX = 0;
+
+  const viewport = trackEl.parentElement;
+
+  viewport.addEventListener("touchstart", e => {
+    startX = e.touches[0].clientX;
+  }, {passive:true});
+
+  viewport.addEventListener("touchend", e => {
+    const endX = e.changedTouches[0].clientX;
+    if (endX < startX - 45) setIndex(index + 1);
+    if (endX > startX + 45) setIndex(index - 1);
+  }, {passive:true});
+}
 
   let index = 0;
 
@@ -312,12 +353,40 @@ fetch(sheetURL)
     const acc = all.filter(x => x.category === "Accessories" && x.image);
 
     buildSwipeCarousel({
-      items: hats,
-      trackEl: document.getElementById("track-hat"),
-      dotsEl: document.getElementById("dots-hat"),
-      labelEl: document.getElementById("label-hat"),
-      allowBlank: true   // ✅ hats can be blank
-    });
+  items: hats,
+  trackEl: document.getElementById("track-hat"),
+  dotsEl: document.getElementById("dots-hat"),
+  labelEl: document.getElementById("label-hat"),
+  allowBlank: true,
+  storageKey: "fit_hat"
+});
+
+buildSwipeCarousel({
+  items: tops,
+  trackEl: document.getElementById("track-top"),
+  dotsEl: document.getElementById("dots-top"),
+  labelEl: document.getElementById("label-top"),
+  allowBlank: false,
+  storageKey: "fit_top"
+});
+
+buildSwipeCarousel({
+  items: bottoms,
+  trackEl: document.getElementById("track-bottom"),
+  dotsEl: document.getElementById("dots-bottom"),
+  labelEl: document.getElementById("label-bottom"),
+  allowBlank: false,
+  storageKey: "fit_bottom"
+});
+
+buildSwipeCarousel({
+  items: acc,
+  trackEl: document.getElementById("track-acc"),
+  dotsEl: document.getElementById("dots-acc"),
+  labelEl: document.getElementById("label-acc"),
+  allowBlank: true,
+  storageKey: "fit_accessory"
+});
 
     buildSwipeCarousel({
       items: tops,
