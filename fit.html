@@ -1,124 +1,260 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Build a Fit</title>
+
+<style>
+body{
+  margin:0;
+  font-family:-apple-system, BlinkMacSystemFont, sans-serif;
+  background:#fff;
+  overflow:hidden;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  padding:14px 20px;
+}
+
+.back{
+  position:absolute;
+  left:20px;
+  color:#e10600;
+  text-decoration:none;
+  font-weight:600;
+}
+
+.title{
+  font-weight:800;
+  font-size:20px;
+}
+
+.actions{
+  position:absolute;
+  right:20px;
+  display:flex;
+  gap:14px;
+}
+
+.action-btn{
+  color:#e10600;
+  font-weight:700;
+  font-size:14px;
+  text-decoration:none;
+  cursor:pointer;
+}
+
+.stage-wrapper{
+  height:calc(100vh - 70px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.fit-stage{
+  position:relative;
+  width:380px;
+  height:650px;
+  transform-origin:top center;
+}
+
+/* Item positions */
+
+.hat{
+  position:absolute;
+  top:0;
+  left:0;
+  width:120px;
+}
+
+.accessory{
+  position:absolute;
+  top:0;
+  right:0;
+  width:110px;
+}
+
+.top{
+  position:absolute;
+  top:120px;
+  left:50%;
+  transform:translateX(-50%);
+  width:300px;
+}
+
+.bottom{
+  position:absolute;
+  top:380px;
+  left:50%;
+  transform:translateX(-50%);
+  width:260px;
+}
+
+.fit-stage img{
+  width:100%;
+  height:auto;
+  object-fit:contain;
+}
+
+.swipe{
+  touch-action:pan-y;
+}
+</style>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Build a Fit</title>
 
   <style>
     :root{
-  --red:#e10600;
-  --pad:18px;
-  --topbar-h:72px;
-}
+      --red:#e10600;
+      --pad:16px;
+      --topbar-h:64px;
+    }
 
-*{ box-sizing:border-box; }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:#fff;
+      font-family:-apple-system,BlinkMacSystemFont,"San Francisco",Arial,sans-serif;
+      color:#111;
+      overflow:hidden; /* key: keep it 1-screen */
+      -webkit-tap-highlight-color: transparent;
+    }
 
-body{
-  margin:0;
-  background:#fff;
-  font-family:-apple-system,BlinkMacSystemFont,"San Francisco",Arial,sans-serif;
-  overflow:hidden;
-}
+    /* Top bar */
+    .topbar{
+      height:var(--topbar-h);
+      display:grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items:center;
+      padding:0 var(--pad);
+    }
+    .back{
+      justify-self:start;
+      color:var(--red);
+      font-weight:600;
+      text-decoration:none;
+      font-size:18px;
+    }
+    .title{
+      justify-self:center;
+      font-size:22px;
+      font-weight:700;
+    }
+    .actions{
+      justify-self:end;
+      display:flex;
+      gap:18px;
+      align-items:center;
+    }
+    .action-btn{
+      background:transparent;
+      border:0;
+      padding:0;
+      color:var(--red);
+      font-size:18px;
+      font-weight:700;
+      cursor:pointer;
+    }
 
-/* Top bar */
-.topbar{
-  height:var(--topbar-h);
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
-  align-items:center;
-  padding:0 var(--pad);
-}
+    /* Stage that always fits on screen */
+    .stage{
+      height:calc(100vh - var(--topbar-h));
+      padding:10px var(--pad) var(--pad);
+      display:grid;
+      grid-template-rows: 22% 45% 33%; /* hat/access | top | bottom */
+      row-gap:10px;
+    }
 
-.back{
-  justify-self:start;
-  color:var(--red);
-  font-weight:600;
-  text-decoration:none;
-  font-size:18px;
-}
+    /* Row 1: hat left, accessory right */
+    .row-top{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap:18px;
+      align-items:start;
+    }
 
-.title{
-  justify-self:center;
-  font-size:22px;
-  font-weight:700;
-}
+    /* Slot base */
+    .slot{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      user-select:none;
+      touch-action:pan-y; /* allow vertical scroll gestures in safari UI, but we handle horizontal */
+    }
 
-.actions{
-  justify-self:end;
-  display:flex;
-  gap:18px;
-}
+    /* Click/swipe capture even if image is blank */
+    .slot::after{
+      content:"";
+      position:absolute;
+      inset:-6px;
+    }
 
-.action-btn{
-  background:transparent;
-  border:0;
-  color:var(--red);
-  font-size:18px;
-  font-weight:700;
-  cursor:pointer;
-}
+    /* Images scale to fit the slot */
+    .slot img{
+      max-width:100%;
+      max-height:100%;
+      width:auto;
+      height:auto;
+      object-fit:contain;
+      display:block;
+      pointer-events:none;
+    }
 
-/* Stage */
-.stage{
-  height:calc(100vh - var(--topbar-h));
-  padding:20px var(--pad) 10px;
-  display:grid;
-  grid-template-rows: 20% 42% 38%; /* refined proportions */
-  row-gap:14px;
-}
+    /* Center the top/bottom */
+    .row-mid, .row-bot{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
-/* Top row (hat + accessory) */
-.row-top{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  column-gap:30px;
-  align-items:center;
-  padding-top:10px; /* push down slightly */
-}
+    /* Make top/bottom a bit larger visually */
+    .slot.top img{ max-height:100%; }
+    .slot.bottom img{ max-height:100%; }
 
-.slot{
-  width:100%;
-  height:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  touch-action:pan-y;
-}
+    /* Optional: tiny hint when blank (kept invisible-ish) */
+    .blankHint{
+      position:absolute;
+      font-size:12px;
+      color:#bbb;
+      opacity:0;
+    }
+    .slot.blank .blankHint{ opacity:0; } /* keep fully hidden (matches your reference) */
 
-/* Smaller hat + accessory */
-.slot.hat img,
-.slot.acc img{
-  max-height:70%;
-  max-width:80%;
-  object-fit:contain;
-}
-
-/* Hoodie sizing */
-.slot.top img{
-  max-height:95%;
-  width:auto;
-  object-fit:contain;
-}
-
-/* Jeans sizing */
-.slot.bottom img{
-  max-height:100%;
-  width:auto;
-  object-fit:contain;
-}
-
-.row-mid,
-.row-bot{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+    /* Prevent selection highlight on iOS */
+    .no-select{
+      -webkit-user-select:none;
+      user-select:none;
+    }
   </style>
 </head>
 
 <body>
+
+<div class="topbar">
+  <a class="back" href="index.html">← Back</a>
+  <div class="title">Build a Fit</div>
+
+  <div class="actions">
+    <div class="action-btn" onclick="randomFit()">Random</div>
+    <div class="action-btn" onclick="saveImage()">Save</div>
+  </div>
+</div>
+
+<div class="stage-wrapper">
+  <div class="fit-stage" id="stage">
+    <div class="hat swipe" id="hat"></div>
+    <div class="accessory swipe" id="accessory"></div>
+    <div class="top swipe" id="top"></div>
+    <div class="bottom swipe" id="bottom"></div>
   <div class="topbar">
     <a class="back" href="index.html">← Back</a>
     <div class="title">Build a Fit</div>
@@ -127,7 +263,17 @@ body{
       <button class="action-btn" id="saveBtn">Save</button>
     </div>
   </div>
+</div>
 
+<script>
+const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
+
+function firstImage(imgCell){
+  if(!imgCell) return "";
+  return imgCell.split("|")[0].trim();
+}
+
+let dataCache = [];
   <div class="stage no-select">
     <div class="row-top">
       <div class="slot hat" id="hatSlot">
@@ -154,16 +300,101 @@ body{
     </div>
   </div>
 
+fetch(sheetURL)
+.then(r=>r.text())
+.then(text=>{
+  const rows = text.split("\n").slice(1).filter(Boolean);
   <script>
     // Your sheet CSV
     const sheetURL =
       "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 
+  dataCache = rows.map(r=>{
+    const c = r.split(",");
+    return {
+      name:c[1],
+      category:c[2],
+      image:firstImage(c[8])
     // Helpers
     const splitCSVLine = (line) => {
       // Simple CSV split (your sheet looks comma-safe). If you later add commas in names, we can upgrade this.
       return line.split(",");
     };
+  });
+
+  buildSlot("Headwear","hat",true,"fit_hat");
+  buildSlot("Accessories","accessory",true,"fit_accessory");
+  buildSlot("Tops","top",false,"fit_top");
+  buildSlot("Bottoms","bottom",false,"fit_bottom");
+
+  autoScale();
+});
+
+function buildSlot(category, elementId, allowBlank, storageKey){
+
+  const items = dataCache.filter(x=>x.category===category && x.image);
+  const slides = allowBlank ? [{image:""}].concat(items) : items;
+
+  const el = document.getElementById(elementId);
+  let index = parseInt(localStorage.getItem(storageKey)) || 0;
+  if(index >= slides.length) index = 0;
+
+  function render(){
+    el.innerHTML = slides[index].image ? `<img src="${slides[index].image}">` : "";
+    localStorage.setItem(storageKey,index);
+  }
+
+  render();
+
+  let startX=0;
+
+  el.addEventListener("touchstart",e=>{
+    startX=e.touches[0].clientX;
+  },{passive:true});
+
+  el.addEventListener("touchend",e=>{
+    const endX=e.changedTouches[0].clientX;
+    if(endX < startX-40) index=Math.min(index+1,slides.length-1);
+    if(endX > startX+40) index=Math.max(index-1,0);
+    render();
+  },{passive:true});
+
+  el.dataset.slides = JSON.stringify(slides);
+  el.dataset.storage = storageKey;
+}
+
+function randomFit(){
+  document.querySelectorAll(".fit-stage > div").forEach(el=>{
+    const slides = JSON.parse(el.dataset.slides);
+    const randomIndex = Math.floor(Math.random()*slides.length);
+    localStorage.setItem(el.dataset.storage, randomIndex);
+  });
+  location.reload();
+}
+
+function saveImage(){
+  html2canvas(document.getElementById("stage")).then(canvas=>{
+    const link=document.createElement("a");
+    link.download="my-fit.png";
+    link.href=canvas.toDataURL();
+    link.click();
+  });
+}
+
+/* Auto scale to fit viewport */
+function autoScale(){
+  const stage=document.getElementById("stage");
+  const scale=Math.min(
+    window.innerHeight / stage.offsetHeight,
+    window.innerWidth / stage.offsetWidth
+  );
+  stage.style.transform=`scale(${scale*0.92})`;
+}
+
+window.addEventListener("resize",autoScale);
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     // Fit data buckets
     let tops = [];
