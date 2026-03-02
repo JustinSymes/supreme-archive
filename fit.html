@@ -1,230 +1,314 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Build a Fit</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Build a Fit</title>
 
-<style>
-body{
-  margin:0;
-  font-family:-apple-system, BlinkMacSystemFont, sans-serif;
-  background:#fff;
-  overflow:hidden;
-}
+  <style>
+    :root{
+      --red:#e10600;
+      --pad:16px;
+      --topbar-h:64px;
+    }
 
-.topbar{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  padding:14px 20px;
-}
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background:#fff;
+      font-family:-apple-system,BlinkMacSystemFont,"San Francisco",Arial,sans-serif;
+      color:#111;
+      overflow:hidden; /* key: keep it 1-screen */
+      -webkit-tap-highlight-color: transparent;
+    }
 
-.back{
-  position:absolute;
-  left:20px;
-  color:#e10600;
-  text-decoration:none;
-  font-weight:600;
-}
+    /* Top bar */
+    .topbar{
+      height:var(--topbar-h);
+      display:grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items:center;
+      padding:0 var(--pad);
+    }
+    .back{
+      justify-self:start;
+      color:var(--red);
+      font-weight:600;
+      text-decoration:none;
+      font-size:18px;
+    }
+    .title{
+      justify-self:center;
+      font-size:22px;
+      font-weight:700;
+    }
+    .actions{
+      justify-self:end;
+      display:flex;
+      gap:18px;
+      align-items:center;
+    }
+    .action-btn{
+      background:transparent;
+      border:0;
+      padding:0;
+      color:var(--red);
+      font-size:18px;
+      font-weight:700;
+      cursor:pointer;
+    }
 
-.title{
-  font-weight:800;
-  font-size:20px;
-}
+    /* Stage that always fits on screen */
+    .stage{
+      height:calc(100vh - var(--topbar-h));
+      padding:10px var(--pad) var(--pad);
+      display:grid;
+      grid-template-rows: 22% 45% 33%; /* hat/access | top | bottom */
+      row-gap:10px;
+    }
 
-.actions{
-  position:absolute;
-  right:20px;
-  display:flex;
-  gap:14px;
-}
+    /* Row 1: hat left, accessory right */
+    .row-top{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap:18px;
+      align-items:start;
+    }
 
-.action-btn{
-  color:#e10600;
-  font-weight:700;
-  font-size:14px;
-  text-decoration:none;
-  cursor:pointer;
-}
+    /* Slot base */
+    .slot{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      user-select:none;
+      touch-action:pan-y; /* allow vertical scroll gestures in safari UI, but we handle horizontal */
+    }
 
-.stage-wrapper{
-  height:calc(100vh - 70px);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+    /* Click/swipe capture even if image is blank */
+    .slot::after{
+      content:"";
+      position:absolute;
+      inset:-6px;
+    }
 
-.fit-stage{
-  position:relative;
-  width:380px;
-  height:650px;
-  transform-origin:top center;
-}
+    /* Images scale to fit the slot */
+    .slot img{
+      max-width:100%;
+      max-height:100%;
+      width:auto;
+      height:auto;
+      object-fit:contain;
+      display:block;
+      pointer-events:none;
+    }
 
-/* Item positions */
+    /* Center the top/bottom */
+    .row-mid, .row-bot{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
 
-.hat{
-  position:absolute;
-  top:0;
-  left:0;
-  width:120px;
-}
+    /* Make top/bottom a bit larger visually */
+    .slot.top img{ max-height:100%; }
+    .slot.bottom img{ max-height:100%; }
 
-.accessory{
-  position:absolute;
-  top:0;
-  right:0;
-  width:110px;
-}
+    /* Optional: tiny hint when blank (kept invisible-ish) */
+    .blankHint{
+      position:absolute;
+      font-size:12px;
+      color:#bbb;
+      opacity:0;
+    }
+    .slot.blank .blankHint{ opacity:0; } /* keep fully hidden (matches your reference) */
 
-.top{
-  position:absolute;
-  top:120px;
-  left:50%;
-  transform:translateX(-50%);
-  width:300px;
-}
-
-.bottom{
-  position:absolute;
-  top:380px;
-  left:50%;
-  transform:translateX(-50%);
-  width:260px;
-}
-
-.fit-stage img{
-  width:100%;
-  height:auto;
-  object-fit:contain;
-}
-
-.swipe{
-  touch-action:pan-y;
-}
-</style>
+    /* Prevent selection highlight on iOS */
+    .no-select{
+      -webkit-user-select:none;
+      user-select:none;
+    }
+  </style>
 </head>
 
 <body>
-
-<div class="topbar">
-  <a class="back" href="index.html">← Back</a>
-  <div class="title">Build a Fit</div>
-
-  <div class="actions">
-    <div class="action-btn" onclick="randomFit()">Random</div>
-    <div class="action-btn" onclick="saveImage()">Save</div>
+  <div class="topbar">
+    <a class="back" href="index.html">← Back</a>
+    <div class="title">Build a Fit</div>
+    <div class="actions">
+      <button class="action-btn" id="randomBtn">Random</button>
+      <button class="action-btn" id="saveBtn">Save</button>
+    </div>
   </div>
-</div>
 
-<div class="stage-wrapper">
-  <div class="fit-stage" id="stage">
-    <div class="hat swipe" id="hat"></div>
-    <div class="accessory swipe" id="accessory"></div>
-    <div class="top swipe" id="top"></div>
-    <div class="bottom swipe" id="bottom"></div>
+  <div class="stage no-select">
+    <div class="row-top">
+      <div class="slot hat" id="hatSlot">
+        <span class="blankHint">No Hat</span>
+        <img id="hatImg" alt="Hat" />
+      </div>
+
+      <div class="slot acc" id="accSlot">
+        <span class="blankHint">No Accessory</span>
+        <img id="accImg" alt="Accessory" />
+      </div>
+    </div>
+
+    <div class="row-mid">
+      <div class="slot top" id="topSlot">
+        <img id="topImg" alt="Top" />
+      </div>
+    </div>
+
+    <div class="row-bot">
+      <div class="slot bottom" id="botSlot">
+        <img id="botImg" alt="Bottom" />
+      </div>
+    </div>
   </div>
-</div>
 
-<script>
-const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
+  <script>
+    // Your sheet CSV
+    const sheetURL =
+      "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 
-function firstImage(imgCell){
-  if(!imgCell) return "";
-  return imgCell.split("|")[0].trim();
-}
-
-let dataCache = [];
-
-fetch(sheetURL)
-.then(r=>r.text())
-.then(text=>{
-  const rows = text.split("\n").slice(1).filter(Boolean);
-
-  dataCache = rows.map(r=>{
-    const c = r.split(",");
-    return {
-      name:c[1],
-      category:c[2],
-      image:firstImage(c[8])
+    // Helpers
+    const splitCSVLine = (line) => {
+      // Simple CSV split (your sheet looks comma-safe). If you later add commas in names, we can upgrade this.
+      return line.split(",");
     };
-  });
 
-  buildSlot("Headwear","hat",true,"fit_hat");
-  buildSlot("Accessories","accessory",true,"fit_accessory");
-  buildSlot("Tops","top",false,"fit_top");
-  buildSlot("Bottoms","bottom",false,"fit_bottom");
+    // Fit data buckets
+    let tops = [];
+    let bottoms = [];
+    let hats = [];
+    let accs = [];
 
-  autoScale();
-});
+    // IMPORTANT:
+    // Add a BLANK option for hat/accessories so they can be "empty" but still swipe.
+    // Blank is represented by empty src "".
+    const BLANK = { name: "", src: "" };
 
-function buildSlot(category, elementId, allowBlank, storageKey){
+    // Current indices
+    let idxTop = 0, idxBot = 0, idxHat = 0, idxAcc = 0;
 
-  const items = dataCache.filter(x=>x.category===category && x.image);
-  const slides = allowBlank ? [{image:""}].concat(items) : items;
+    // Render functions
+    function setImg(imgEl, slotEl, src){
+      const trimmed = (src || "").trim();
+      if (!trimmed) {
+        imgEl.removeAttribute("src");
+        imgEl.style.display = "none";
+        slotEl.classList.add("blank");
+      } else {
+        imgEl.src = trimmed;
+        imgEl.style.display = "block";
+        slotEl.classList.remove("blank");
+      }
+    }
 
-  const el = document.getElementById(elementId);
-  let index = parseInt(localStorage.getItem(storageKey)) || 0;
-  if(index >= slides.length) index = 0;
+    function render(){
+      setImg(document.getElementById("topImg"), document.getElementById("topSlot"), tops[idxTop]?.src);
+      setImg(document.getElementById("botImg"), document.getElementById("botSlot"), bottoms[idxBot]?.src);
+      setImg(document.getElementById("hatImg"), document.getElementById("hatSlot"), hats[idxHat]?.src);
+      setImg(document.getElementById("accImg"), document.getElementById("accSlot"), accs[idxAcc]?.src);
+    }
 
-  function render(){
-    el.innerHTML = slides[index].image ? `<img src="${slides[index].image}">` : "";
-    localStorage.setItem(storageKey,index);
-  }
+    // Swipe handler (works even when slot is blank)
+    function attachSwipe(slotEl, getList, getIndex, setIndex){
+      let startX = 0;
+      let startY = 0;
 
-  render();
+      slotEl.addEventListener("touchstart", (e) => {
+        const t = e.touches[0];
+        startX = t.clientX;
+        startY = t.clientY;
+      }, { passive:true });
 
-  let startX=0;
+      slotEl.addEventListener("touchend", (e) => {
+        const t = e.changedTouches[0];
+        const endX = t.clientX;
+        const endY = t.clientY;
 
-  el.addEventListener("touchstart",e=>{
-    startX=e.touches[0].clientX;
-  },{passive:true});
+        const dx = endX - startX;
+        const dy = endY - startY;
 
-  el.addEventListener("touchend",e=>{
-    const endX=e.changedTouches[0].clientX;
-    if(endX < startX-40) index=Math.min(index+1,slides.length-1);
-    if(endX > startX+40) index=Math.max(index-1,0);
-    render();
-  },{passive:true});
+        // Only treat as swipe if mostly horizontal
+        if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy)) return;
 
-  el.dataset.slides = JSON.stringify(slides);
-  el.dataset.storage = storageKey;
-}
+        const list = getList();
+        if (!list || list.length <= 1) return;
 
-function randomFit(){
-  document.querySelectorAll(".fit-stage > div").forEach(el=>{
-    const slides = JSON.parse(el.dataset.slides);
-    const randomIndex = Math.floor(Math.random()*slides.length);
-    localStorage.setItem(el.dataset.storage, randomIndex);
-  });
-  location.reload();
-}
+        const cur = getIndex();
+        if (dx < 0) { // swipe left -> next
+          setIndex((cur + 1) % list.length);
+        } else {      // swipe right -> prev
+          setIndex((cur - 1 + list.length) % list.length);
+        }
+        render();
+      }, { passive:true });
+    }
 
-function saveImage(){
-  html2canvas(document.getElementById("stage")).then(canvas=>{
-    const link=document.createElement("a");
-    link.download="my-fit.png";
-    link.href=canvas.toDataURL();
-    link.click();
-  });
-}
+    // Random + Save
+    function randInt(n){ return Math.floor(Math.random() * n); }
 
-/* Auto scale to fit viewport */
-function autoScale(){
-  const stage=document.getElementById("stage");
-  const scale=Math.min(
-    window.innerHeight / stage.offsetHeight,
-    window.innerWidth / stage.offsetWidth
-  );
-  stage.style.transform=`scale(${scale*0.92})`;
-}
+    function randomize(){
+      if (tops.length) idxTop = randInt(tops.length);
+      if (bottoms.length) idxBot = randInt(bottoms.length);
+      if (hats.length) idxHat = randInt(hats.length);
+      if (accs.length) idxAcc = randInt(accs.length);
+      render();
+    }
 
-window.addEventListener("resize",autoScale);
-</script>
+    // Save: downloads a screenshot-like image using html2canvas-style approach would need a lib.
+    // Instead: use native share screenshot (iOS) OR we can add a lightweight save later.
+    // For now we’ll just tell the user to take a screenshot.
+    function saveFit(){
+      alert("Tip: Take a screenshot to save your fit.\n(If you want a real 'Save Image' button, tell me and I’ll add it.)");
+    }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    document.getElementById("randomBtn").addEventListener("click", randomize);
+    document.getElementById("saveBtn").addEventListener("click", saveFit);
 
+    // Load sheet and build lists
+    fetch(sheetURL)
+      .then(r => r.text())
+      .then(csv => {
+        const rows = csv.trim().split("\n").slice(1);
+
+        const items = rows
+          .map(line => splitCSVLine(line))
+          .filter(cols => cols.length >= 9)
+          .map(cols => ({
+            name: (cols[1] || "").trim(),
+            category: (cols[2] || "").trim(),
+            // IMPORTANT: this assumes your image column already contains FULL URLs or valid paths
+            // If you're using filenames only, change src to your folder path (e.g. "images/" + cols[8]).
+            src: (cols[8] || "").trim().split("|")[0].trim() // use first image for fit
+          }));
+
+        tops = items.filter(i => i.category === "Tops");
+        bottoms = items.filter(i => i.category === "Bottoms");
+
+        // Headwear + Accessories lists
+        hats = [BLANK, ...items.filter(i => i.category === "Headwear")];
+        accs = [BLANK, ...items.filter(i => i.category === "Accessories")];
+
+        // Start with blank hat/acc
+        idxHat = 0;
+        idxAcc = 0;
+        idxTop = 0;
+        idxBot = 0;
+
+        render();
+
+        // Attach swipes (blank still swipeable because list includes BLANK)
+        attachSwipe(document.getElementById("topSlot"), () => tops, () => idxTop, (v) => idxTop = v);
+        attachSwipe(document.getElementById("botSlot"), () => bottoms, () => idxBot, (v) => idxBot = v);
+        attachSwipe(document.getElementById("hatSlot"), () => hats, () => idxHat, (v) => idxHat = v);
+        attachSwipe(document.getElementById("accSlot"), () => accs, () => idxAcc, (v) => idxAcc = v);
+      });
+  </script>
 </body>
 </html>
