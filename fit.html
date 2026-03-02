@@ -8,9 +8,9 @@
 <style>
 body{
   margin:0;
-  padding:20px;
   font-family:-apple-system, BlinkMacSystemFont, sans-serif;
   background:#fff;
+  overflow:hidden;
 }
 
 .topbar{
@@ -18,12 +18,12 @@ body{
   align-items:center;
   justify-content:center;
   position:relative;
-  margin-bottom:20px;
+  padding:14px 20px;
 }
 
 .back{
   position:absolute;
-  left:0;
+  left:20px;
   color:#e10600;
   text-decoration:none;
   font-weight:600;
@@ -34,20 +34,36 @@ body{
   font-size:20px;
 }
 
-/* FIT LAYOUT */
+.actions{
+  position:absolute;
+  right:20px;
+  display:flex;
+  gap:14px;
+}
+
+.action-btn{
+  color:#e10600;
+  font-weight:700;
+  font-size:14px;
+  text-decoration:none;
+  cursor:pointer;
+}
+
+.stage-wrapper{
+  height:calc(100vh - 70px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
 .fit-stage{
   position:relative;
-  max-width:420px;
-  margin:0 auto;
+  width:380px;
+  height:650px;
+  transform-origin:top center;
 }
 
-.fit-item{
-  position:relative;
-  text-align:center;
-}
-
-/* Positioning */
+/* Item positions */
 
 .hat{
   position:absolute;
@@ -64,22 +80,26 @@ body{
 }
 
 .top{
-  margin-top:90px;
+  position:absolute;
+  top:120px;
+  left:50%;
+  transform:translateX(-50%);
+  width:300px;
 }
 
 .bottom{
-  margin-top:20px;
+  position:absolute;
+  top:380px;
+  left:50%;
+  transform:translateX(-50%);
+  width:260px;
 }
 
-/* Images */
-
-.fit-item img{
+.fit-stage img{
   width:100%;
   height:auto;
   object-fit:contain;
 }
-
-/* Swipe area */
 
 .swipe{
   touch-action:pan-y;
@@ -92,18 +112,20 @@ body{
 <div class="topbar">
   <a class="back" href="index.html">← Back</a>
   <div class="title">Build a Fit</div>
+
+  <div class="actions">
+    <div class="action-btn" onclick="randomFit()">Random</div>
+    <div class="action-btn" onclick="saveImage()">Save</div>
+  </div>
 </div>
 
-<div class="fit-stage">
-
-  <div class="fit-item hat swipe" id="hat"></div>
-
-  <div class="fit-item accessory swipe" id="accessory"></div>
-
-  <div class="fit-item top swipe" id="top"></div>
-
-  <div class="fit-item bottom swipe" id="bottom"></div>
-
+<div class="stage-wrapper">
+  <div class="fit-stage" id="stage">
+    <div class="hat swipe" id="hat"></div>
+    <div class="accessory swipe" id="accessory"></div>
+    <div class="top swipe" id="top"></div>
+    <div class="bottom swipe" id="bottom"></div>
+  </div>
 </div>
 
 <script>
@@ -114,80 +136,95 @@ function firstImage(imgCell){
   return imgCell.split("|")[0].trim();
 }
 
+let dataCache = [];
+
+fetch(sheetURL)
+.then(r=>r.text())
+.then(text=>{
+  const rows = text.split("\n").slice(1).filter(Boolean);
+
+  dataCache = rows.map(r=>{
+    const c = r.split(",");
+    return {
+      name:c[1],
+      category:c[2],
+      image:firstImage(c[8])
+    };
+  });
+
+  buildSlot("Headwear","hat",true,"fit_hat");
+  buildSlot("Accessories","accessory",true,"fit_accessory");
+  buildSlot("Tops","top",false,"fit_top");
+  buildSlot("Bottoms","bottom",false,"fit_bottom");
+
+  autoScale();
+});
+
 function buildSlot(category, elementId, allowBlank, storageKey){
 
-  fetch(sheetURL)
-  .then(r=>r.text())
-  .then(text=>{
-    const rows = text.split("\n").slice(1).filter(Boolean);
+  const items = dataCache.filter(x=>x.category===category && x.image);
+  const slides = allowBlank ? [{image:""}].concat(items) : items;
 
-    const items = rows.map(r=>{
-      const c = r.split(",");
-      return {
-        name:c[1],
-        category:c[2],
-        image:firstImage(c[8])
-      };
-    }).filter(x=>x.category===category && x.image);
+  const el = document.getElementById(elementId);
+  let index = parseInt(localStorage.getItem(storageKey)) || 0;
+  if(index >= slides.length) index = 0;
 
-    const slides = [];
+  function render(){
+    el.innerHTML = slides[index].image ? `<img src="${slides[index].image}">` : "";
+    localStorage.setItem(storageKey,index);
+  }
 
-    if(allowBlank){
-      slides.push({name:"None", image:""});
-    }
+  render();
 
-    slides.push(...items);
+  let startX=0;
 
-    const el = document.getElementById(elementId);
+  el.addEventListener("touchstart",e=>{
+    startX=e.touches[0].clientX;
+  },{passive:true});
 
-    let index = 0;
-
-    const saved = localStorage.getItem(storageKey);
-    if(saved !== null){
-      const s = parseInt(saved);
-      if(s < slides.length) index = s;
-    }
-
-    function render(){
-      if(slides[index].image){
-        el.innerHTML = `<img src="${slides[index].image}">`;
-      }else{
-        el.innerHTML = "";
-      }
-      localStorage.setItem(storageKey, index);
-    }
-
+  el.addEventListener("touchend",e=>{
+    const endX=e.changedTouches[0].clientX;
+    if(endX < startX-40) index=Math.min(index+1,slides.length-1);
+    if(endX > startX+40) index=Math.max(index-1,0);
     render();
+  },{passive:true});
 
-    let startX = 0;
+  el.dataset.slides = JSON.stringify(slides);
+  el.dataset.storage = storageKey;
+}
 
-    el.addEventListener("touchstart", e=>{
-      startX = e.touches[0].clientX;
-    }, {passive:true});
+function randomFit(){
+  document.querySelectorAll(".fit-stage > div").forEach(el=>{
+    const slides = JSON.parse(el.dataset.slides);
+    const randomIndex = Math.floor(Math.random()*slides.length);
+    localStorage.setItem(el.dataset.storage, randomIndex);
+  });
+  location.reload();
+}
 
-    el.addEventListener("touchend", e=>{
-      const endX = e.changedTouches[0].clientX;
-
-      if(endX < startX - 40){
-        index = Math.min(index+1, slides.length-1);
-      }
-      if(endX > startX + 40){
-        index = Math.max(index-1, 0);
-      }
-
-      render();
-    }, {passive:true});
+function saveImage(){
+  html2canvas(document.getElementById("stage")).then(canvas=>{
+    const link=document.createElement("a");
+    link.download="my-fit.png";
+    link.href=canvas.toDataURL();
+    link.click();
   });
 }
 
-/* Build Slots */
+/* Auto scale to fit viewport */
+function autoScale(){
+  const stage=document.getElementById("stage");
+  const scale=Math.min(
+    window.innerHeight / stage.offsetHeight,
+    window.innerWidth / stage.offsetWidth
+  );
+  stage.style.transform=`scale(${scale*0.92})`;
+}
 
-buildSlot("Headwear", "hat", true, "fit_hat");
-buildSlot("Accessories", "accessory", true, "fit_accessory");
-buildSlot("Tops", "top", false, "fit_top");
-buildSlot("Bottoms", "bottom", false, "fit_bottom");
-
+window.addEventListener("resize",autoScale);
 </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </body>
 </html>
