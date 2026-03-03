@@ -13,16 +13,17 @@
     }
 
     *{ box-sizing:border-box; }
+
     body{
       margin:0;
       background:#fff;
       font-family:-apple-system,BlinkMacSystemFont,"San Francisco",Arial,sans-serif;
       color:#111;
-      overflow:hidden; /* key: keep it 1-screen */
+      overflow:hidden; /* keep 1 screen */
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Top bar */
+    /* Top bar (Back + Title only) */
     .topbar{
       height:var(--topbar-h);
       display:grid;
@@ -42,13 +43,30 @@
       font-size:22px;
       font-weight:700;
     }
-    .actions{
-      justify-self:end;
-      display:flex;
-      gap:18px;
-      align-items:center;
+    .right-spacer{ justify-self:end; }
+
+    /* Stage area (everything that gets saved) */
+    .stage{
+      position:relative;
+      height:calc(100vh - var(--topbar-h));
+      padding:10px var(--pad) 18px;
+      display:grid;
+      grid-template-rows: 28% 38% 34%; /* hat/acc | top | bottom */
+      row-gap:10px;
     }
-    .action-btn{
+
+    /* Random + Save placement like your reference */
+    .fit-controls{
+      position:absolute;
+      left:var(--pad);
+      right:var(--pad);
+      top:8px;               /* below header */
+      display:flex;
+      justify-content:space-between;
+      z-index:5;
+      pointer-events:auto;
+    }
+    .fit-btn{
       background:transparent;
       border:0;
       padding:0;
@@ -58,21 +76,13 @@
       cursor:pointer;
     }
 
-    /* Stage that always fits on screen */
-    .stage{
-      height:calc(100vh - var(--topbar-h));
-      padding:10px var(--pad) var(--pad);
-      display:grid;
-      grid-template-rows: 22% 45% 33%; /* hat/access | top | bottom */
-      row-gap:10px;
-    }
-
     /* Row 1: hat left, accessory right */
     .row-top{
       display:grid;
       grid-template-columns: 1fr 1fr;
       column-gap:18px;
-      align-items:start;
+      align-items:center;
+      padding-top:32px;      /* moves hat+acc DOWN slightly */
     }
 
     /* Slot base */
@@ -84,20 +94,18 @@
       justify-content:center;
       position:relative;
       user-select:none;
-      touch-action:pan-y; /* allow vertical scroll gestures in safari UI, but we handle horizontal */
+      touch-action:pan-y;
     }
 
-    /* Click/swipe capture even if image is blank */
+    /* Make swipe work even if blank */
     .slot::after{
       content:"";
       position:absolute;
-      inset:-6px;
+      inset:-10px;
     }
 
-    /* Images scale to fit the slot */
+    /* Images */
     .slot img{
-      max-width:100%;
-      max-height:100%;
       width:auto;
       height:auto;
       object-fit:contain;
@@ -105,27 +113,50 @@
       pointer-events:none;
     }
 
-    /* Center the top/bottom */
+    /* Mid + bottom rows centered */
     .row-mid, .row-bot{
       display:flex;
       align-items:center;
       justify-content:center;
     }
 
-    /* Make top/bottom a bit larger visually */
-    .slot.top img{ max-height:100%; }
-    .slot.bottom img{ max-height:100%; }
+    /* Hat bigger */
+    .slot.hat img{
+      max-height:88%;
+      max-width:96%;
+    }
 
-    /* Optional: tiny hint when blank (kept invisible-ish) */
+    /* Accessory bigger + moved down already via padding */
+    .slot.acc img{
+      max-height:82%;
+      max-width:92%;
+    }
+
+    /* Shirt smaller */
+    .slot.top img{
+      max-height:86%;
+      max-width:96%;
+    }
+
+    /* Pants up + not cut off */
+    .row-bot{
+      align-items:flex-start;
+      padding-top:0px;
+    }
+    .slot.bottom img{
+      max-height:92%;
+      max-width:92%;
+    }
+
+    /* Blank handling */
     .blankHint{
       position:absolute;
       font-size:12px;
       color:#bbb;
-      opacity:0;
+      opacity:0; /* keep hidden */
     }
-    .slot.blank .blankHint{ opacity:0; } /* keep fully hidden (matches your reference) */
+    .slot.blank .blankHint{ opacity:0; }
 
-    /* Prevent selection highlight on iOS */
     .no-select{
       -webkit-user-select:none;
       user-select:none;
@@ -134,16 +165,19 @@
 </head>
 
 <body>
-  <div class="topbar">
+  <div class="topbar" id="topbar">
     <a class="back" href="index.html">← Back</a>
     <div class="title">Build a Fit</div>
-    <div class="actions">
-      <button class="action-btn" id="randomBtn">Random</button>
-      <button class="action-btn" id="saveBtn">Save</button>
-    </div>
+    <div class="right-spacer"></div>
   </div>
 
-  <div class="stage no-select">
+  <!-- Everything inside #capture is what we "Save" -->
+  <div class="stage no-select" id="capture">
+    <div class="fit-controls" id="fitControls">
+      <button class="fit-btn" id="randomBtn">Random</button>
+      <button class="fit-btn" id="saveBtn">Save</button>
+    </div>
+
     <div class="row-top">
       <div class="slot hat" id="hatSlot">
         <span class="blankHint">No Hat</span>
@@ -169,32 +203,24 @@
     </div>
   </div>
 
+  <!-- Needed for real PNG saving -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
   <script>
-    // Your sheet CSV
     const sheetURL =
       "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 
-    // Helpers
-    const splitCSVLine = (line) => {
-      // Simple CSV split (your sheet looks comma-safe). If you later add commas in names, we can upgrade this.
-      return line.split(",");
-    };
+    const splitCSVLine = (line) => line.split(",");
 
-    // Fit data buckets
     let tops = [];
     let bottoms = [];
     let hats = [];
     let accs = [];
 
-    // IMPORTANT:
-    // Add a BLANK option for hat/accessories so they can be "empty" but still swipe.
-    // Blank is represented by empty src "".
     const BLANK = { name: "", src: "" };
 
-    // Current indices
     let idxTop = 0, idxBot = 0, idxHat = 0, idxAcc = 0;
 
-    // Render functions
     function setImg(imgEl, slotEl, src){
       const trimmed = (src || "").trim();
       if (!trimmed) {
@@ -215,7 +241,6 @@
       setImg(document.getElementById("accImg"), document.getElementById("accSlot"), accs[idxAcc]?.src);
     }
 
-    // Swipe handler (works even when slot is blank)
     function attachSwipe(slotEl, getList, getIndex, setIndex){
       let startX = 0;
       let startY = 0;
@@ -228,29 +253,22 @@
 
       slotEl.addEventListener("touchend", (e) => {
         const t = e.changedTouches[0];
-        const endX = t.clientX;
-        const endY = t.clientY;
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
 
-        const dx = endX - startX;
-        const dy = endY - startY;
-
-        // Only treat as swipe if mostly horizontal
         if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy)) return;
 
         const list = getList();
         if (!list || list.length <= 1) return;
 
         const cur = getIndex();
-        if (dx < 0) { // swipe left -> next
-          setIndex((cur + 1) % list.length);
-        } else {      // swipe right -> prev
-          setIndex((cur - 1 + list.length) % list.length);
-        }
+        if (dx < 0) setIndex((cur + 1) % list.length);
+        else setIndex((cur - 1 + list.length) % list.length);
+
         render();
       }, { passive:true });
     }
 
-    // Random + Save
     function randInt(n){ return Math.floor(Math.random() * n); }
 
     function randomize(){
@@ -261,17 +279,35 @@
       render();
     }
 
-    // Save: downloads a screenshot-like image using html2canvas-style approach would need a lib.
-    // Instead: use native share screenshot (iOS) OR we can add a lightweight save later.
-    // For now we’ll just tell the user to take a screenshot.
-    function saveFit(){
-      alert("Tip: Take a screenshot to save your fit.\n(If you want a real 'Save Image' button, tell me and I’ll add it.)");
+    async function saveFit(){
+      const topbar = document.getElementById("topbar");
+      const controls = document.getElementById("fitControls");
+      const capture = document.getElementById("capture");
+
+      // Hide header + buttons for saved image
+      topbar.style.display = "none";
+      controls.style.display = "none";
+
+      await new Promise(r => setTimeout(r, 60));
+
+      const canvas = await html2canvas(capture, {
+        backgroundColor: "#ffffff",
+        scale: 2
+      });
+
+      // Restore UI
+      topbar.style.display = "";
+      controls.style.display = "";
+
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = "fit.png";
+      a.click();
     }
 
     document.getElementById("randomBtn").addEventListener("click", randomize);
     document.getElementById("saveBtn").addEventListener("click", saveFit);
 
-    // Load sheet and build lists
     fetch(sheetURL)
       .then(r => r.text())
       .then(csv => {
@@ -283,19 +319,15 @@
           .map(cols => ({
             name: (cols[1] || "").trim(),
             category: (cols[2] || "").trim(),
-            // IMPORTANT: this assumes your image column already contains FULL URLs or valid paths
-            // If you're using filenames only, change src to your folder path (e.g. "images/" + cols[8]).
-            src: (cols[8] || "").trim().split("|")[0].trim() // use first image for fit
+            src: (cols[8] || "").trim().split("|")[0].trim()
           }));
 
         tops = items.filter(i => i.category === "Tops");
         bottoms = items.filter(i => i.category === "Bottoms");
 
-        // Headwear + Accessories lists
         hats = [BLANK, ...items.filter(i => i.category === "Headwear")];
         accs = [BLANK, ...items.filter(i => i.category === "Accessories")];
 
-        // Start with blank hat/acc
         idxHat = 0;
         idxAcc = 0;
         idxTop = 0;
@@ -303,7 +335,6 @@
 
         render();
 
-        // Attach swipes (blank still swipeable because list includes BLANK)
         attachSwipe(document.getElementById("topSlot"), () => tops, () => idxTop, (v) => idxTop = v);
         attachSwipe(document.getElementById("botSlot"), () => bottoms, () => idxBot, (v) => idxBot = v);
         attachSwipe(document.getElementById("hatSlot"), () => hats, () => idxHat, (v) => idxHat = v);
