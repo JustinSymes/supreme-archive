@@ -297,29 +297,47 @@ render();
 
 async function saveFit(){
 
-const stage=document.getElementById("capture");
+  const stage = document.getElementById("capture");
 
-const canvas=await html2canvas(stage,{
-backgroundColor:"#ffffff",
-scale:3
-});
+  /* clone stage so layout stays unchanged */
+  const clone = stage.cloneNode(true);
 
-const now=new Date();
+  clone.style.position = "fixed";
+  clone.style.top = "-9999px";
+  clone.style.left = "-9999px";
 
-const date=
-now.getFullYear()+"-"+
-String(now.getMonth()+1).padStart(2,"0")+"-"+
-String(now.getDate()).padStart(2,"0");
+  /* force portrait canvas */
+  clone.style.width = "1080px";
+  clone.style.height = "1920px";
 
-const link=document.createElement("a");
+  clone.style.display = "grid";
+  clone.style.padding = "120px 120px 180px 120px";
 
-link.href=canvas.toDataURL("image/png");
-link.download=`fit-${date}.png`;
+  document.body.appendChild(clone);
 
-document.body.appendChild(link);
-link.click();
-document.body.removeChild(link);
+  const canvas = await html2canvas(clone,{
+    backgroundColor:"#ffffff",
+    width:1080,
+    height:1920,
+    scale:2
+  });
 
+  document.body.removeChild(clone);
+
+  const now = new Date();
+  const date =
+    now.getFullYear()+"-"+
+    String(now.getMonth()+1).padStart(2,"0")+"-"+
+    String(now.getDate()).padStart(2,"0");
+
+  const link = document.createElement("a");
+
+  link.href = canvas.toDataURL("image/png");
+  link.download = `fit-${date}.png`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 document.getElementById("randomBtn").onclick=randomize;
