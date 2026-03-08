@@ -108,13 +108,16 @@ body{
   align-items:center;
   justify-content:center;
   position:relative;
-  user-select:none;
+  overflow:hidden;
 }
 
 .slot img{
+  max-width:100%;
+  max-height:100%;
   width:auto;
   height:auto;
   object-fit:contain;
+  display:block;
 }
 
 /* Size adjustments */
@@ -123,7 +126,8 @@ body{
 }
 
 .slot.acc img{
-  max-height:82%;
+  max-height:75%;
+  max-width:75%;
 }
 
 .slot.top img{
