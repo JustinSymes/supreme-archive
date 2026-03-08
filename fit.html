@@ -227,7 +227,10 @@ let accs = [];
 
 const BLANK = { name:"", src:"" };
 
-let idxTop = 0, idxBot = 0, idxHat = 0, idxAcc = 0;
+let idxTop = Number(localStorage.getItem("fitTop")) || 0;
+let idxBot = Number(localStorage.getItem("fitBot")) || 0;
+let idxHat = Number(localStorage.getItem("fitHat")) || 0;
+let idxAcc = Number(localStorage.getItem("fitAcc")) || 0;
 
 function setImg(imgEl, slotEl, src){
   const trimmed = (src || "").trim();
@@ -244,6 +247,12 @@ function setImg(imgEl, slotEl, src){
 }
 
 function render(){
+
+  localStorage.setItem("fitTop", idxTop);
+  localStorage.setItem("fitBot", idxBot);
+  localStorage.setItem("fitHat", idxHat);
+  localStorage.setItem("fitAcc", idxAcc);
+
   setImg(topImg, topSlot, tops[idxTop]?.src);
   setImg(botImg, botSlot, bottoms[idxBot]?.src);
   setImg(hatImg, hatSlot, hats[idxHat]?.src);
@@ -301,27 +310,26 @@ async function saveFit(){
 
   const stage = document.getElementById("capture");
 
-  const clone = stage.cloneNode(true);
-
-  clone.style.position="fixed";
-  clone.style.top="-9999px";
-  clone.style.left="-9999px";
-
-  clone.style.width="2160px";
-  clone.style.height="3840px";
-
-  clone.style.padding="200px";
-  clone.style.transform="none";
-  clone.style.display="grid";
-
-  document.body.appendChild(clone);
-
-  const canvas = await html2canvas(clone,{
+  const canvas = await html2canvas(stage,{
     backgroundColor:"#ffffff",
-    width:2160,
-    height:3840,
-    scale:2
+    scale:3
   });
+
+  const now = new Date();
+  const date =
+    now.getFullYear()+"-"+
+    String(now.getMonth()+1).padStart(2,"0")+"-"+
+    String(now.getDate()).padStart(2,"0");
+
+  const link = document.createElement("a");
+
+  link.href = canvas.toDataURL("image/png");
+  link.download = `fit-${date}.png`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
   document.body.removeChild(clone);
 
