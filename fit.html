@@ -215,97 +215,104 @@
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <script>
-    const sheetURL =
-      "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
+const sheetURL =
+"https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 
-    const splitCSVLine = (line) => line.split(",");
+const splitCSVLine = (line) => line.split(",");
 
-    let tops = [];
-    let bottoms = [];
-    let hats = [];
-    let accs = [];
+let tops = [];
+let bottoms = [];
+let hats = [];
+let accs = [];
 
-    const BLANK = { name: "", src: "" };
+const BLANK = { name:"", src:"" };
 
-    let idxTop = 0, idxBot = 0, idxHat = 0, idxAcc = 0;
+let idxTop = 0, idxBot = 0, idxHat = 0, idxAcc = 0;
 
-    function setImg(imgEl, slotEl, src){
-      const trimmed = (src || "").trim();
-      if (!trimmed) {
-        imgEl.removeAttribute("src");
-        imgEl.style.display = "none";
-        slotEl.classList.add("blank");
-      } else {
-        imgEl.src = trimmed;
-        imgEl.style.display = "block";
-        slotEl.classList.remove("blank");
-      }
+function setImg(imgEl, slotEl, src){
+  const trimmed = (src || "").trim();
+
+  if(!trimmed){
+    imgEl.removeAttribute("src");
+    imgEl.style.display="none";
+    slotEl.classList.add("blank");
+  } else {
+    imgEl.src = trimmed;
+    imgEl.style.display="block";
+    slotEl.classList.remove("blank");
+  }
+}
+
+function render(){
+  setImg(topImg, topSlot, tops[idxTop]?.src);
+  setImg(botImg, botSlot, bottoms[idxBot]?.src);
+  setImg(hatImg, hatSlot, hats[idxHat]?.src);
+  setImg(accImg, accSlot, accs[idxAcc]?.src);
+}
+
+function attachSwipe(slotEl, getList, getIndex, setIndex){
+
+  let startX = 0;
+  let startY = 0;
+
+  slotEl.addEventListener("touchstart", e=>{
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+  },{passive:true});
+
+  slotEl.addEventListener("touchend", e=>{
+
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+
+    if(Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy)) return;
+
+    const list = getList();
+    if(list.length <= 1) return;
+
+    const cur = getIndex();
+
+    if(dx < 0){
+      setIndex((cur + 1) % list.length);
+    } else {
+      setIndex((cur - 1 + list.length) % list.length);
     }
 
-    function render(){
-      setImg(document.getElementById("topImg"), document.getElementById("topSlot"), tops[idxTop]?.src);
-      setImg(document.getElementById("botImg"), document.getElementById("botSlot"), bottoms[idxBot]?.src);
-      setImg(document.getElementById("hatImg"), document.getElementById("hatSlot"), hats[idxHat]?.src);
-      setImg(document.getElementById("accImg"), document.getElementById("accSlot"), accs[idxAcc]?.src);
-    }
+    render();
 
-    function attachSwipe(slotEl, getList, getIndex, setIndex){
-      let startX = 0;
-      let startY = 0;
+  },{passive:true});
+}
 
-      slotEl.addEventListener("touchstart", (e) => {
-        const t = e.touches[0];
-        startX = t.clientX;
-        startY = t.clientY;
-      }, { passive:true });
+function randInt(n){
+  return Math.floor(Math.random()*n);
+}
 
-      slotEl.addEventListener("touchend", (e) => {
-        const t = e.changedTouches[0];
-        const dx = t.clientX - startX;
-        const dy = t.clientY - startY;
+function randomize(){
+  if(tops.length) idxTop = randInt(tops.length);
+  if(bottoms.length) idxBot = randInt(bottoms.length);
+  if(hats.length) idxHat = randInt(hats.length);
+  if(accs.length) idxAcc = randInt(accs.length);
+  render();
+}
 
-        if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy)) return;
-
-        const list = getList();
-        if (!list || list.length <= 1) return;
-
-        const cur = getIndex();
-        if (dx < 0) setIndex((cur + 1) % list.length);
-        else setIndex((cur - 1 + list.length) % list.length);
-
-        render();
-      }, { passive:true });
-    }
-
-    function randInt(n){ return Math.floor(Math.random() * n); }
-
-    function randomize(){
-      if (tops.length) idxTop = randInt(tops.length);
-      if (bottoms.length) idxBot = randInt(bottoms.length);
-      if (hats.length) idxHat = randInt(hats.length);
-      if (accs.length) idxAcc = randInt(accs.length);
-      render();
-    }
-
-    async function saveFit(){
+async function saveFit(){
 
   const stage = document.getElementById("capture");
 
-  /* clone stage so layout doesn't change */
   const clone = stage.cloneNode(true);
 
-  clone.style.position = "fixed";
-  clone.style.top = "-9999px";
-  clone.style.left = "-9999px";
+  clone.style.position="fixed";
+  clone.style.top="-9999px";
+  clone.style.left="-9999px";
 
-  /* perfect vertical export layout */
-  clone.style.width = "2160px";
-  clone.style.height = "3840px";
+  clone.style.width="2160px";
+  clone.style.height="3840px";
 
-  clone.style.padding = "200px"; /* adds nice white margins */
-
-  clone.style.transform = "none";
-  clone.style.display = "grid";
+  clone.style.padding="200px";
+  clone.style.transform="none";
+  clone.style.display="grid";
 
   document.body.appendChild(clone);
 
@@ -318,72 +325,57 @@
 
   document.body.removeChild(clone);
 
-  /* create filename like fit-2026-03-08.png */
   const now = new Date();
+
   const date =
-    now.getFullYear() + "-" +
-    String(now.getMonth()+1).padStart(2,"0") + "-" +
+    now.getFullYear()+"-"+
+    String(now.getMonth()+1).padStart(2,"0")+"-"+
     String(now.getDate()).padStart(2,"0");
 
   const link = document.createElement("a");
-  link.download = `fit-${date}.png`;
-  link.href = canvas.toDataURL("image/png");
+
+  link.download=`fit-${date}.png`;
+  link.href=canvas.toDataURL("image/png");
   link.click();
 }
 
-  document.body.removeChild(clone);
+document.getElementById("randomBtn").addEventListener("click",randomize);
+document.getElementById("saveBtn").addEventListener("click",saveFit);
 
-  const link = document.createElement("a");
-  link.download = "fit.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
-}
+fetch(sheetURL)
+.then(r=>r.text())
+.then(csv=>{
 
-      // Restore UI
-      topbar.style.display = "";
-      controls.style.display = "";
+  const rows = csv.trim().split("\n").slice(1);
 
-      const a = document.createElement("a");
-      a.href = canvas.toDataURL("image/png");
-      a.download = "fit.png";
-      a.click();
-    }
+  const items = rows
+  .map(line=>splitCSVLine(line))
+  .filter(cols=>cols.length>=9)
+  .map(cols=>({
+    name:(cols[1]||"").trim(),
+    category:(cols[2]||"").trim(),
+    src:(cols[8]||"").trim().split("|")[0].trim()
+  }));
 
-    document.getElementById("randomBtn").addEventListener("click", randomize);
-    document.getElementById("saveBtn").addEventListener("click", saveFit);
+  tops = items.filter(i=>i.category==="Tops");
+  bottoms = items.filter(i=>i.category==="Bottoms");
 
-    fetch(sheetURL)
-      .then(r => r.text())
-      .then(csv => {
-        const rows = csv.trim().split("\n").slice(1);
+  hats = [BLANK, ...items.filter(i=>i.category==="Headwear")];
+  accs = [BLANK, ...items.filter(i=>i.category==="Accessories")];
 
-        const items = rows
-          .map(line => splitCSVLine(line))
-          .filter(cols => cols.length >= 9)
-          .map(cols => ({
-            name: (cols[1] || "").trim(),
-            category: (cols[2] || "").trim(),
-            src: (cols[8] || "").trim().split("|")[0].trim()
-          }));
+  idxHat = 0;
+  idxAcc = 0;
+  idxTop = 0;
+  idxBot = 0;
 
-        tops = items.filter(i => i.category === "Tops");
-        bottoms = items.filter(i => i.category === "Bottoms");
+  render();
 
-        hats = [BLANK, ...items.filter(i => i.category === "Headwear")];
-        accs = [BLANK, ...items.filter(i => i.category === "Accessories")];
+  attachSwipe(topSlot, ()=>tops, ()=>idxTop, v=>idxTop=v);
+  attachSwipe(botSlot, ()=>bottoms, ()=>idxBot, v=>idxBot=v);
+  attachSwipe(hatSlot, ()=>hats, ()=>idxHat, v=>idxHat=v);
+  attachSwipe(accSlot, ()=>accs, ()=>idxAcc, v=>idxAcc=v);
 
-        idxHat = 0;
-        idxAcc = 0;
-        idxTop = 0;
-        idxBot = 0;
-
-        render();
-
-        attachSwipe(document.getElementById("topSlot"), () => tops, () => idxTop, (v) => idxTop = v);
-        attachSwipe(document.getElementById("botSlot"), () => bottoms, () => idxBot, (v) => idxBot = v);
-        attachSwipe(document.getElementById("hatSlot"), () => hats, () => idxHat, (v) => idxHat = v);
-        attachSwipe(document.getElementById("accSlot"), () => accs, () => idxAcc, (v) => idxAcc = v);
-      });
-  </script>
+});
+</script>
 </body>
 </html>
