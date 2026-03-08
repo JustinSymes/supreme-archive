@@ -288,20 +288,56 @@
     }
 
     async function saveFit(){
-      const topbar = document.getElementById("topbar");
-      const controls = document.getElementById("fitControls");
-      const capture = document.getElementById("capture");
 
-      // Hide header + buttons for saved image
-      topbar.style.display = "none";
-      controls.style.display = "none";
+  const stage = document.getElementById("capture");
 
-      await new Promise(r => setTimeout(r, 60));
+  /* clone stage so layout doesn't change */
+  const clone = stage.cloneNode(true);
 
-      const canvas = await html2canvas(capture, {
-        backgroundColor: "#ffffff",
-        scale: 2
-      });
+  clone.style.position = "fixed";
+  clone.style.top = "-9999px";
+  clone.style.left = "-9999px";
+
+  /* perfect vertical export layout */
+  clone.style.width = "2160px";
+  clone.style.height = "3840px";
+
+  clone.style.padding = "200px"; /* adds nice white margins */
+
+  clone.style.transform = "none";
+  clone.style.display = "grid";
+
+  document.body.appendChild(clone);
+
+  const canvas = await html2canvas(clone,{
+    backgroundColor:"#ffffff",
+    width:2160,
+    height:3840,
+    scale:2
+  });
+
+  document.body.removeChild(clone);
+
+  /* create filename like fit-2026-03-08.png */
+  const now = new Date();
+  const date =
+    now.getFullYear() + "-" +
+    String(now.getMonth()+1).padStart(2,"0") + "-" +
+    String(now.getDate()).padStart(2,"0");
+
+  const link = document.createElement("a");
+  link.download = `fit-${date}.png`;
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
+
+  document.body.removeChild(clone);
+
+  const link = document.createElement("a");
+  link.download = "fit.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
 
       // Restore UI
       topbar.style.display = "";
