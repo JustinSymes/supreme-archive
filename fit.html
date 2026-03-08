@@ -330,23 +330,6 @@ async function saveFit(){
   link.click();
   document.body.removeChild(link);
 }
-
-  document.body.removeChild(clone);
-
-  const now = new Date();
-
-  const date =
-    now.getFullYear()+"-"+
-    String(now.getMonth()+1).padStart(2,"0")+"-"+
-    String(now.getDate()).padStart(2,"0");
-
-  const link = document.createElement("a");
-
-  link.download=`fit-${date}.png`;
-  link.href=canvas.toDataURL("image/png");
-  link.click();
-}
-
 document.getElementById("randomBtn").addEventListener("click",randomize);
 document.getElementById("saveBtn").addEventListener("click",saveFit);
 
