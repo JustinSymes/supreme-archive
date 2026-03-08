@@ -114,11 +114,19 @@
     }
 
     /* Mid + bottom rows centered */
-    .row-mid, .row-bot{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
+    .row-mid{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform:translateY(-10px); /* moves shirt up */
+}
+
+.row-bot{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform:translateY(-12px); /* moves pants up */
+}
 
     /* Hat bigger */
     .slot.hat img{
