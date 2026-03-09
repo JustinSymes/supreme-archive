@@ -90,14 +90,14 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  transform:translateY(-10px);
+  transform:translateY(-40px);
 }
 
 .row-bot{
   display:flex;
-  align-items:flex-start;
+  align-items:center;
   justify-content:center;
-  transform:translateY(-10px);
+  transform:translateY(-80px);
 }
 
 /* Slots */
@@ -298,31 +298,18 @@ render();
 async function saveFit(){
 
   const stage = document.getElementById("capture");
+  const controls = document.querySelector(".fit-controls");
 
-  /* clone stage so layout stays unchanged */
-  const clone = stage.cloneNode(true);
+  /* hide buttons before capture */
+  controls.style.display = "none";
 
-  clone.style.position = "fixed";
-  clone.style.top = "-9999px";
-  clone.style.left = "-9999px";
-
-  /* force portrait canvas */
-  clone.style.width = "1080px";
-  clone.style.height = "1920px";
-
-  clone.style.display = "grid";
-  clone.style.padding = "120px 120px 180px 120px";
-
-  document.body.appendChild(clone);
-
-  const canvas = await html2canvas(clone,{
+  const canvas = await html2canvas(stage,{
     backgroundColor:"#ffffff",
-    width:1080,
-    height:1920,
-    scale:2
+    scale:3
   });
 
-  document.body.removeChild(clone);
+  /* show buttons again */
+  controls.style.display = "flex";
 
   const now = new Date();
   const date =
