@@ -303,13 +303,48 @@ async function saveFit(){
   /* hide buttons */
   controls.style.display = "none";
 
-  const canvas = await html2canvas(stage,{
+  /* create clean export container */
+  const exportBox = document.createElement("div");
+
+  exportBox.style.position = "fixed";
+  exportBox.style.left = "-9999px";
+  exportBox.style.top = "-9999px";
+  exportBox.style.width = "2000px";
+  exportBox.style.height = "2000px";
+  exportBox.style.background = "#ffffff";
+
+  exportBox.style.display = "flex";
+  exportBox.style.flexDirection = "column";
+  exportBox.style.alignItems = "center";
+  exportBox.style.justifyContent = "center";
+  exportBox.style.gap = "120px";
+
+  /* clone the clothing pieces only */
+  const hat = hatImg.cloneNode();
+  const acc = accImg.cloneNode();
+  const top = topImg.cloneNode();
+  const bot = botImg.cloneNode();
+
+  const hatRow = document.createElement("div");
+  hatRow.style.display = "flex";
+  hatRow.style.gap = "200px";
+  hatRow.appendChild(hat);
+  hatRow.appendChild(acc);
+
+  exportBox.appendChild(hatRow);
+  exportBox.appendChild(top);
+  exportBox.appendChild(bot);
+
+  document.body.appendChild(exportBox);
+
+  const canvas = await html2canvas(exportBox,{
     backgroundColor:"#ffffff",
-    scale:4,
+    scale:2,
     useCORS:true
   });
 
-  /* show buttons again */
+  document.body.removeChild(exportBox);
+
   controls.style.display = "flex";
 
   const now = new Date();
