@@ -303,32 +303,13 @@ async function saveFit(){
   /* hide buttons */
   controls.style.display = "none";
 
-  /* clone stage */
-  const clone = stage.cloneNode(true);
-
-  clone.style.position = "fixed";
-  clone.style.left = "-9999px";
-  clone.style.top = "-9999px";
-
-  /* remove grid so items don't stretch */
-  clone.style.display = "flex";
-  clone.style.flexDirection = "column";
-  clone.style.alignItems = "center";
-  clone.style.justifyContent = "flex-start";
-  clone.style.width = "1800px";
-  clone.style.height = "2600px";
-  clone.style.padding = "120px";
-  clone.style.gap = "120px";
-
-  document.body.appendChild(clone);
-
-  const canvas = await html2canvas(clone,{
+  const canvas = await html2canvas(stage,{
     backgroundColor:"#ffffff",
-    scale:2
+    scale:4,
+    useCORS:true
   });
 
-  document.body.removeChild(clone);
-
+  /* show buttons again */
   controls.style.display = "flex";
 
   const now = new Date();
