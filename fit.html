@@ -300,15 +300,35 @@ async function saveFit(){
   const stage = document.getElementById("capture");
   const controls = document.querySelector(".fit-controls");
 
-  /* hide buttons before capture */
+  /* hide buttons */
   controls.style.display = "none";
 
-  const canvas = await html2canvas(stage,{
+  /* clone stage */
+  const clone = stage.cloneNode(true);
+
+  clone.style.position = "fixed";
+  clone.style.left = "-9999px";
+  clone.style.top = "-9999px";
+
+  /* remove grid so items don't stretch */
+  clone.style.display = "flex";
+  clone.style.flexDirection = "column";
+  clone.style.alignItems = "center";
+  clone.style.justifyContent = "flex-start";
+  clone.style.width = "1800px";
+  clone.style.height = "2600px";
+  clone.style.padding = "120px";
+  clone.style.gap = "120px";
+
+  document.body.appendChild(clone);
+
+  const canvas = await html2canvas(clone,{
     backgroundColor:"#ffffff",
-    scale:3
+    scale:2
   });
 
-  /* show buttons again */
+  document.body.removeChild(clone);
+
   controls.style.display = "flex";
 
   const now = new Date();
@@ -318,7 +338,6 @@ async function saveFit(){
     String(now.getDate()).padStart(2,"0");
 
   const link = document.createElement("a");
-
   link.href = canvas.toDataURL("image/png");
   link.download = `fit-${date}.png`;
 
