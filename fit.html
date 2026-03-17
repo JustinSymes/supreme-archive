@@ -131,7 +131,7 @@ body{
 }
 
 .slot.top img{
-  max-height:88%;
+  max-height:84%;
 }
 
 .slot.bottom img{
@@ -320,10 +320,23 @@ async function saveFit(){
   exportBox.style.gap = "80px";
 
   /* clone the clothing pieces only */
-  const hat = hatImg.cloneNode();
-  const acc = accImg.cloneNode();
-  const top = topImg.cloneNode();
-  const bot = botImg.cloneNode();
+const hat = hatImg.cloneNode();
+const acc = accImg.cloneNode();
+const top = topImg.cloneNode();
+const bot = botImg.cloneNode();
+
+/* apply correct export sizes */
+hat.style.width = "260px";
+hat.style.height = "auto";
+
+acc.style.width = "220px";
+acc.style.height = "auto";
+
+top.style.width = "520px";
+top.style.height = "auto";
+
+bot.style.width = "480px";
+bot.style.height = "auto";
 
   const hatRow = document.createElement("div");
   hatRow.style.display = "flex";
