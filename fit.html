@@ -20,6 +20,7 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,"San Francisco",Arial,sans-serif;
   color:#111;
   overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
 }
 
 /* Top bar */
@@ -44,6 +45,8 @@ body{
   font-size:22px;
   font-weight:700;
 }
+
+.right-spacer{ justify-self:end; }
 
 /* Stage */
 .stage{
@@ -74,7 +77,7 @@ body{
   cursor:pointer;
 }
 
-/* Layout */
+/* Rows */
 .row-top{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -85,12 +88,14 @@ body{
 
 .row-mid{
   display:flex;
+  align-items:center;
   justify-content:center;
   transform:translateY(-40px);
 }
 
 .row-bot{
   display:flex;
+  align-items:center;
   justify-content:center;
   transform:translateY(-50px);
 }
@@ -102,22 +107,43 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
+  position:relative;
   overflow:hidden;
 }
 
 .slot img{
   max-width:100%;
   max-height:100%;
+  width:auto;
+  height:auto;
   object-fit:contain;
   display:block;
 }
 
-/* Size tuning (on-screen only) */
-.slot.hat img{ max-height:95%; }
-.slot.acc img{ max-height:75%; max-width:75%; }
-.slot.top img{ max-height:79%; }
-.slot.bottom img{ max-height:92%; }
+/* Size adjustments */
+.slot.hat img{
+  max-height:95%;
+}
 
+.slot.acc img{
+  max-height:75%;
+  max-width:75%;
+}
+
+.slot.top img{
+  max-height:79%;
+}
+
+.slot.bottom img{
+  max-height:92%;
+}
+
+.blankHint{
+  position:absolute;
+  font-size:12px;
+  color:#bbb;
+  opacity:0;
+}
 </style>
 </head>
 
@@ -137,16 +163,29 @@ body{
 </div>
 
 <div class="row-top">
-<div class="slot hat"><img id="hatImg"></div>
-<div class="slot acc"><img id="accImg"></div>
+
+<div class="slot hat" id="hatSlot">
+<span class="blankHint">Hat</span>
+<img id="hatImg">
+</div>
+
+<div class="slot acc" id="accSlot">
+<span class="blankHint">Accessory</span>
+<img id="accImg">
+</div>
+
 </div>
 
 <div class="row-mid">
-<div class="slot top"><img id="topImg"></div>
+<div class="slot top" id="topSlot">
+<img id="topImg">
+</div>
 </div>
 
 <div class="row-bot">
-<div class="slot bottom"><img id="botImg"></div>
+<div class="slot bottom" id="botSlot">
+<img id="botImg">
+</div>
 </div>
 
 </div>
@@ -155,96 +194,153 @@ body{
 
 <script>
 
-const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
+const sheetURL =
+"https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 
-let tops=[], bottoms=[], hats=[], accs=[];
+let tops=[];
+let bottoms=[];
+let hats=[];
+let accs=[];
+
 const BLANK={name:"",src:""};
 
-let idxTop=0, idxBot=0, idxHat=0, idxAcc=0;
+let idxTop=Number(localStorage.getItem("fitTop"))||0;
+let idxBot=Number(localStorage.getItem("fitBot"))||0;
+let idxHat=Number(localStorage.getItem("fitHat"))||0;
+let idxAcc=Number(localStorage.getItem("fitAcc"))||0;
+
+/* DOM references (fix for iOS bug) */
 
 const topImg=document.getElementById("topImg");
 const botImg=document.getElementById("botImg");
 const hatImg=document.getElementById("hatImg");
 const accImg=document.getElementById("accImg");
 
-function setImg(img,src){
-  if(!src){
-    img.style.display="none";
-  }else{
-    img.src=src;
-    img.style.display="block";
-  }
+const topSlot=document.getElementById("topSlot");
+const botSlot=document.getElementById("botSlot");
+const hatSlot=document.getElementById("hatSlot");
+const accSlot=document.getElementById("accSlot");
+
+function setImg(img,slot,src){
+
+const s=(src||"").trim();
+
+if(!s){
+img.removeAttribute("src");
+img.style.display="none";
+slot.classList.add("blank");
+}else{
+img.src=s;
+img.style.display="block";
+slot.classList.remove("blank");
+}
+
 }
 
 function render(){
-  setImg(topImg,tops[idxTop]?.src);
-  setImg(botImg,bottoms[idxBot]?.src);
-  setImg(hatImg,hats[idxHat]?.src);
-  setImg(accImg,accs[idxAcc]?.src);
+
+localStorage.setItem("fitTop",idxTop);
+localStorage.setItem("fitBot",idxBot);
+localStorage.setItem("fitHat",idxHat);
+localStorage.setItem("fitAcc",idxAcc);
+
+setImg(topImg,topSlot,tops[idxTop]?.src);
+setImg(botImg,botSlot,bottoms[idxBot]?.src);
+setImg(hatImg,hatSlot,hats[idxHat]?.src);
+setImg(accImg,accSlot,accs[idxAcc]?.src);
+
 }
 
-function rand(n){ return Math.floor(Math.random()*n); }
+function attachSwipe(slot,getList,getIndex,setIndex){
+
+let startX=0;
+
+slot.addEventListener("touchstart",e=>{
+startX=e.touches[0].clientX;
+},{passive:true});
+
+slot.addEventListener("touchend",e=>{
+
+let dx=e.changedTouches[0].clientX-startX;
+
+if(Math.abs(dx)<40) return;
+
+let list=getList();
+
+if(list.length<=1) return;
+
+let cur=getIndex();
+
+if(dx<0) setIndex((cur+1)%list.length);
+else setIndex((cur-1+list.length)%list.length);
+
+render();
+
+},{passive:true});
+
+}
+
+function rand(n){
+return Math.floor(Math.random()*n);
+}
 
 function randomize(){
-  if(tops.length) idxTop=rand(tops.length);
-  if(bottoms.length) idxBot=rand(bottoms.length);
-  if(hats.length) idxHat=rand(hats.length);
-  if(accs.length) idxAcc=rand(accs.length);
-  render();
+
+if(tops.length) idxTop=rand(tops.length);
+if(bottoms.length) idxBot=rand(bottoms.length);
+if(hats.length) idxHat=rand(hats.length);
+if(accs.length) idxAcc=rand(accs.length);
+
+render();
+
 }
 
-/* ✅ FIXED SAVE FUNCTION */
 async function saveFit(){
 
-  const controls=document.querySelector(".fit-controls");
-  controls.style.display="none";
+  const stage = document.getElementById("capture");
+  const controls = document.querySelector(".fit-controls");
 
-  const exportBox=document.createElement("div");
+  /* hide buttons */
+  controls.style.display = "none";
 
-  exportBox.style.position="fixed";
-  exportBox.style.left="-9999px";
-  exportBox.style.width="1080px";
-  exportBox.style.height="1920px";
-  exportBox.style.background="#fff";
+  /* create clean export container */
+  const exportBox = document.createElement("div");
 
-  exportBox.style.display="flex";
-  exportBox.style.flexDirection="column";
-  exportBox.style.alignItems="center";
-  exportBox.style.justifyContent="center";
-  exportBox.style.gap="70px";
+  exportBox.style.position = "fixed";
+  exportBox.style.left = "-9999px";
+  exportBox.style.top = "-9999px";
+  exportBox.style.width = "1080px";
+  exportBox.style.height = "1920px";
+  exportBox.style.background = "#ffffff";
 
-  const hat=hatImg.cloneNode();
-  const acc=accImg.cloneNode();
-  const top=topImg.cloneNode();
-  const bot=botImg.cloneNode();
+  exportBox.style.display = "flex";
+  exportBox.style.flexDirection = "column";
+  exportBox.style.alignItems = "center";
+  exportBox.style.justifyContent = "center";
+  exportBox.style.gap = "70px";
 
-  const baseWidth=1080;
+  /* clone the clothing pieces only */
+const hat = hatImg.cloneNode();
+const acc = accImg.cloneNode();
+const top = topImg.cloneNode();
+const bot = botImg.cloneNode();
 
-  /* ✅ correct scaling */
-  hat.style.width=baseWidth*0.22+"px";
-  acc.style.width=baseWidth*0.22+"px";
-  top.style.width=baseWidth*0.55+"px";
-  bot.style.width=baseWidth*0.55+"px";
+const baseWidth = 1080; // same as export width
 
-  [hat,acc,top,bot].forEach(img=>{
-    img.style.height="auto";
-    img.style.objectFit="contain";
-    img.style.display="block";
-  });
+hat.style.width = baseWidth * 0.58 + "px";
+acc.style.width = baseWidth * 0.45 + "px";
 
-  function wrap(img){
-    const box=document.createElement("div");
-    box.style.display="flex";
-    box.style.alignItems="center";
-    box.style.justifyContent="center";
-    return box.appendChild(img).parentNode;
-  }
+top.style.width = baseWidth * 0.55 + "px";
+bot.style.width = "auto";
+bot.style.height = baseWidth * 0.38 + "px";
+bot.style.objectFit = "contain";
+hat.style.height = acc.style.height = top.style.height = bot.style.height = "auto";
 
-  const hatRow=document.createElement("div");
-  hatRow.style.display="flex";
-  hatRow.style.gap="100px";
-  hatRow.appendChild(wrap(hat));
-  hatRow.appendChild(wrap(acc));
+  const hatRow = document.createElement("div");
+  hatRow.style.display = "flex";
+  hatRow.style.gap = "100px";
+  hatRow.appendChild(hat);
+  hatRow.appendChild(acc);
 
   exportBox.appendChild(hatRow);
   exportBox.appendChild(top);
@@ -252,19 +348,29 @@ async function saveFit(){
 
   document.body.appendChild(exportBox);
 
-  const canvas=await html2canvas(exportBox,{
-    backgroundColor:"#fff",
+  const canvas = await html2canvas(exportBox,{
+    backgroundColor:"#ffffff",
     scale:2,
     useCORS:true
   });
 
   document.body.removeChild(exportBox);
-  controls.style.display="flex";
 
-  const link=document.createElement("a");
-  link.href=canvas.toDataURL();
-  link.download="fit.png";
+  controls.style.display = "flex";
+
+  const now = new Date();
+  const date =
+    now.getFullYear()+"-"+
+    String(now.getMonth()+1).padStart(2,"0")+"-"+
+    String(now.getDate()).padStart(2,"0");
+
+  const link = document.createElement("a");
+  link.href = canvas.toDataURL("image/png");
+  link.download = `fit-${date}.png`;
+
+  document.body.appendChild(link);
   link.click();
+  document.body.removeChild(link);
 }
 
 document.getElementById("randomBtn").onclick=randomize;
@@ -273,19 +379,30 @@ document.getElementById("saveBtn").onclick=saveFit;
 fetch(sheetURL)
 .then(r=>r.text())
 .then(data=>{
-  const rows=data.split("\n").slice(1);
 
-  const items=rows.map(r=>r.split(",")).map(c=>({
-    category:c[2]?.trim(),
-    src:c[8]?.split("|")[0]?.trim()
-  }));
+const rows=data.split("\n").slice(1);
 
-  tops=items.filter(i=>i.category==="Tops");
-  bottoms=items.filter(i=>i.category==="Bottoms");
-  hats=[BLANK,...items.filter(i=>i.category==="Headwear")];
-  accs=[BLANK,...items.filter(i=>i.category==="Accessories")];
+const items=rows.map(r=>r.split(",")).map(c=>({
 
-  render();
+name:c[1]?.trim(),
+category:c[2]?.trim(),
+src:c[8]?.split("|")[0]?.trim()
+
+}));
+
+tops=items.filter(i=>i.category==="Tops");
+bottoms=items.filter(i=>i.category==="Bottoms");
+
+hats=[BLANK,...items.filter(i=>i.category==="Headwear")];
+accs=[BLANK,...items.filter(i=>i.category==="Accessories")];
+
+render();
+
+attachSwipe(topSlot,()=>tops,()=>idxTop,v=>idxTop=v);
+attachSwipe(botSlot,()=>bottoms,()=>idxBot,v=>idxBot=v);
+attachSwipe(hatSlot,()=>hats,()=>idxHat,v=>idxHat=v);
+attachSwipe(accSlot,()=>accs,()=>idxAcc,v=>idxAcc=v);
+
 });
 
 </script>
