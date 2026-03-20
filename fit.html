@@ -1,74 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Build a Fit</title>
+
+<style>
+:root{
+  --red:#e10600;
+  --pad:16px;
+  --topbar-h:64px;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  background:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,"San Francisco",Arial,sans-serif;
+  color:#111;
+  overflow:hidden;
+}
+
+/* Top bar */
+.topbar{
+  height:var(--topbar-h);
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:center;
+  padding:0 var(--pad);
+}
+
+.back{
+  justify-self:start;
+  color:var(--red);
+  font-weight:600;
+  text-decoration:none;
+  font-size:18px;
+}
+
+.title{
+  justify-self:center;
+  font-size:22px;
+  font-weight:700;
+}
+
+/* Stage */
+.stage{
+  position:relative;
+  height:calc(100vh - var(--topbar-h));
+  padding:10px var(--pad) 18px;
+  display:grid;
+  grid-template-rows:28% 38% 34%;
+  row-gap:10px;
+}
+
+/* Buttons */
+.fit-controls{
+  position:absolute;
+  left:var(--pad);
+  right:var(--pad);
+  top:8px;
+  display:flex;
+  justify-content:space-between;
+}
+
+.fit-btn{
+  background:transparent;
+  border:0;
+  color:var(--red);
+  font-size:18px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* Layout */
+.row-top{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  column-gap:18px;
+  align-items:center;
+  padding-top:32px;
+}
+
+.row-mid{
+  display:flex;
+  justify-content:center;
+  transform:translateY(-40px);
+}
+
+.row-bot{
+  display:flex;
+  justify-content:center;
+  transform:translateY(-50px);
+}
+
+/* Slots */
+.slot{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+.slot img{
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  display:block;
+}
+
+/* Size tuning (on-screen only) */
+.slot.hat img{ max-height:95%; }
+.slot.acc img{ max-height:75%; max-width:75%; }
+.slot.top img{ max-height:79%; }
+.slot.bottom img{ max-height:92%; }
+
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+<a class="back" href="index.html">← Back</a>
+<div class="title">Build a Fit</div>
+<div></div>
+</div>
+
+<div class="stage" id="capture">
+
+<div class="fit-controls">
+<button class="fit-btn" id="randomBtn">Random</button>
+<button class="fit-btn" id="saveBtn">Save</button>
+</div>
+
+<div class="row-top">
+<div class="slot hat"><img id="hatImg"></div>
+<div class="slot acc"><img id="accImg"></div>
+</div>
+
+<div class="row-mid">
+<div class="slot top"><img id="topImg"></div>
+</div>
+
+<div class="row-bot">
+<div class="slot bottom"><img id="botImg"></div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 <script>
+
+const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
+
+let tops=[], bottoms=[], hats=[], accs=[];
+const BLANK={name:"",src:""};
+
+let idxTop=0, idxBot=0, idxHat=0, idxAcc=0;
+
+const topImg=document.getElementById("topImg");
+const botImg=document.getElementById("botImg");
+const hatImg=document.getElementById("hatImg");
+const accImg=document.getElementById("accImg");
+
+function setImg(img,src){
+  if(!src){
+    img.style.display="none";
+  }else{
+    img.src=src;
+    img.style.display="block";
+  }
+}
+
+function render(){
+  setImg(topImg,tops[idxTop]?.src);
+  setImg(botImg,bottoms[idxBot]?.src);
+  setImg(hatImg,hats[idxHat]?.src);
+  setImg(accImg,accs[idxAcc]?.src);
+}
+
+function rand(n){ return Math.floor(Math.random()*n); }
+
+function randomize(){
+  if(tops.length) idxTop=rand(tops.length);
+  if(bottoms.length) idxBot=rand(bottoms.length);
+  if(hats.length) idxHat=rand(hats.length);
+  if(accs.length) idxAcc=rand(accs.length);
+  render();
+}
+
+/* ✅ FIXED SAVE FUNCTION */
 async function saveFit(){
 
-  const controls = document.querySelector(".fit-controls");
+  const controls=document.querySelector(".fit-controls");
+  controls.style.display="none";
 
-  /* hide buttons */
-  controls.style.display = "none";
+  const exportBox=document.createElement("div");
 
-  /* create clean export container */
-  const exportBox = document.createElement("div");
+  exportBox.style.position="fixed";
+  exportBox.style.left="-9999px";
+  exportBox.style.width="1080px";
+  exportBox.style.height="1920px";
+  exportBox.style.background="#fff";
 
-  exportBox.style.position = "fixed";
-  exportBox.style.left = "-9999px";
-  exportBox.style.top = "-9999px";
-  exportBox.style.width = "1080px";
-  exportBox.style.height = "1920px";
-  exportBox.style.background = "#ffffff";
+  exportBox.style.display="flex";
+  exportBox.style.flexDirection="column";
+  exportBox.style.alignItems="center";
+  exportBox.style.justifyContent="center";
+  exportBox.style.gap="70px";
 
-  exportBox.style.display = "flex";
-  exportBox.style.flexDirection = "column";
-  exportBox.style.alignItems = "center";
-  exportBox.style.justifyContent = "center";
-  exportBox.style.gap = "70px";
+  const hat=hatImg.cloneNode();
+  const acc=accImg.cloneNode();
+  const top=topImg.cloneNode();
+  const bot=botImg.cloneNode();
 
-  /* clone images */
-  const hat = hatImg.cloneNode();
-  const acc = accImg.cloneNode();
-  const top = topImg.cloneNode();
-  const bot = botImg.cloneNode();
+  const baseWidth=1080;
 
-  const baseWidth = 1080;
+  /* ✅ correct scaling */
+  hat.style.width=baseWidth*0.22+"px";
+  acc.style.width=baseWidth*0.22+"px";
+  top.style.width=baseWidth*0.55+"px";
+  bot.style.width=baseWidth*0.55+"px";
 
-  /* ✅ CLEAN SIZING (NO STRETCHING) */
+  [hat,acc,top,bot].forEach(img=>{
+    img.style.height="auto";
+    img.style.objectFit="contain";
+    img.style.display="block";
+  });
 
-  // Hat
-  hat.style.width = baseWidth * 0.22 + "px";
-  hat.style.height = "auto";
-  hat.style.objectFit = "contain";
-  hat.style.display = "block";
-
-  // Accessory
-  acc.style.width = baseWidth * 0.22 + "px";
-  acc.style.height = "auto";
-  acc.style.objectFit = "contain";
-  acc.style.display = "block";
-
-  // Top
-  top.style.width = baseWidth * 0.55 + "px";
-  top.style.height = "auto";
-  top.style.objectFit = "contain";
-  top.style.display = "block";
-
-  // Bottom (FIXED — no more size inconsistency)
-  bot.style.width = baseWidth * 0.55 + "px";
-  bot.style.height = "auto";
-  bot.style.objectFit = "contain";
-  bot.style.display = "block";
-
-  /* ✅ WRAPPER (prevents flex distortion) */
   function wrap(img){
-    const box = document.createElement("div");
-    box.style.display = "flex";
-    box.style.alignItems = "center";
-    box.style.justifyContent = "center";
+    const box=document.createElement("div");
+    box.style.display="flex";
+    box.style.alignItems="center";
+    box.style.justifyContent="center";
     return box.appendChild(img).parentNode;
   }
 
-  /* top row */
-  const hatRow = document.createElement("div");
-  hatRow.style.display = "flex";
-  hatRow.style.gap = "100px";
+  const hatRow=document.createElement("div");
+  hatRow.style.display="flex";
+  hatRow.style.gap="100px";
   hatRow.appendChild(wrap(hat));
   hatRow.appendChild(wrap(acc));
 
@@ -78,29 +252,43 @@ async function saveFit(){
 
   document.body.appendChild(exportBox);
 
-  const canvas = await html2canvas(exportBox,{
-    backgroundColor:"#ffffff",
+  const canvas=await html2canvas(exportBox,{
+    backgroundColor:"#fff",
     scale:2,
     useCORS:true
   });
 
   document.body.removeChild(exportBox);
+  controls.style.display="flex";
 
-  controls.style.display = "flex";
-
-  /* download */
-  const now = new Date();
-  const date =
-    now.getFullYear()+"-"+
-    String(now.getMonth()+1).padStart(2,"0")+"-"+
-    String(now.getDate()).padStart(2,"0");
-
-  const link = document.createElement("a");
-  link.href = canvas.toDataURL("image/png");
-  link.download = `fit-${date}.png`;
-
-  document.body.appendChild(link);
+  const link=document.createElement("a");
+  link.href=canvas.toDataURL();
+  link.download="fit.png";
   link.click();
-  document.body.removeChild(link);
 }
+
+document.getElementById("randomBtn").onclick=randomize;
+document.getElementById("saveBtn").onclick=saveFit;
+
+fetch(sheetURL)
+.then(r=>r.text())
+.then(data=>{
+  const rows=data.split("\n").slice(1);
+
+  const items=rows.map(r=>r.split(",")).map(c=>({
+    category:c[2]?.trim(),
+    src:c[8]?.split("|")[0]?.trim()
+  }));
+
+  tops=items.filter(i=>i.category==="Tops");
+  bottoms=items.filter(i=>i.category==="Bottoms");
+  hats=[BLANK,...items.filter(i=>i.category==="Headwear")];
+  accs=[BLANK,...items.filter(i=>i.category==="Accessories")];
+
+  render();
+});
+
 </script>
+
+</body>
+</html>
