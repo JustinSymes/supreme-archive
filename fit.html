@@ -131,7 +131,7 @@ body{
 }
 
 .slot.top img{
-  max-height:80%;
+  max-height:79%;
 }
 
 .slot.bottom img{
@@ -317,7 +317,7 @@ async function saveFit(){
   exportBox.style.flexDirection = "column";
   exportBox.style.alignItems = "center";
   exportBox.style.justifyContent = "center";
-  exportBox.style.gap = "80px";
+  exportBox.style.gap = "70px";
 
   /* clone the clothing pieces only */
 const hat = hatImg.cloneNode();
@@ -325,18 +325,15 @@ const acc = accImg.cloneNode();
 const top = topImg.cloneNode();
 const bot = botImg.cloneNode();
 
-/* apply correct export sizes */
-hat.style.width = "260px";
-hat.style.height = "auto";
+const baseWidth = 1080; // same as export width
 
-acc.style.width = "220px";
-acc.style.height = "auto";
+hat.style.width = baseWidth * 0.18 + "px";
+acc.style.width = baseWidth * 0.20 + "px";
 
-top.style.width = "520px";
-top.style.height = "auto";
+top.style.width = baseWidth * 0.55 + "px";
+bot.style.width = baseWidth * 0.60 + "px";
 
-bot.style.width = "480px";
-bot.style.height = "auto";
+hat.style.height = acc.style.height = top.style.height = bot.style.height = "auto";
 
   const hatRow = document.createElement("div");
   hatRow.style.display = "flex";
