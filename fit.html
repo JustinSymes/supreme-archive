@@ -331,8 +331,9 @@ hat.style.width = baseWidth * 0.58 + "px";
 acc.style.width = baseWidth * 0.45 + "px";
 
 top.style.width = baseWidth * 0.55 + "px";
-bot.style.width = baseWidth * 0.60 + "px";
-
+bot.style.width = "auto";
+bot.style.height = baseWidth * 0.38 + "px";
+bot.style.objectFit = "contain";
 hat.style.height = acc.style.height = top.style.height = bot.style.height = "auto";
 
   const hatRow = document.createElement("div");
