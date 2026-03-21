@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+  margin:0;
+  font-family:-apple-system;
+  background:#fff;
+}
+
+.header{
+  text-align:center;
+  padding:16px;
+  font-weight:700;
+  font-size:20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  padding:10px;
+}
+
+.card{
+  background:#f8f8f8;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.card img{
+  width:100%;
+  display:block;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">Your Fits</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+
+const fits = JSON.parse(localStorage.getItem("savedFits") || "[]");
+const grid = document.getElementById("grid");
+
+fits.forEach(fit => {
+
+  const card = document.createElement("div");
+  card.className = "card";
+
+  const img = document.createElement("img");
+  img.src = fit.img;
+
+  card.appendChild(img);
+  grid.appendChild(card);
+
+  document.getElementById("fitsBtn").onclick = () => {
+  window.location.href = "fits.html";
+};
+
+});
+
+</script>
+
+</body>
+</html>
