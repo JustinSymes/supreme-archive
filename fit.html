@@ -401,7 +401,6 @@ async function saveFit(){
   exportBox.style.justifyContent = "space-between";
   exportBox.style.padding = "120px 0";
 
-  /* helper to create slot */
   function makeSlot(img, height){
     const slot = document.createElement("div");
     slot.style.width = "80%";
@@ -412,40 +411,29 @@ async function saveFit(){
 
     img.style.maxWidth = "100%";
     img.style.maxHeight = "100%";
-    img.style.width = "auto";
-    img.style.height = "auto";
     img.style.objectFit = "contain";
 
     slot.appendChild(img);
     return slot;
   }
 
-  /* clone images */
   const hat = hatImg.cloneNode();
   const acc = accImg.cloneNode();
   const top = topImg.cloneNode();
   const bot = botImg.cloneNode();
 
-  /* top row */
   const hatRow = document.createElement("div");
   hatRow.style.display = "flex";
   hatRow.style.width = "80%";
   hatRow.style.justifyContent = "space-between";
   hatRow.style.height = "250px";
 
-  const hatSlotExport = makeSlot(hat, 250);
-  const accSlotExport = makeSlot(acc, 250);
-
-  hatRow.appendChild(hatSlotExport);
-  hatRow.appendChild(accSlotExport);
-
-  /* middle + bottom */
-  const topSlotExport = makeSlot(top, 700);
-  const botSlotExport = makeSlot(bot, 700);
+  hatRow.appendChild(makeSlot(hat,250));
+  hatRow.appendChild(makeSlot(acc,250));
 
   exportBox.appendChild(hatRow);
-  exportBox.appendChild(topSlotExport);
-  exportBox.appendChild(botSlotExport);
+  exportBox.appendChild(makeSlot(top,700));
+  exportBox.appendChild(makeSlot(bot,700));
 
   document.body.appendChild(exportBox);
 
@@ -455,7 +443,23 @@ async function saveFit(){
     useCORS:true
   });
 
+  /* save to fits */
   saveFitToGallery(canvas);
+
+  /* download */
+  const now = new Date();
+  const date =
+    now.getFullYear()+"-"+
+    String(now.getMonth()+1).padStart(2,"0")+"-"+
+    String(now.getDate()).padStart(2,"0");
+
+  const link = document.createElement("a");
+  link.href = canvas.toDataURL("image/png");
+  link.download = `fit-${date}.png`;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 
   document.body.removeChild(exportBox);
   controls.style.display = "flex";
