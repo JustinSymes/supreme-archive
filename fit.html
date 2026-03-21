@@ -312,6 +312,74 @@ function saveFitToGallery(canvas){
 
   alert("Saved to Fits 🔥");
 }  
+
+async function saveToGalleryOnly(){
+
+  const controls = document.querySelector(".fit-controls");
+  controls.style.display = "none";
+
+  const exportBox = document.createElement("div");
+
+  exportBox.style.position = "fixed";
+  exportBox.style.left = "-9999px";
+  exportBox.style.top = "-9999px";
+  exportBox.style.width = "1080px";
+  exportBox.style.height = "1920px";
+  exportBox.style.background = "#ffffff";
+
+  exportBox.style.display = "flex";
+  exportBox.style.flexDirection = "column";
+  exportBox.style.alignItems = "center";
+  exportBox.style.justifyContent = "space-between";
+  exportBox.style.padding = "120px 0";
+
+  function makeSlot(img, height){
+    const slot = document.createElement("div");
+    slot.style.width = "80%";
+    slot.style.height = height + "px";
+    slot.style.display = "flex";
+    slot.style.alignItems = "center";
+    slot.style.justifyContent = "center";
+
+    img.style.maxWidth = "100%";
+    img.style.maxHeight = "100%";
+    img.style.objectFit = "contain";
+
+    slot.appendChild(img);
+    return slot;
+  }
+
+  const hat = hatImg.cloneNode();
+  const acc = accImg.cloneNode();
+  const top = topImg.cloneNode();
+  const bot = botImg.cloneNode();
+
+  const hatRow = document.createElement("div");
+  hatRow.style.display = "flex";
+  hatRow.style.width = "80%";
+  hatRow.style.justifyContent = "space-between";
+  hatRow.style.height = "250px";
+
+  hatRow.appendChild(makeSlot(hat,250));
+  hatRow.appendChild(makeSlot(acc,250));
+
+  exportBox.appendChild(hatRow);
+  exportBox.appendChild(makeSlot(top,700));
+  exportBox.appendChild(makeSlot(bot,700));
+
+  document.body.appendChild(exportBox);
+
+  const canvas = await html2canvas(exportBox,{
+    backgroundColor:"#ffffff",
+    scale:2,
+    useCORS:true
+  });
+
+  saveFitToGallery(canvas);
+
+  document.body.removeChild(exportBox);
+  controls.style.display = "flex";
+}
   
 async function saveFit(){
 
@@ -386,9 +454,15 @@ async function saveFit(){
     scale:2,
     useCORS:true
   });
+
+  saveFitToGallery(canvas);
+
+  document.body.removeChild(exportBox);
+  controls.style.display = "flex";
+}
   
   saveFitToGallery(canvas);
-  document.getElementById("saveFitBtn").onclick = saveToGalleryOnly;
+
 
   document.body.removeChild(exportBox);
   controls.style.display = "flex";
@@ -410,6 +484,10 @@ async function saveFit(){
 
 document.getElementById("randomBtn").onclick=randomize;
 document.getElementById("saveBtn").onclick=saveFit;
+document.getElementById("saveFitBtn").onclick = saveToGalleryOnly;
+document.getElementById("fitsBtn").onclick = () => {
+  window.location.href = "fits.html";
+};
 
 fetch(sheetURL)
 .then(r=>r.text())
