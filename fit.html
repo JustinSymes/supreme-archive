@@ -144,6 +144,25 @@ body{
   color:#bbb;
   opacity:0;
 }
+  #toast{
+  position:fixed;
+  bottom:40px;
+  left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:#111;
+  color:#fff;
+  padding:10px 16px;
+  border-radius:20px;
+  font-size:14px;
+  opacity:0;
+  transition:all 0.3s ease;
+  pointer-events:none;
+}
+
+#toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
 </style>
 </head>
 
@@ -299,18 +318,23 @@ render();
 
 function saveFitToGallery(canvas){
 
-  const fits = JSON.parse(localStorage.getItem("savedFits") || "[]");
+  let fits = JSON.parse(localStorage.getItem("savedFits") || "[]");
 
-  const image = canvas.toDataURL("image/png");
+  const image = canvas.toDataURL("image/jpeg", 0.7); // 🔥 compress
 
   fits.unshift({
     img: image,
     date: Date.now()
   });
 
+  // ✅ LIMIT TO 10 FITS (prevents storage crash)
+  if(fits.length > 10){
+    fits = fits.slice(0,10);
+  }
+
   localStorage.setItem("savedFits", JSON.stringify(fits));
 
-  alert("Saved to Fits 🔥");
+  showToast("Saved ✓");
 }  
 
 async function saveToGalleryOnly(){
@@ -393,80 +417,86 @@ async function saveFit(){
   const controls = document.querySelector(".fit-controls");
   controls.style.display = "none";
 
-  const exportBox = document.createElement("div");
+  try {
 
-  exportBox.style.position = "fixed";
-  exportBox.style.left = "-9999px";
-  exportBox.style.top = "-9999px";
-  exportBox.style.width = "1080px";
-  exportBox.style.height = "1920px";
-  exportBox.style.background = "#ffffff";
+    const exportBox = document.createElement("div");
 
-  exportBox.style.display = "flex";
-  exportBox.style.flexDirection = "column";
-  exportBox.style.alignItems = "center";
-  exportBox.style.justifyContent = "space-between";
-  exportBox.style.padding = "120px 0";
+    exportBox.style.position = "fixed";
+    exportBox.style.left = "-9999px";
+    exportBox.style.top = "-9999px";
+    exportBox.style.width = "1080px";
+    exportBox.style.height = "1920px";
+    exportBox.style.background = "#ffffff";
 
-  function makeSlot(img, height){
-    const slot = document.createElement("div");
-    slot.style.width = "80%";
-    slot.style.height = height + "px";
-    slot.style.display = "flex";
-    slot.style.alignItems = "center";
-    slot.style.justifyContent = "center";
+    exportBox.style.display = "flex";
+    exportBox.style.flexDirection = "column";
+    exportBox.style.alignItems = "center";
+    exportBox.style.justifyContent = "space-between";
+    exportBox.style.padding = "120px 0";
 
-    img.style.maxWidth = "100%";
-    img.style.maxHeight = "100%";
-    img.style.objectFit = "contain";
+    function makeSlot(img, height){
+      const slot = document.createElement("div");
+      slot.style.width = "80%";
+      slot.style.height = height + "px";
+      slot.style.display = "flex";
+      slot.style.alignItems = "center";
+      slot.style.justifyContent = "center";
 
-    slot.appendChild(img);
-    return slot;
+      img.style.maxWidth = "100%";
+      img.style.maxHeight = "100%";
+      img.style.objectFit = "contain";
+
+      slot.appendChild(img);
+      return slot;
+    }
+
+    const hat = hatImg.cloneNode();
+    const acc = accImg.cloneNode();
+    const top = topImg.cloneNode();
+    const bot = botImg.cloneNode();
+
+    const hatRow = document.createElement("div");
+    hatRow.style.display = "flex";
+    hatRow.style.width = "80%";
+    hatRow.style.justifyContent = "space-between";
+    hatRow.style.height = "250px";
+
+    hatRow.appendChild(makeSlot(hat,250));
+    hatRow.appendChild(makeSlot(acc,250));
+
+    exportBox.appendChild(hatRow);
+    exportBox.appendChild(makeSlot(top,700));
+    exportBox.appendChild(makeSlot(bot,700));
+
+    document.body.appendChild(exportBox);
+
+    const canvas = await html2canvas(exportBox,{
+      backgroundColor:"#ffffff",
+      scale:2,
+      useCORS:true
+    });
+
+    const now = new Date();
+    const date =
+      now.getFullYear()+"-"+
+      String(now.getMonth()+1).padStart(2,"0")+"-"+
+      String(now.getDate()).padStart(2,"0");
+
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = `fit-${date}.png`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    document.body.removeChild(exportBox);
+
+  } catch(err){
+    console.error(err);
+  } finally {
+    controls.style.display = "flex";
   }
-
-  const hat = hatImg.cloneNode();
-  const acc = accImg.cloneNode();
-  const top = topImg.cloneNode();
-  const bot = botImg.cloneNode();
-
-  const hatRow = document.createElement("div");
-  hatRow.style.display = "flex";
-  hatRow.style.width = "80%";
-  hatRow.style.justifyContent = "space-between";
-  hatRow.style.height = "250px";
-
-  hatRow.appendChild(makeSlot(hat,250));
-  hatRow.appendChild(makeSlot(acc,250));
-
-  exportBox.appendChild(hatRow);
-  exportBox.appendChild(makeSlot(top,700));
-  exportBox.appendChild(makeSlot(bot,700));
-
-  document.body.appendChild(exportBox);
-
-  const canvas = await html2canvas(exportBox,{
-    backgroundColor:"#ffffff",
-    scale:2,
-    useCORS:true
-  });
-
-  /* download */
-  const now = new Date();
-  const date =
-    now.getFullYear()+"-"+
-    String(now.getMonth()+1).padStart(2,"0")+"-"+
-    String(now.getDate()).padStart(2,"0");
-
-  const link = document.createElement("a");
-  link.href = canvas.toDataURL("image/png");
-  link.download = `fit-${date}.png`;
-
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  document.body.removeChild(exportBox);
-  controls.style.display = "flex";
 }
 
 document.getElementById("randomBtn").onclick=randomize;
@@ -503,9 +533,19 @@ attachSwipe(botSlot,()=>bottoms,()=>idxBot,v=>idxBot=v);
 attachSwipe(hatSlot,()=>hats,()=>idxHat,v=>idxHat=v);
 attachSwipe(accSlot,()=>accs,()=>idxAcc,v=>idxAcc=v);
 
-});
+}); 
 
+  function showToast(text){
+  const toast = document.getElementById("toast");
+  toast.textContent = text;
+  toast.classList.add("show");
+
+  setTimeout(()=>{
+    toast.classList.remove("show");
+  },2000);
+}
+  
 </script>
-
+<div id="toast">Saved ✓</div>
 </body>
 </html>
