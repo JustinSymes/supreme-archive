@@ -46,8 +46,6 @@ body{
   font-weight:700;
 }
 
-.right-spacer{ justify-self:end; }
-
 /* Stage */
 .stage{
   position:relative;
@@ -74,10 +72,9 @@ body{
   color:var(--red);
   font-size:18px;
   font-weight:700;
-  cursor:pointer;
 }
 
-/* Rows */
+/* Layout */
 .row-top{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -86,19 +83,15 @@ body{
   padding-top:32px;
 }
 
-.row-mid{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transform:translateY(-40px);
-}
-
+.row-mid,
 .row-bot{
   display:flex;
   align-items:center;
   justify-content:center;
-  transform:translateY(-50px);
 }
+
+.row-mid{ transform:translateY(-40px); }
+.row-bot{ transform:translateY(-50px); }
 
 /* Slots */
 .slot{
@@ -107,42 +100,12 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  position:relative;
-  overflow:hidden;
 }
 
 .slot img{
   max-width:100%;
   max-height:100%;
-  width:auto;
-  height:auto;
   object-fit:contain;
-  display:block;
-}
-
-/* Size adjustments */
-.slot.hat img{
-  max-height:95%;
-}
-
-.slot.acc img{
-  max-height:75%;
-  max-width:75%;
-}
-
-.slot.top img{
-  max-height:79%;
-}
-
-.slot.bottom img{
-  max-height:92%;
-}
-
-.blankHint{
-  position:absolute;
-  font-size:12px;
-  color:#bbb;
-  opacity:0;
 }
 </style>
 </head>
@@ -163,29 +126,16 @@ body{
 </div>
 
 <div class="row-top">
-
-<div class="slot hat" id="hatSlot">
-<span class="blankHint">Hat</span>
-<img id="hatImg">
-</div>
-
-<div class="slot acc" id="accSlot">
-<span class="blankHint">Accessory</span>
-<img id="accImg">
-</div>
-
+<div class="slot"><img id="hatImg"></div>
+<div class="slot"><img id="accImg"></div>
 </div>
 
 <div class="row-mid">
-<div class="slot top" id="topSlot">
-<img id="topImg">
-</div>
+<div class="slot"><img id="topImg"></div>
 </div>
 
 <div class="row-bot">
-<div class="slot bottom" id="botSlot">
-<img id="botImg">
-</div>
+<div class="slot"><img id="botImg"></div>
 </div>
 
 </div>
@@ -197,194 +147,119 @@ body{
 const sheetURL =
 "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 
-let tops=[];
-let bottoms=[];
-let hats=[];
-let accs=[];
-
+let tops=[], bottoms=[], hats=[], accs=[];
 const BLANK={name:"",src:""};
 
-let idxTop=Number(localStorage.getItem("fitTop"))||0;
-let idxBot=Number(localStorage.getItem("fitBot"))||0;
-let idxHat=Number(localStorage.getItem("fitHat"))||0;
-let idxAcc=Number(localStorage.getItem("fitAcc"))||0;
-
-/* DOM references (fix for iOS bug) */
+let idxTop=0, idxBot=0, idxHat=0, idxAcc=0;
 
 const topImg=document.getElementById("topImg");
 const botImg=document.getElementById("botImg");
 const hatImg=document.getElementById("hatImg");
 const accImg=document.getElementById("accImg");
 
-const topSlot=document.getElementById("topSlot");
-const botSlot=document.getElementById("botSlot");
-const hatSlot=document.getElementById("hatSlot");
-const accSlot=document.getElementById("accSlot");
-
-function setImg(img,slot,src){
-
-const s=(src||"").trim();
-
-if(!s){
-img.removeAttribute("src");
-img.style.display="none";
-slot.classList.add("blank");
-}else{
-img.src=s;
-img.style.display="block";
-slot.classList.remove("blank");
-}
-
+function setImg(img,src){
+  if(!src){
+    img.style.display="none";
+  }else{
+    img.src=src;
+    img.style.display="block";
+  }
 }
 
 function render(){
-
-localStorage.setItem("fitTop",idxTop);
-localStorage.setItem("fitBot",idxBot);
-localStorage.setItem("fitHat",idxHat);
-localStorage.setItem("fitAcc",idxAcc);
-
-setImg(topImg,topSlot,tops[idxTop]?.src);
-setImg(botImg,botSlot,bottoms[idxBot]?.src);
-setImg(hatImg,hatSlot,hats[idxHat]?.src);
-setImg(accImg,accSlot,accs[idxAcc]?.src);
-
+  setImg(topImg,tops[idxTop]?.src);
+  setImg(botImg,bottoms[idxBot]?.src);
+  setImg(hatImg,hats[idxHat]?.src);
+  setImg(accImg,accs[idxAcc]?.src);
 }
 
-function attachSwipe(slot,getList,getIndex,setIndex){
-
-let startX=0;
-
-slot.addEventListener("touchstart",e=>{
-startX=e.touches[0].clientX;
-},{passive:true});
-
-slot.addEventListener("touchend",e=>{
-
-let dx=e.changedTouches[0].clientX-startX;
-
-if(Math.abs(dx)<40) return;
-
-let list=getList();
-
-if(list.length<=1) return;
-
-let cur=getIndex();
-
-if(dx<0) setIndex((cur+1)%list.length);
-else setIndex((cur-1+list.length)%list.length);
-
-render();
-
-},{passive:true});
-
-}
-
-function rand(n){
-return Math.floor(Math.random()*n);
-}
+function rand(n){ return Math.floor(Math.random()*n); }
 
 function randomize(){
-
-if(tops.length) idxTop=rand(tops.length);
-if(bottoms.length) idxBot=rand(bottoms.length);
-if(hats.length) idxHat=rand(hats.length);
-if(accs.length) idxAcc=rand(accs.length);
-
-render();
-
+  if(tops.length) idxTop=rand(tops.length);
+  if(bottoms.length) idxBot=rand(bottoms.length);
+  if(hats.length) idxHat=rand(hats.length);
+  if(accs.length) idxAcc=rand(accs.length);
+  render();
 }
 
 async function saveFit(){
 
-  const controls = document.querySelector(".fit-controls");
-  controls.style.display = "none";
+  const controls=document.querySelector(".fit-controls");
+  controls.style.display="none";
 
-  const exportBox = document.createElement("div");
+  const exportBox=document.createElement("div");
 
-  exportBox.style.position = "fixed";
-  exportBox.style.left = "-9999px";
-  exportBox.style.top = "-9999px";
-  exportBox.style.width = "1080px";
-  exportBox.style.height = "1920px";
-  exportBox.style.background = "#ffffff";
+  exportBox.style.position="fixed";
+  exportBox.style.left="-9999px";
+  exportBox.style.width="1080px";
+  exportBox.style.height="1920px";
+  exportBox.style.background="#fff";
 
-  exportBox.style.display = "flex";
-  exportBox.style.flexDirection = "column";
-  exportBox.style.alignItems = "center";
-  exportBox.style.justifyContent = "space-between";
-  exportBox.style.padding = "120px 0";
+  exportBox.style.display="flex";
+  exportBox.style.flexDirection="column";
+  exportBox.style.alignItems="center";
+  exportBox.style.justifyContent="center";
+  exportBox.style.gap="120px";
 
-  /* helper to create slot */
-  function makeSlot(img, height){
-    const slot = document.createElement("div");
-    slot.style.width = "80%";
-    slot.style.height = height + "px";
-    slot.style.display = "flex";
-    slot.style.alignItems = "center";
-    slot.style.justifyContent = "center";
+  function makeSlot(img,height,scale=1){
+    const slot=document.createElement("div");
+    slot.style.width="80%";
+    slot.style.height=height+"px";
+    slot.style.display="flex";
+    slot.style.alignItems="center";
+    slot.style.justifyContent="center";
 
-    img.style.maxWidth = "100%";
-    img.style.maxHeight = "100%";
-    img.style.width = "auto";
-    img.style.height = "auto";
-    img.style.objectFit = "contain";
+    img.style.maxWidth="100%";
+    img.style.maxHeight="100%";
+    img.style.objectFit="contain";
+
+    /* auto scale fix */
+    let finalScale=scale;
+
+    if(img.naturalWidth && img.naturalWidth < 500){
+      finalScale*=1.2;
+    }
+
+    img.style.transform=`scale(${finalScale})`;
 
     slot.appendChild(img);
     return slot;
   }
 
-  /* clone images */
-  const hat = hatImg.cloneNode();
-  const acc = accImg.cloneNode();
-  const top = topImg.cloneNode();
-  const bot = botImg.cloneNode();
+  const hat=hatImg.cloneNode();
+  const acc=accImg.cloneNode();
+  const top=topImg.cloneNode();
+  const bot=botImg.cloneNode();
 
-  /* top row */
-  const hatRow = document.createElement("div");
-  hatRow.style.display = "flex";
-  hatRow.style.width = "80%";
-  hatRow.style.justifyContent = "space-between";
-  hatRow.style.height = "250px";
+  const hatRow=document.createElement("div");
+  hatRow.style.display="flex";
+  hatRow.style.width="80%";
+  hatRow.style.justifyContent="space-between";
+  hatRow.style.height="250px";
 
-  const hatSlotExport = makeSlot(hat, 250);
-  const accSlotExport = makeSlot(acc, 250);
-
-  hatRow.appendChild(hatSlotExport);
-  hatRow.appendChild(accSlotExport);
-
-  /* middle + bottom */
-  const topSlotExport = makeSlot(top, 700);
-  const botSlotExport = makeSlot(bot, 700);
+  hatRow.appendChild(makeSlot(hat,250,1.05));
+  hatRow.appendChild(makeSlot(acc,250,0.95));
 
   exportBox.appendChild(hatRow);
-  exportBox.appendChild(topSlotExport);
-  exportBox.appendChild(botSlotExport);
+  exportBox.appendChild(makeSlot(top,700,1));
+  exportBox.appendChild(makeSlot(bot,700,1.1));
 
   document.body.appendChild(exportBox);
 
-  const canvas = await html2canvas(exportBox,{
-    backgroundColor:"#ffffff",
+  const canvas=await html2canvas(exportBox,{
+    backgroundColor:"#fff",
     scale:2,
     useCORS:true
   });
 
   document.body.removeChild(exportBox);
-  controls.style.display = "flex";
+  controls.style.display="flex";
 
-  const now = new Date();
-  const date =
-    now.getFullYear()+"-"+
-    String(now.getMonth()+1).padStart(2,"0")+"-"+
-    String(now.getDate()).padStart(2,"0");
-
-  const link = document.createElement("a");
-  link.href = canvas.toDataURL("image/png");
-  link.download = `fit-${date}.png`;
-
-  document.body.appendChild(link);
+  const link=document.createElement("a");
+  link.href=canvas.toDataURL("image/png");
+  link.download="fit.png";
   link.click();
-  document.body.removeChild(link);
 }
 
 document.getElementById("randomBtn").onclick=randomize;
@@ -393,32 +268,20 @@ document.getElementById("saveBtn").onclick=saveFit;
 fetch(sheetURL)
 .then(r=>r.text())
 .then(data=>{
+  const rows=data.split("\n").slice(1);
 
-const rows=data.split("\n").slice(1);
+  const items=rows.map(r=>r.split(",")).map(c=>({
+    category:c[2]?.trim(),
+    src:c[8]?.split("|")[0]?.trim()
+  }));
 
-const items=rows.map(r=>r.split(",")).map(c=>({
+  tops=items.filter(i=>i.category==="Tops");
+  bottoms=items.filter(i=>i.category==="Bottoms");
+  hats=[BLANK,...items.filter(i=>i.category==="Headwear")];
+  accs=[BLANK,...items.filter(i=>i.category==="Accessories")];
 
-name:c[1]?.trim(),
-category:c[2]?.trim(),
-src:c[8]?.split("|")[0]?.trim()
-
-}));
-
-tops=items.filter(i=>i.category==="Tops");
-bottoms=items.filter(i=>i.category==="Bottoms");
-
-hats=[BLANK,...items.filter(i=>i.category==="Headwear")];
-accs=[BLANK,...items.filter(i=>i.category==="Accessories")];
-
-render();
-
-attachSwipe(topSlot,()=>tops,()=>idxTop,v=>idxTop=v);
-attachSwipe(botSlot,()=>bottoms,()=>idxBot,v=>idxBot=v);
-attachSwipe(hatSlot,()=>hats,()=>idxHat,v=>idxHat=v);
-attachSwipe(accSlot,()=>accs,()=>idxAcc,v=>idxAcc=v);
-
+  render();
 });
-
 </script>
 
 </body>
