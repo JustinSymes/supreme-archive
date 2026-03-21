@@ -159,6 +159,8 @@ body{
 
 <div class="fit-controls">
 <button class="fit-btn" id="randomBtn">Random</button>
+<button class="fit-btn" id="fitsBtn">Fits</button>
+<button class="fit-btn" id="saveFitBtn">+ Fit</button> 
 <button class="fit-btn" id="saveBtn">Save</button>
 </div>
 
@@ -295,6 +297,22 @@ render();
 
 }
 
+function saveFitToGallery(canvas){
+
+  const fits = JSON.parse(localStorage.getItem("savedFits") || "[]");
+
+  const image = canvas.toDataURL("image/png");
+
+  fits.unshift({
+    img: image,
+    date: Date.now()
+  });
+
+  localStorage.setItem("savedFits", JSON.stringify(fits));
+
+  alert("Saved to Fits 🔥");
+}  
+  
 async function saveFit(){
 
   const controls = document.querySelector(".fit-controls");
@@ -368,6 +386,9 @@ async function saveFit(){
     scale:2,
     useCORS:true
   });
+  
+  saveFitToGallery(canvas);
+  document.getElementById("saveFitBtn").onclick = saveToGalleryOnly;
 
   document.body.removeChild(exportBox);
   controls.style.display = "flex";
