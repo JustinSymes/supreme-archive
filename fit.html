@@ -297,13 +297,9 @@ render();
 
 async function saveFit(){
 
-  const stage = document.getElementById("capture");
   const controls = document.querySelector(".fit-controls");
-
-  /* hide buttons */
   controls.style.display = "none";
 
-  /* create clean export container */
   const exportBox = document.createElement("div");
 
   exportBox.style.position = "fixed";
@@ -316,35 +312,54 @@ async function saveFit(){
   exportBox.style.display = "flex";
   exportBox.style.flexDirection = "column";
   exportBox.style.alignItems = "center";
-  exportBox.style.justifyContent = "center";
-  exportBox.style.gap = "70px";
+  exportBox.style.justifyContent = "space-between";
+  exportBox.style.padding = "120px 0";
 
-  /* clone the clothing pieces only */
-const hat = hatImg.cloneNode();
-const acc = accImg.cloneNode();
-const top = topImg.cloneNode();
-const bot = botImg.cloneNode();
+  /* helper to create slot */
+  function makeSlot(img, height){
+    const slot = document.createElement("div");
+    slot.style.width = "80%";
+    slot.style.height = height + "px";
+    slot.style.display = "flex";
+    slot.style.alignItems = "center";
+    slot.style.justifyContent = "center";
 
-const baseWidth = 1080; // same as export width
+    img.style.maxWidth = "100%";
+    img.style.maxHeight = "100%";
+    img.style.width = "auto";
+    img.style.height = "auto";
+    img.style.objectFit = "contain";
 
-hat.style.width = baseWidth * 0.58 + "px";
-acc.style.width = baseWidth * 0.35 + "px";
+    slot.appendChild(img);
+    return slot;
+  }
 
-top.style.width = baseWidth * 0.55 + "px";
-bot.style.width = "auto";
-bot.style.height = baseWidth * 0.38 + "px";
-bot.style.objectFit = "contain";
-hat.style.height = acc.style.height = top.style.height = bot.style.height = "auto";
+  /* clone images */
+  const hat = hatImg.cloneNode();
+  const acc = accImg.cloneNode();
+  const top = topImg.cloneNode();
+  const bot = botImg.cloneNode();
 
+  /* top row */
   const hatRow = document.createElement("div");
   hatRow.style.display = "flex";
-  hatRow.style.gap = "100px";
-  hatRow.appendChild(hat);
-  hatRow.appendChild(acc);
+  hatRow.style.width = "80%";
+  hatRow.style.justifyContent = "space-between";
+  hatRow.style.height = "250px";
+
+  const hatSlotExport = makeSlot(hat, 250);
+  const accSlotExport = makeSlot(acc, 250);
+
+  hatRow.appendChild(hatSlotExport);
+  hatRow.appendChild(accSlotExport);
+
+  /* middle + bottom */
+  const topSlotExport = makeSlot(top, 700);
+  const botSlotExport = makeSlot(bot, 700);
 
   exportBox.appendChild(hatRow);
-  exportBox.appendChild(top);
-  exportBox.appendChild(bot);
+  exportBox.appendChild(topSlotExport);
+  exportBox.appendChild(botSlotExport);
 
   document.body.appendChild(exportBox);
 
@@ -355,7 +370,6 @@ hat.style.height = acc.style.height = top.style.height = bot.style.height = "aut
   });
 
   document.body.removeChild(exportBox);
-
   controls.style.display = "flex";
 
   const now = new Date();
