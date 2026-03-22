@@ -333,9 +333,13 @@ function saveFitToGallery(canvas){
   const image = canvas.toDataURL("image/jpeg", 0.7); // 🔥 compress
 
   fits.unshift({
-    img: image,
-    date: Date.now()
-  });
+  img: image,
+  date: Date.now(),
+  top: topImg.src,
+  bottom: botImg.src,
+  hat: hatImg.src,
+  acc: accImg.src
+});
 
   // ✅ LIMIT TO 10 FITS (prevents storage crash)
   if(fits.length >= 10){
@@ -546,6 +550,22 @@ bottoms=items.filter(i=>i.category==="Bottoms");
 
 hats=[BLANK,...items.filter(i=>i.category==="Headwear")];
 accs=[BLANK,...items.filter(i=>i.category==="Accessories")];
+
+  const editFit = JSON.parse(localStorage.getItem("editFit") || "null");
+
+if(editFit){
+  idxTop = tops.findIndex(i => i.src === editFit.top);
+  idxBot = bottoms.findIndex(i => i.src === editFit.bottom);
+  idxHat = hats.findIndex(i => i.src === editFit.hat);
+  idxAcc = accs.findIndex(i => i.src === editFit.acc);
+
+  if(idxTop < 0) idxTop = 0;
+  if(idxBot < 0) idxBot = 0;
+  if(idxHat < 0) idxHat = 0;
+  if(idxAcc < 0) idxAcc = 0;
+
+  localStorage.removeItem("editFit");
+}
 
 render();
 
