@@ -71,23 +71,106 @@ body{
 
 <script>
 
-const fits = JSON.parse(localStorage.getItem("savedFits") || "[]");
+let fits = JSON.parse(localStorage.getItem("savedFits") || "[]");
 const grid = document.getElementById("grid");
 
-fits.forEach(fit => {
+function saveFits(){
+  localStorage.setItem("savedFits", JSON.stringify(fits));
+}
 
-  const card = document.createElement("div");
-  card.className = "card";
+function renderFits(){
+  grid.innerHTML = "";
+
+  fits.forEach((fit, index) => {
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const img = document.createElement("img");
+    img.src = fit.img;
+
+    // 🔍 FULLSCREEN VIEW
+    img.onclick = () => openViewer(index);
+
+    const nameRow = document.createElement("div");
+    nameRow.style.display = "flex";
+    nameRow.style.alignItems = "center";
+    nameRow.style.justifyContent = "space-between";
+    nameRow.style.padding = "6px 8px";
+
+    const name = document.createElement("div");
+    name.textContent = fit.name || "Tap to name";
+    name.style.fontSize = "14px";
+    name.style.cursor = "pointer";
+
+    // ✏️ EDIT NAME
+    name.onclick = () => {
+      const newName = prompt("Name this fit:", fit.name || "");
+      if(newName !== null){
+        fits[index].name = newName;
+        saveFits();
+        renderFits();
+      }
+    };
+
+    // 🗑 DELETE
+    const del = document.createElement("div");
+    del.textContent = "🗑";
+    del.style.cursor = "pointer";
+
+    del.onclick = () => {
+      fits.splice(index,1);
+      saveFits();
+      renderFits();
+    };
+
+    nameRow.appendChild(name);
+    nameRow.appendChild(del);
+
+    card.appendChild(img);
+    card.appendChild(nameRow);
+
+    grid.appendChild(card);
+  });
+}
+
+renderFits();
+
+
+// 🔍 FULLSCREEN VIEW
+function openViewer(index){
+
+  const viewer = document.createElement("div");
+  viewer.style.position = "fixed";
+  viewer.style.top = "0";
+  viewer.style.left = "0";
+  viewer.style.width = "100%";
+  viewer.style.height = "100%";
+  viewer.style.background = "#fff";
+  viewer.style.display = "flex";
+  viewer.style.flexDirection = "column";
+  viewer.style.zIndex = "999";
+
+  const back = document.createElement("div");
+  back.textContent = "← Back";
+  back.style.padding = "16px";
+  back.style.color = "#e10600";
+  back.style.fontWeight = "600";
+  back.style.cursor = "pointer";
+
+  back.onclick = () => document.body.removeChild(viewer);
 
   const img = document.createElement("img");
-  img.src = fit.img;
+  img.src = fits[index].img;
+  img.style.width = "100%";
+  img.style.flex = "1";
+  img.style.objectFit = "contain";
 
-  card.appendChild(img);
-  grid.appendChild(card);
+  viewer.appendChild(back);
+  viewer.appendChild(img);
 
-
-
-});
+  document.body.appendChild(viewer);
+}
 
 </script>
 
