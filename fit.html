@@ -272,6 +272,16 @@ setImg(accImg,accSlot,accs[idxAcc]?.src);
 
 }
 
+function waitForImages(container){
+  const imgs = container.querySelectorAll("img");
+  return Promise.all([...imgs].map(img=>{
+    if(img.complete) return Promise.resolve();
+    return new Promise(res=>{
+      img.onload = img.onerror = res;
+    });
+  }));
+}
+  
 function attachSwipe(slot,getList,getIndex,setIndex){
 
 let startX=0;
@@ -401,6 +411,8 @@ async function saveToGalleryOnly(){
 
     document.body.appendChild(exportBox);
 
+    await waitForImages(exportBox);
+    
     const canvas = await html2canvas(exportBox,{
       backgroundColor:"#ffffff",
       scale:2,
@@ -476,6 +488,8 @@ async function saveFit(){
 
     document.body.appendChild(exportBox);
 
+    await waitForImages(exportBox);
+    
     const canvas = await html2canvas(exportBox,{
       backgroundColor:"#ffffff",
       scale:2,
