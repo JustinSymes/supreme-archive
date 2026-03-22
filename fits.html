@@ -64,13 +64,22 @@ body{
   <div class="title">Your Fits</div>
   <div></div>
 </div>
-  
-<div class="header">Your Fits</div>
 
 <div class="grid" id="grid"></div>
 
 <script>
 
+  function downloadImage(dataUrl){
+  const link = document.createElement("a");
+  link.href = dataUrl;
+  link.download = "fit.png";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+let dragIndex = null;
+  
 let fits = JSON.parse(localStorage.getItem("savedFits") || "[]");
 const grid = document.getElementById("grid");
 
@@ -85,6 +94,26 @@ function renderFits(){
 
     const card = document.createElement("div");
     card.className = "card";
+
+    card.draggable = true;
+
+  card.ondragstart = () => {
+    dragIndex = index;
+  };
+
+  card.ondragover = (e) => {
+    e.preventDefault();
+  };
+
+  card.ondrop = () => {
+    if(dragIndex === null) return;
+
+    const moved = fits.splice(dragIndex,1)[0];
+    fits.splice(index,0,moved);
+
+    saveFits();
+    renderFits();
+  };
 
     const img = document.createElement("img");
     img.src = fit.img;
@@ -151,22 +180,55 @@ function openViewer(index){
   viewer.style.flexDirection = "column";
   viewer.style.zIndex = "999";
 
+  // 🔝 Top bar
+  const topbar = document.createElement("div");
+  topbar.style.display = "flex";
+  topbar.style.justifyContent = "space-between";
+  topbar.style.alignItems = "center";
+  topbar.style.padding = "16px";
+
+  // 🔙 Back
   const back = document.createElement("div");
   back.textContent = "← Back";
-  back.style.padding = "16px";
   back.style.color = "#e10600";
   back.style.fontWeight = "600";
   back.style.cursor = "pointer";
 
   back.onclick = () => document.body.removeChild(viewer);
 
+  // ✏️ Edit Fit
+  const edit = document.createElement("div");
+  edit.textContent = "Edit";
+  edit.style.color = "#e10600";
+  edit.style.fontWeight = "700";
+  edit.style.cursor = "pointer";
+
+  edit.onclick = () => {
+    localStorage.setItem("editFit", JSON.stringify(fits[index]));
+    window.location.href = "fit.html";
+  };
+
+  // 💾 Save Image
+  const save = document.createElement("div");
+  save.textContent = "Save";
+  save.style.color = "#e10600";
+  save.style.fontWeight = "700";
+  save.style.cursor = "pointer";
+
+  save.onclick = () => downloadImage(fits[index].img);
+
+  topbar.appendChild(back);
+  topbar.appendChild(edit);
+  topbar.appendChild(save);
+
+  // 🖼 Image
   const img = document.createElement("img");
   img.src = fits[index].img;
   img.style.width = "100%";
   img.style.flex = "1";
   img.style.objectFit = "contain";
 
-  viewer.appendChild(back);
+  viewer.appendChild(topbar);
   viewer.appendChild(img);
 
   document.body.appendChild(viewer);
