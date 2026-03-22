@@ -375,10 +375,16 @@ async function saveToGalleryOnly(){
       return slot;
     }
 
-    const hat = hatImg.cloneNode();
-    const acc = accImg.cloneNode();
-    const top = topImg.cloneNode();
-    const bot = botImg.cloneNode();
+    function cloneImageWithSrc(original){
+  const img = document.createElement("img");
+  img.src = original.src || "";
+  return img;
+}
+
+    const hat = cloneImageWithSrc(hatImg);
+    const acc = cloneImageWithSrc(accImg);
+    const top = cloneImageWithSrc(topImg);
+    const bot = cloneImageWithSrc(botImg);
 
     const hatRow = document.createElement("div");
     hatRow.style.display = "flex";
