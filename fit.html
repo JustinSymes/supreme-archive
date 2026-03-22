@@ -338,9 +338,10 @@ function saveFitToGallery(canvas){
   });
 
   // ✅ LIMIT TO 10 FITS (prevents storage crash)
-  if(fits.length > 10){
-    fits = fits.slice(0,10);
-  }
+  if(fits.length >= 10){
+  showToast("Max Fits Reached");
+  return;
+}
 
   localStorage.setItem("savedFits", JSON.stringify(fits));
 
