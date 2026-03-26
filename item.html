@@ -233,10 +233,7 @@ container.addEventListener("touchend", e => {
   if (endX < startX - 50) setIndex(index + 1);
   if (endX > startX + 50) setIndex(index - 1);
 });
-    const endX = e.changedTouches[0].clientX;
-    if (endX < startX - 50) setIndex(index + 1);
-    if (endX > startX + 50) setIndex(index - 1);
-  });
+  
 }
 </script>
 
