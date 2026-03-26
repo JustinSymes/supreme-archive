@@ -284,28 +284,45 @@ function waitForImages(container){
   
 function attachSwipe(slot,getList,getIndex,setIndex){
 
-let startX=0;
+let startX = 0;
+let startY = 0;
+let isHorizontal = false;
 
-slot.addEventListener("touchstart",e=>{
-startX=e.touches[0].clientX;
+slot.addEventListener("touchstart", e=>{
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+  isHorizontal = false;
 },{passive:true});
 
-slot.addEventListener("touchend",e=>{
+slot.addEventListener("touchmove", e=>{
+  const dx = e.touches[0].clientX - startX;
+  const dy = e.touches[0].clientY - startY;
 
-let dx=e.changedTouches[0].clientX-startX;
+  // detect direction
+  if(Math.abs(dx) > Math.abs(dy)){
+    isHorizontal = true;
+    e.preventDefault(); // 🔥 stops page scroll ONLY for horizontal swipe
+  }
 
-if(Math.abs(dx)<40) return;
+},{passive:false}); // 🔥 important
 
-let list=getList();
+slot.addEventListener("touchend", e=>{
 
-if(list.length<=1) return;
+  if(!isHorizontal) return;
 
-let cur=getIndex();
+  let dx = e.changedTouches[0].clientX - startX;
 
-if(dx<0) setIndex((cur+1)%list.length);
-else setIndex((cur-1+list.length)%list.length);
+  if(Math.abs(dx) < 40) return;
 
-render();
+  let list = getList();
+  if(list.length <= 1) return;
+
+  let cur = getIndex();
+
+  if(dx < 0) setIndex((cur+1)%list.length);
+  else setIndex((cur-1+list.length)%list.length);
+
+  render();
 
 },{passive:true});
 
