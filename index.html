@@ -4,35 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Supreme Archive</title>
+
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
+
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Supreme Archive">
+
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  overflow-x: hidden;
-  background: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "San Francisco", sans-serif;
-}
-.header{
-  padding: 20px;
-  position: relative;
-  text-align: center;
-  font-size: 24px;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 800;
-  font-style: italic;
-  letter-spacing: -0.5px;
+body{
+  margin:0;
+  background:#fff;
+  font-family:-apple-system;
 }
 
-.header .title{
-  display:inline-block;
+.header{
+  padding:20px;
+  text-align:center;
+  font-size:24px;
+  font-family:'Montserrat', sans-serif;
+  font-weight:800;
+  font-style:italic;
 }
 
 .counter-row{
@@ -46,6 +42,14 @@ html, body {
 .counter{
   color:#e10600;
   font-weight:600;
+}
+
+.add-link{
+  position:absolute;
+  left:18px;
+  color:#e10600;
+  font-weight:700;
+  text-decoration:none;
 }
 
 .fit-link{
@@ -54,140 +58,101 @@ html, body {
   color:#e10600;
   font-weight:700;
   text-decoration:none;
-  font-size:16px;
-  letter-spacing:0.5px;
 }
-.counter { text-align:center; color:#e10600; margin-bottom:10px; }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  padding: 18px;
-  width: 100%;
-  box-sizing: border-box;
+
+.category-bar{
+  display:flex;
+  gap:15px;
+  overflow:auto;
+  padding:10px 20px;
+  border-bottom:1px solid #eee;
 }
-.card {
-  text-align:center;
+
+.category{
+  color:#e10600;
   cursor:pointer;
 }
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+  padding:18px;
+}
+
+.card{
+  text-align:center;
+}
+
 .thumb{
-  width:100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio:1/1;
   display:flex;
   align-items:center;
   justify-content:center;
-  overflow:hidden;
 }
 
 .thumb img{
   width:100%;
   height:100%;
   object-fit:contain;
-  display:block;
 }
-  img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-}
-.card .name {
+
+.name{
   margin-top:12px;
-  font-size:18px;
-  line-height:1.3;
-  font-family: 'Special Elite', monospace;
-  letter-spacing: 1px;
-}
-.category-bar { display:flex; overflow:auto; gap:15px; padding:10px 20px; border-bottom:1px solid #eee; }
-.category { cursor:pointer; color:#e10600; }
-.counter-row{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  position:relative;
-  margin-bottom:10px;
+  font-family:'Special Elite', monospace;
 }
 
-.counter{
-  color:#e10600;
-  font-weight:600;
-}
-
-.fit-btn{
-  position:absolute;
-  right:18px;
-  width:36px;
-  height:36px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.fit-svg{
-  width:26px;
-  height:26px;
-  fill:#e10600;
-}
-
-  .add-link{
-  position:absolute;
-  left:18px;
-  color:#e10600;
-  font-weight:700;
-  text-decoration:none;
-  font-size:16px;
-}
-
-  #trashBin{
+/* 🔥 TRASH */
+#trashBin{
   position:fixed;
-  bottom:-100px;
   left:50%;
-  transform:translateX(-50%);
-  width:80px;
-  height:80px;
+  bottom:-120px;
+  transform:translateX(-50%) scale(1);
+  width:84px;
+  height:84px;
   background:#e10600;
   color:#fff;
-  font-size:30px;
+  font-size:32px;
   display:flex;
   align-items:center;
   justify-content:center;
-  border-radius:20px;
-  transition:0.3s;
-  z-index:999;
+  border-radius:22px;
+  transition:all 0.2s ease;
+  z-index:3000;
+  opacity:0;
 }
 
 #trashBin.show{
-  bottom:30px;
+  bottom:28px;
+  opacity:1;
 }
-  
+
+#trashBin.active{
+  transform:translateX(-50%) scale(1.2);
+}
 </style>
 </head>
-<div id="trashBin">🗑</div>
+
 <body>
 
-<div class="header">
-  Supreme Archive
-</div>
+<div id="trashBin">🗑</div>
+
+<div class="header">Supreme Archive</div>
 
 <div class="counter-row">
-  
-  <!-- LEFT -->
   <a class="add-link" href="add.html">+ Add</a>
-
-  <!-- CENTER -->
   <div class="counter" id="counter"></div>
-
-  <!-- RIGHT -->
   <a class="fit-link" href="fit.html">Build a Fit</a>
 </div>
 
 <div class="category-bar">
-<div class="category" onclick="filterCategory('All')">All</div>
-<div class="category" onclick="filterCategory('Tops')">Tops</div>
-<div class="category" onclick="filterCategory('Bottoms')">Bottoms</div>
-<div class="category" onclick="filterCategory('Hats')">Hats</div>
-<div class="category" onclick="filterCategory('Bags')">Bags</div>
-<div class="category" onclick="filterCategory('Accessories')">Accessories</div>
-<div class="category" onclick="filterCategory('Skate')">Skate</div>
+  <div class="category" onclick="filterCategory('All')">All</div>
+  <div class="category" onclick="filterCategory('Tops')">Tops</div>
+  <div class="category" onclick="filterCategory('Bottoms')">Bottoms</div>
+  <div class="category" onclick="filterCategory('Hats')">Hats</div>
+  <div class="category" onclick="filterCategory('Bags')">Bags</div>
+  <div class="category" onclick="filterCategory('Accessories')">Accessories</div>
+  <div class="category" onclick="filterCategory('Skate')">Skate</div>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -206,157 +171,55 @@ function firstPhoto(imageField){
 }
 
 function clean(v){
-  return (v ?? "")
-    .toString()
-    .trim()
-    .replace(/^"+|"+$/g, "");
+  return (v ?? "").toString().trim().replace(/^"+|"+$/g,"");
 }
 
 fetch(sheetURL)
-.then(res => res.text())
-.then(csv => {
+.then(res=>res.text())
+.then(csv=>{
 
-  const parsed = Papa.parse(csv, { skipEmptyLines: true });
-  const rows = parsed.data;
+  const rows = Papa.parse(csv,{skipEmptyLines:true}).data;
 
-  items = rows.slice(1).map(cols => {
-    cols = cols || [];
-    return {
-      id: clean(cols[0]),
-      name: clean(cols[1]),
-      category: clean(cols[2]),
-      size: clean(cols[3]),
-      image: clean(cols[8])
-    };
-  })
-  .filter(item => item.id && item.name && item.image);
+  items = rows.slice(1).map(c=>({
+    id: clean(c[0]),
+    name: clean(c[1]),
+    category: clean(c[2]),
+    image: clean(c[8])
+  }))
+  .filter(i=>i.id && i.name && i.image);
 
-  let myItems = [];
-  try {
-    myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
-  } catch(e){
-    myItems = [];
-  }
+  let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
   allItems = [...myItems, ...items];
 
-  document.getElementById("counter").innerText = `Total Pieces: ${allItems.length}`;
+  document.getElementById("counter").innerText =
+    `Total Pieces: ${allItems.length}`;
+
   displayItems(allItems);
 });
 
 
-// 🔥 DRAG SYSTEM (MOVED OUTSIDE)
-let holdTimer = null;
-
-function enableDragDelete(card, item){
-
-  let startX = 0;
-  let startY = 0;
-  let isDragging = false;
-
-  card.addEventListener("touchstart", e => {
-
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-
-    holdTimer = setTimeout(()=>{
-      isDragging = true;
-
-      card.style.position = "fixed";
-      card.style.zIndex = "1000";
-      card.style.width = "45%";
-      card.style.pointerEvents = "none";
-
-      document.getElementById("trashBin").classList.add("show");
-
-    }, 300);
-
-  });
-
-  card.addEventListener("touchmove", e => {
-
-    if(!isDragging){
-      const dx = Math.abs(e.touches[0].clientX - startX);
-      const dy = Math.abs(e.touches[0].clientY - startY);
-
-      if(dx > 10 || dy > 10){
-        clearTimeout(holdTimer);
-      }
-      return;
-    }
-
-    const x = e.touches[0].clientX;
-    const y = e.touches[0].clientY;
-
-    card.style.left = (x - card.offsetWidth/2) + "px";
-    card.style.top = (y - card.offsetHeight/2) + "px";
-
-  });
-
-  card.addEventListener("touchend", e => {
-
-    clearTimeout(holdTimer);
-
-    if(!isDragging) return;
-
-    const trash = document.getElementById("trashBin");
-    const rect = trash.getBoundingClientRect();
-    const touch = e.changedTouches[0];
-
-    if(
-      touch.clientX > rect.left &&
-      touch.clientX < rect.right &&
-      touch.clientY > rect.top &&
-      touch.clientY < rect.bottom
-    ){
-      deleteItem(item);
-    }
-
-    card.style.position = "";
-    card.style.left = "";
-    card.style.top = "";
-    card.style.zIndex = "";
-    card.style.width = "";
-    card.style.pointerEvents = "";
-
-    trash.classList.remove("show");
-    isDragging = false;
-  });
-}
-
-
-// 🗑 DELETE
-function deleteItem(item){
-
-  let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
-
-  myItems = myItems.filter(i => i.id !== item.id);
-
-  localStorage.setItem("myItems", JSON.stringify(myItems));
-
-  location.reload();
-}
-
-
-// 🎨 DISPLAY
 function displayItems(list){
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
-  list.forEach(item => {
+  list.forEach(item=>{
 
     const imgSrc = item.image || item.src;
 
     const div = document.createElement("div");
     div.className = "card";
 
-    div.innerHTML =
-      '<div class="thumb">' +
-        '<img src="' + firstPhoto(imgSrc) + '" alt="' + item.name + '">' +
-      '</div>' +
-      '<div class="name">' + item.name + '</div>';
+    div.innerHTML = `
+      <div class="thumb">
+        <img src="${firstPhoto(imgSrc)}">
+      </div>
+      <div class="name">${item.name}</div>
+    `;
 
-    div.onclick = () => window.location = "item.html?id=" + encodeURIComponent(item.id);
+    div.onclick = () => {
+      window.location = "item.html?id=" + encodeURIComponent(item.id);
+    };
 
     enableDragDelete(div, item);
 
@@ -365,10 +228,144 @@ function displayItems(list){
 }
 
 
-// 🔎 FILTER
 function filterCategory(cat){
   if(cat==="All") return displayItems(allItems);
   displayItems(allItems.filter(i=>i.category===cat));
+}
+
+
+/* 🔥 DRAG SYSTEM */
+let holdTimer=null;
+let dragGhost=null;
+let didLongPress=false;
+
+function enableDragDelete(card,item){
+
+  let startX=0,startY=0,isDragging=false;
+
+  card.addEventListener("touchstart",e=>{
+
+    if(!isUserItem(item)) return;
+
+    const t=e.touches[0];
+    startX=t.clientX;
+    startY=t.clientY;
+
+    holdTimer=setTimeout(()=>{
+      isDragging=true;
+      didLongPress=true;
+
+      showTrash();
+
+      dragGhost=card.cloneNode(true);
+      dragGhost.style.position="fixed";
+      dragGhost.style.left=(t.clientX-100)+"px";
+      dragGhost.style.top=(t.clientY-100)+"px";
+      dragGhost.style.width=card.offsetWidth+"px";
+      dragGhost.style.pointerEvents="none";
+      dragGhost.style.zIndex="2000";
+      dragGhost.style.opacity="0.95";
+
+      document.body.appendChild(dragGhost);
+
+      card.style.opacity="0.3";
+
+    },300);
+
+  },{passive:true});
+
+
+  card.addEventListener("touchmove",e=>{
+
+    const t=e.touches[0];
+
+    if(!isDragging){
+      if(Math.abs(t.clientX-startX)>10 || Math.abs(t.clientY-startY)>10){
+        clearTimeout(holdTimer);
+      }
+      return;
+    }
+
+    e.preventDefault();
+
+    dragGhost.style.left=(t.clientX-100)+"px";
+    dragGhost.style.top=(t.clientY-100)+"px";
+
+    const trash=document.getElementById("trashBin").getBoundingClientRect();
+
+    const over =
+      t.clientX>trash.left &&
+      t.clientX<trash.right &&
+      t.clientY>trash.top &&
+      t.clientY<trash.bottom;
+
+    document.getElementById("trashBin").classList.toggle("active",over);
+
+  },{passive:false});
+
+
+  card.addEventListener("touchend",e=>{
+
+    clearTimeout(holdTimer);
+
+    if(!isDragging) return;
+
+    const t=e.changedTouches[0];
+    const trash=document.getElementById("trashBin").getBoundingClientRect();
+
+    const dropped =
+      t.clientX>trash.left &&
+      t.clientX<trash.right &&
+      t.clientY>trash.top &&
+      t.clientY<trash.bottom;
+
+    cleanup(card);
+
+    if(dropped) deleteItem(item.id);
+
+  });
+
+
+  card.addEventListener("click",e=>{
+    if(didLongPress){
+      e.preventDefault();
+      e.stopPropagation();
+      didLongPress=false;
+    }
+  },true);
+}
+
+
+function cleanup(card){
+  card.style.opacity="";
+  if(dragGhost) dragGhost.remove();
+  dragGhost=null;
+  document.getElementById("trashBin").classList.remove("show","active");
+}
+
+function showTrash(){
+  document.getElementById("trashBin").classList.add("show");
+}
+
+function deleteItem(id){
+
+  let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+
+  myItems = myItems.filter(i => i.id !== id);
+
+  localStorage.setItem("myItems", JSON.stringify(myItems));
+
+  allItems = allItems.filter(i => i.id !== id);
+
+  document.getElementById("counter").innerText =
+    `Total Pieces: ${allItems.length}`;
+
+  displayItems(allItems);
+}
+
+function isUserItem(item){
+  const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+  return myItems.some(i=>i.id===item.id);
 }
 </script>
 
