@@ -143,7 +143,7 @@ document.getElementById("addBtn").onclick = () => {
 
   if(!selectedItem) return alert("Select item");
 
-  const color = document.getElementById("color").value;
+  
   const size = document.getElementById("size").value;
 
   let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
