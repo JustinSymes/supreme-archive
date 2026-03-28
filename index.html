@@ -211,8 +211,11 @@ const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 items = [...myItems, ...items];
 
 // 👇 THEN THIS RUNS AFTER
-document.getElementById("counter").innerText = `Total Pieces: ${items.length}`;
-displayItems(items);
+document.getElementById("counter").innerText = `Total Pieces: ${myItems.length}`;
+    
+const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+
+displayItems(myItems);
   });
 
 function displayItems(list){
