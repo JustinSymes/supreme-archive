@@ -161,6 +161,7 @@ html, body {
   
 </style>
 </head>
+<div id="trashBin">🗑</div>
 <body>
 
 <div class="header">
@@ -197,7 +198,7 @@ html, body {
 const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 
 let items = [];
-let allItems = []; // 👈 combined list
+let allItems = [];
 
 function firstPhoto(imageField){
   if(!imageField) return "";
@@ -218,7 +219,6 @@ fetch(sheetURL)
   const parsed = Papa.parse(csv, { skipEmptyLines: true });
   const rows = parsed.data;
 
-  // 🟢 Sheet items
   items = rows.slice(1).map(cols => {
     cols = cols || [];
     return {
@@ -231,7 +231,6 @@ fetch(sheetURL)
   })
   .filter(item => item.id && item.name && item.image);
 
-  // 🟣 User items
   let myItems = [];
   try {
     myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
@@ -239,15 +238,15 @@ fetch(sheetURL)
     myItems = [];
   }
 
-  // 🔥 COMBINE BOTH
   allItems = [...myItems, ...items];
 
-  // ✅ show everything (or change later)
   document.getElementById("counter").innerText = `Total Pieces: ${allItems.length}`;
   displayItems(allItems);
+});
 
-  let holdTimer = null;
-let draggingEl = null;
+
+// 🔥 DRAG SYSTEM (MOVED OUTSIDE)
+let holdTimer = null;
 
 function enableDragDelete(card, item){
 
@@ -262,7 +261,6 @@ function enableDragDelete(card, item){
 
     holdTimer = setTimeout(()=>{
       isDragging = true;
-      draggingEl = card;
 
       card.style.position = "fixed";
       card.style.zIndex = "1000";
@@ -271,7 +269,7 @@ function enableDragDelete(card, item){
 
       document.getElementById("trashBin").classList.add("show");
 
-    }, 300); // hold delay
+    }, 300);
 
   });
 
@@ -303,10 +301,8 @@ function enableDragDelete(card, item){
 
     const trash = document.getElementById("trashBin");
     const rect = trash.getBoundingClientRect();
-
     const touch = e.changedTouches[0];
 
-    // dropped in trash
     if(
       touch.clientX > rect.left &&
       touch.clientX < rect.right &&
@@ -316,7 +312,6 @@ function enableDragDelete(card, item){
       deleteItem(item);
     }
 
-    // reset
     card.style.position = "";
     card.style.left = "";
     card.style.top = "";
@@ -329,31 +324,32 @@ function enableDragDelete(card, item){
   });
 }
 
-});
 
+// 🗑 DELETE
 function deleteItem(item){
 
   let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
-  // only delete user-added items
   myItems = myItems.filter(i => i.id !== item.id);
 
   localStorage.setItem("myItems", JSON.stringify(myItems));
 
-  location.reload(); // simple refresh
+  location.reload();
 }
 
+
+// 🎨 DISPLAY
 function displayItems(list){
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
   list.forEach(item => {
 
-    // 👇 support BOTH sheet + user items
     const imgSrc = item.image || item.src;
 
     const div = document.createElement("div");
     div.className = "card";
+
     div.innerHTML =
       '<div class="thumb">' +
         '<img src="' + firstPhoto(imgSrc) + '" alt="' + item.name + '">' +
@@ -363,10 +359,13 @@ function displayItems(list){
     div.onclick = () => window.location = "item.html?id=" + encodeURIComponent(item.id);
 
     enableDragDelete(div, item);
+
     grid.appendChild(div);
   });
 }
 
+
+// 🔎 FILTER
 function filterCategory(cat){
   if(cat==="All") return displayItems(allItems);
   displayItems(allItems.filter(i=>i.category===cat));
