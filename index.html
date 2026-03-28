@@ -137,6 +137,27 @@ html, body {
   font-size:16px;
 }
 
+  #trashBin{
+  position:fixed;
+  bottom:-100px;
+  left:50%;
+  transform:translateX(-50%);
+  width:80px;
+  height:80px;
+  background:#e10600;
+  color:#fff;
+  font-size:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:20px;
+  transition:0.3s;
+  z-index:999;
+}
+
+#trashBin.show{
+  bottom:30px;
+}
   
 </style>
 </head>
@@ -225,7 +246,102 @@ fetch(sheetURL)
   document.getElementById("counter").innerText = `Total Pieces: ${allItems.length}`;
   displayItems(allItems);
 
+  let holdTimer = null;
+let draggingEl = null;
+
+function enableDragDelete(card, item){
+
+  let startX = 0;
+  let startY = 0;
+  let isDragging = false;
+
+  card.addEventListener("touchstart", e => {
+
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+
+    holdTimer = setTimeout(()=>{
+      isDragging = true;
+      draggingEl = card;
+
+      card.style.position = "fixed";
+      card.style.zIndex = "1000";
+      card.style.width = "45%";
+      card.style.pointerEvents = "none";
+
+      document.getElementById("trashBin").classList.add("show");
+
+    }, 300); // hold delay
+
+  });
+
+  card.addEventListener("touchmove", e => {
+
+    if(!isDragging){
+      const dx = Math.abs(e.touches[0].clientX - startX);
+      const dy = Math.abs(e.touches[0].clientY - startY);
+
+      if(dx > 10 || dy > 10){
+        clearTimeout(holdTimer);
+      }
+      return;
+    }
+
+    const x = e.touches[0].clientX;
+    const y = e.touches[0].clientY;
+
+    card.style.left = (x - card.offsetWidth/2) + "px";
+    card.style.top = (y - card.offsetHeight/2) + "px";
+
+  });
+
+  card.addEventListener("touchend", e => {
+
+    clearTimeout(holdTimer);
+
+    if(!isDragging) return;
+
+    const trash = document.getElementById("trashBin");
+    const rect = trash.getBoundingClientRect();
+
+    const touch = e.changedTouches[0];
+
+    // dropped in trash
+    if(
+      touch.clientX > rect.left &&
+      touch.clientX < rect.right &&
+      touch.clientY > rect.top &&
+      touch.clientY < rect.bottom
+    ){
+      deleteItem(item);
+    }
+
+    // reset
+    card.style.position = "";
+    card.style.left = "";
+    card.style.top = "";
+    card.style.zIndex = "";
+    card.style.width = "";
+    card.style.pointerEvents = "";
+
+    trash.classList.remove("show");
+    isDragging = false;
+  });
+}
+
 });
+
+function deleteItem(item){
+
+  let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+
+  // only delete user-added items
+  myItems = myItems.filter(i => i.id !== item.id);
+
+  localStorage.setItem("myItems", JSON.stringify(myItems));
+
+  location.reload(); // simple refresh
+}
 
 function displayItems(list){
   const grid = document.getElementById("grid");
@@ -245,6 +361,8 @@ function displayItems(list){
       '<div class="name">' + item.name + '</div>';
 
     div.onclick = () => window.location = "item.html?id=" + encodeURIComponent(item.id);
+
+    enableDragDelete(div, item);
     grid.appendChild(div);
   });
 }
