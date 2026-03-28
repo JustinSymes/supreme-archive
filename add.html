@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+  margin:0;
+  font-family:-apple-system;
+  padding:20px;
+}
+
+.topbar{
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+.back{
+  position:absolute;
+  left:16px;
+  color:#e10600;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.title{
+  font-weight:700;
+  font-size:18px;
+}
+
+.form{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  margin-top:20px;
+}
+
+input, select{
+  padding:12px;
+  font-size:16px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
+button{
+  margin-top:10px;
+  padding:14px;
+  background:#e10600;
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:700;
+}
+
+.result{
+  margin-top:20px;
+  text-align:center;
+}
+
+.result img{
+  width:150px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+  <div class="back" onclick="history.back()">← Back</div>
+  <div class="title">Add Item</div>
+</div>
+
+<div class="form">
+
+<input id="search" placeholder="Search item name...">
+
+<select id="color">
+  <option value="">Select color</option>
+</select>
+
+<select id="size">
+  <option value="">Select size</option>
+  <option>S</option>
+  <option>M</option>
+  <option>L</option>
+  <option>XL</option>
+</select>
+
+<button id="addBtn">Add Item</button>
+
+</div>
+
+<div class="result" id="result"></div>
+
+<script>
+
+const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
+
+let items = [];
+let selectedItem = null;
+
+fetch(sheetURL)
+.then(r=>r.text())
+.then(data=>{
+  const rows = data.split("\n").slice(1);
+
+  items = rows.map(r=>r.split(",")).map(c=>({
+    id: c[0],
+    name: c[1],
+    category: c[2],
+    image: c[8],
+  }));
+});
+
+// 🔍 SEARCH
+document.getElementById("search").addEventListener("input", e=>{
+  const val = e.target.value.toLowerCase();
+
+  const match = items.find(i => i.name.toLowerCase().includes(val));
+
+  if(!match) return;
+
+  selectedItem = match;
+
+  const img = match.image.split("|")[0];
+
+  document.getElementById("result").innerHTML = `
+    <img src="${img}">
+    <div>${match.name}</div>
+  `;
+
+  // fake color options for now
+  const colorSelect = document.getElementById("color");
+  colorSelect.innerHTML = `
+    <option>Red</option>
+    <option>Black</option>
+    <option>White</option>
+  `;
+});
+
+
+// ➕ ADD ITEM
+document.getElementById("addBtn").onclick = () => {
+
+  if(!selectedItem) return alert("Select item");
+
+  const color = document.getElementById("color").value;
+  const size = document.getElementById("size").value;
+
+  let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+
+  myItems.push({
+    id: "user-" + Date.now(),
+    name: selectedItem.name + (color ? " " + color : ""),
+    category: selectedItem.category,
+    size,
+    color,
+    src: selectedItem.image.split("|")[0]
+  });
+
+  localStorage.setItem("myItems", JSON.stringify(myItems));
+
+  alert("Added ✓");
+
+  window.location.href = "index.html";
+};
+
+</script>
+
+</body>
+</html>
