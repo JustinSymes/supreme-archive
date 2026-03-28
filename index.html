@@ -194,19 +194,25 @@ fetch(sheetURL)
     const rows = parsed.data;
 
     items = rows.slice(1).map(cols => {
-      cols = cols || [];
-      return {
-        id: clean(cols[0]),
-        name: clean(cols[1]),
-        category: clean(cols[2]),
-        size: clean(cols[3]),
-        image: clean(cols[8])
-      };
-    })
-    .filter(item => item.id && item.name && item.image);
+  cols = cols || [];
+  return {
+    id: clean(cols[0]),
+    name: clean(cols[1]),
+    category: clean(cols[2]),
+    size: clean(cols[3]),
+    image: clean(cols[8])
+  };
+})
+.filter(item => item.id && item.name && item.image);
 
-    document.getElementById("counter").innerText = `Total Pieces: ${items.length}`;
-    displayItems(items);
+// 👇 ADD THIS HERE
+const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+
+items = [...myItems, ...items];
+
+// 👇 THEN THIS RUNS AFTER
+document.getElementById("counter").innerText = `Total Pieces: ${items.length}`;
+displayItems(items);
   });
 
 function displayItems(list){
