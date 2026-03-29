@@ -94,42 +94,64 @@ img { width:100%; max-width:400px; }
 <script>
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
+const name = params.get("name");
 
 fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0")
 .then(res=>res.text())
 .then(data=>{
-const rows = data.split("\n").slice(1);
-rows.forEach(row=>{
-const cols = row.split(",");
-if(cols[0]===id){
-const images = cols[8].split("|");
-const priceCad = cols[10];
-const priceUsd = cols[11];
 
-document.getElementById("content").innerHTML = `
-<h2>${cols[1]}</h2>
+  const rows = data.split("\n").slice(1);
 
-<div class="carousel">
-  <div class="track" id="track"></div>
-</div>
-<div class="dots" id="dots"></div>
+  let foundRow = null;
 
-<div class="meta-row">
-  <div class="meta-left">
-    <span class="label">Category:</span> ${cols[2]}
-  </div>
+  rows.forEach(row=>{
+    const cols = row.split(",");
 
-  <div class="meta-right">
-    <span class="label">Retail:</span>
-    <span class="price-value" id="priceValue"></span>
-    <span class="price-toggle" id="priceToggle">CAD</span>
-  </div>
-</div>
+    if(id && cols[0] === id){
+      foundRow = cols;
+    }
 
-<p>Size: ${cols[3]}</p>
-`;
+    if(name && cols[1].toLowerCase() === name.toLowerCase()){
+      foundRow = cols;
+    }
+  });
 
-buildCarousel(images);
+  if(!foundRow){
+    document.getElementById("content").innerHTML = "Item not found";
+    return;
+  }
+
+  const cols = foundRow;
+
+  const images = cols[8].split("|");
+  const priceCad = cols[10];
+  const priceUsd = cols[11];
+
+  document.getElementById("content").innerHTML = `
+    <h2>${cols[1]}</h2>
+
+    <div class="carousel">
+      <div class="track" id="track"></div>
+    </div>
+    <div class="dots" id="dots"></div>
+
+    <div class="meta-row">
+      <div class="meta-left">
+        <span class="label">Category:</span> ${cols[2]}
+      </div>
+
+      <div class="meta-right">
+        <span class="label">Retail:</span>
+        <span class="price-value" id="priceValue"></span>
+        <span class="price-toggle" id="priceToggle">CAD</span>
+      </div>
+    </div>
+
+    <p>Size: ${cols[3]}</p>
+  `;
+
+  buildCarousel(images);
+
   let currency = "CAD";
 
 function formatMoney(n){
