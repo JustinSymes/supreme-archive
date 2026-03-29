@@ -92,21 +92,6 @@ img { width:100%; max-width:400px; }
 <div id="content"></div>
 
 <script>
-const localItem = JSON.parse(localStorage.getItem("currentItem") || "null");
-
-if(localItem){
-
-  document.getElementById("content").innerHTML = `
-    <h2>${localItem.name}</h2>
-
-    <img src="${localItem.src || localItem.image}" style="width:100%;max-width:400px">
-
-    <p>Category: ${localItem.category}</p>
-    <p>Size: ${localItem.size || ""}</p>
-  `;
-
-} else {
-  
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
