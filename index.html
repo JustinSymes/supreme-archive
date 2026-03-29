@@ -226,7 +226,15 @@ function displayItems(list){
     `;
 
     div.onclick = () => {
-      window.location = "item.html?id=" + encodeURIComponent(item.id);
+      const params = new URLSearchParams();
+
+if(item.id.startsWith("user-")){
+  params.set("name", item.name);
+} else {
+  params.set("id", item.id);
+}
+
+window.location = "item.html?" + params.toString();
     };
 
     enableDragDelete(div, item);
