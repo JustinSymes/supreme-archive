@@ -198,21 +198,7 @@ fetch(sheetURL)
 
   let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
-  const order = ["Tops","Bottoms","Hats","Bags","Accessories","Skate"];
-
-allItems = [...myItems, ...items];
-
-allItems.sort((a,b)=>{
-
-  const catA = order.indexOf(a.category);
-  const catB = order.indexOf(b.category);
-
-  if(catA !== catB){
-    return catA - catB;
-  }
-
-  return (b.id || "").localeCompare(a.id || "");
-});
+  allItems = [...myItems, ...items];
 
   document.getElementById("counter").innerText =
     `Total Pieces: ${allItems.length}`;
@@ -240,12 +226,8 @@ function displayItems(list){
     `;
 
     div.onclick = () => {
-
-  // save clicked item
-  localStorage.setItem("currentItem", JSON.stringify(item));
-
-  window.location = "item.html";
-};
+      window.location = "item.html?id=" + encodeURIComponent(item.id);
+    };
 
     enableDragDelete(div, item);
 
