@@ -198,7 +198,21 @@ fetch(sheetURL)
 
   let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
-  allItems = [...myItems, ...items];
+  const order = ["Tops","Bottoms","Hats","Bags","Accessories","Skate"];
+
+allItems = [...myItems, ...items];
+
+allItems.sort((a,b)=>{
+
+  const catA = order.indexOf(a.category);
+  const catB = order.indexOf(b.category);
+
+  if(catA !== catB){
+    return catA - catB;
+  }
+
+  return (b.id || "").localeCompare(a.id || "");
+});
 
   document.getElementById("counter").innerText =
     `Total Pieces: ${allItems.length}`;
@@ -226,8 +240,12 @@ function displayItems(list){
     `;
 
     div.onclick = () => {
-      window.location = "item.html?id=" + encodeURIComponent(item.id);
-    };
+
+  // save clicked item
+  localStorage.setItem("currentItem", JSON.stringify(item));
+
+  window.location = "item.html";
+};
 
     enableDragDelete(div, item);
 
