@@ -79,10 +79,6 @@ button{
 
 <select id="size">
   <option value="">Select size</option>
-  <option>S</option>
-  <option>M</option>
-  <option>L</option>
-  <option>XL</option>
 </select>
 
 <button id="addBtn">Add Item</button>
@@ -111,6 +107,33 @@ fetch(sheetURL)
   }));
 });
 
+
+// 🔥 SIZE LOGIC
+function setSizeOptions(item){
+  const sizeSelect = document.getElementById("size");
+
+  let sizes = [];
+  const name = item.name.toLowerCase();
+
+  if(name.includes("Jean")){
+    sizes = ["30", "32", "34", "36", "38"];
+  }
+  else if(item.category === "Tops"){
+    sizes = ["S", "M", "L", "XL"];
+  }
+  else if(item.category === "Bottoms"){
+    sizes = ["S", "M", "L", "XL"];
+  }
+  else{
+    sizes = ["One Size"];
+  }
+
+  sizeSelect.innerHTML =
+    `<option value="">Select size</option>` +
+    sizes.map(s => `<option value="${s}">${s}</option>`).join("");
+}
+
+
 // 🔍 SEARCH
 document.getElementById("search").addEventListener("input", e=>{
   const val = e.target.value.toLowerCase();
@@ -128,13 +151,8 @@ document.getElementById("search").addEventListener("input", e=>{
     <div>${match.name}</div>
   `;
 
-  // fake color options for now
-  const colorSelect = document.getElementById("color");
-  colorSelect.innerHTML = `
-    <option>Red</option>
-    <option>Black</option>
-    <option>White</option>
-  `;
+  // 🔥 SET SIZES BASED ON ITEM
+  setSizeOptions(match);
 });
 
 
@@ -143,18 +161,19 @@ document.getElementById("addBtn").onclick = () => {
 
   if(!selectedItem) return alert("Select item");
 
-  
   const size = document.getElementById("size").value;
+
+  if(!size) return alert("Select size");
 
   let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
   myItems.push({
-  id: "user-" + Date.now(),
-  name: selectedItem.name,
-  category: selectedItem.category,
-  size,
-  src: selectedItem.image.split("|")[0]
-});
+    id: "user-" + Date.now(),
+    name: selectedItem.name,
+    category: selectedItem.category,
+    size,
+    src: selectedItem.image.split("|")[0]
+  });
 
   localStorage.setItem("myItems", JSON.stringify(myItems));
 
