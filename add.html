@@ -57,11 +57,7 @@ button{
 
 .result{
   margin-top:20px;
-  text-align:center;
-}
-
-.result img{
-  width:150px;
+  text-align:left;
 }
 
 .result-item{
@@ -82,8 +78,6 @@ button{
 .result-item.selected{
   background:#f5f5f5;
 }
-
-  
 </style>
 </head>
 
@@ -115,6 +109,7 @@ const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTto
 let items = [];
 let selectedItem = null;
 
+// 📦 LOAD DATA
 fetch(sheetURL)
 .then(r=>r.text())
 .then(data=>{
@@ -155,55 +150,53 @@ function setSizeOptions(item){
 }
 
 
-// 🔍 SEARCH
+// 🔍 SEARCH (FIXED)
 document.getElementById("search").addEventListener("input", e=>{
   const val = e.target.value.toLowerCase();
 
+  const container = document.getElementById("result");
+  container.innerHTML = "";
+
+  if(!val) return;
+
   const results = items.filter(i =>
-  i.name.toLowerCase().includes(val)
-);
+    i.name.toLowerCase().includes(val)
+  );
 
-const container = document.getElementById("result");
-container.innerHTML = "";
+  results.slice(0, 20).forEach(item => {
 
-results.slice(0, 20).forEach(item => { // limit to 20 results
+    const img = (item.image || "").split("|")[0];
 
-  const img = item.image.split("|")[0];
+    const div = document.createElement("div");
+    div.className = "result-item";
 
-  const div = document.createElement("div");
-  div.className = "result-item";
+    div.innerHTML = `
+      <img src="${img}">
+      <div>${item.name}</div>
+    `;
 
-  div.innerHTML = `
-    <img src="${img}">
-    <div>${item.name}</div>
-  `;
+    div.onclick = () => {
+      document.querySelectorAll(".result-item")
+        .forEach(el => el.classList.remove("selected"));
 
-  div.onclick = () => {
+      div.classList.add("selected");
 
-    // highlight selected
-    document.querySelectorAll(".result-item")
-      .forEach(el => el.classList.remove("selected"));
+      selectedItem = item;
 
-    div.classList.add("selected");
+      setSizeOptions(item);
+    };
 
-    selectedItem = item;
-
-    // 🔥 update sizes when selected
-    setSizeOptions(item);
-  };
-
-  container.appendChild(div);
+    container.appendChild(div);
+  });
 });
 
-document.getElementById("result").innerHTML = "";
-document.getElementById("search").value = "";
-// ➕ ADD ITEM
+
+// ➕ ADD ITEM (OUTSIDE search)
 document.getElementById("addBtn").onclick = () => {
 
   if(!selectedItem) return alert("Select item");
 
   const size = document.getElementById("size").value;
-
   if(!size) return alert("Select size");
 
   let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
