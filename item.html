@@ -154,7 +154,19 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
       </div>
     </div>
 
-    <p>Size: ${cols[3] || ""}</p>
+    let displaySize = cols[3] || "";
+
+// 🔥 check if user owns this item
+const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+
+const owned = myItems.find(i =>
+  (id && i.id === id) ||
+  (name && i.name.toLowerCase() === cols[1].toLowerCase())
+);
+
+if(owned && owned.size){
+  displaySize = owned.size;
+}
   `;
 
   buildCarousel(images);
