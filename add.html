@@ -63,6 +63,27 @@ button{
 .result img{
   width:150px;
 }
+
+.result-item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px;
+  border-bottom:1px solid #eee;
+  cursor:pointer;
+}
+
+.result-item img{
+  width:50px;
+  height:50px;
+  object-fit:contain;
+}
+
+.result-item.selected{
+  background:#f5f5f5;
+}
+
+  
 </style>
 </head>
 
@@ -138,24 +159,44 @@ function setSizeOptions(item){
 document.getElementById("search").addEventListener("input", e=>{
   const val = e.target.value.toLowerCase();
 
-  const match = items.find(i => i.name.toLowerCase().includes(val));
+  const results = items.filter(i =>
+  i.name.toLowerCase().includes(val)
+);
 
-  if(!match) return;
+const container = document.getElementById("result");
+container.innerHTML = "";
 
-  selectedItem = match;
+results.slice(0, 20).forEach(item => { // limit to 20 results
 
-  const img = match.image.split("|")[0];
+  const img = item.image.split("|")[0];
 
-  document.getElementById("result").innerHTML = `
+  const div = document.createElement("div");
+  div.className = "result-item";
+
+  div.innerHTML = `
     <img src="${img}">
-    <div>${match.name}</div>
+    <div>${item.name}</div>
   `;
 
-  // 🔥 SET SIZES BASED ON ITEM
-  setSizeOptions(match);
+  div.onclick = () => {
+
+    // highlight selected
+    document.querySelectorAll(".result-item")
+      .forEach(el => el.classList.remove("selected"));
+
+    div.classList.add("selected");
+
+    selectedItem = item;
+
+    // 🔥 update sizes when selected
+    setSizeOptions(item);
+  };
+
+  container.appendChild(div);
 });
 
-
+document.getElementById("result").innerHTML = "";
+document.getElementById("search").value = "";
 // ➕ ADD ITEM
 document.getElementById("addBtn").onclick = () => {
 
