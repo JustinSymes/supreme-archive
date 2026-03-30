@@ -134,6 +134,20 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   const priceCad = cols[10];
   const priceUsd = cols[11];
 
+  let displaySize = cols[3] || "";
+
+// check if user owns item
+const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+
+const owned = myItems.find(i =>
+  (id && i.id === id) ||
+  (name && i.name && i.name.toLowerCase() === cols[1].toLowerCase())
+);
+
+if(owned && owned.size){
+  displaySize = owned.size;
+}
+  
   document.getElementById("content").innerHTML = `
     <h2>${cols[1]}</h2>
 
@@ -154,19 +168,7 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
       </div>
     </div>
 
-    let displaySize = cols[3] || "";
-
-// 🔥 check if user owns this item
-const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
-
-const owned = myItems.find(i =>
-  (id && i.id === id) ||
-  (name && i.name.toLowerCase() === cols[1].toLowerCase())
-);
-
-if(owned && owned.size){
-  displaySize = owned.size;
-}
+    <p>Size: ${displaySize}</p>
   `;
 
   buildCarousel(images);
