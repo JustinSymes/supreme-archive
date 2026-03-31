@@ -202,12 +202,13 @@ document.getElementById("addBtn").onclick = () => {
   let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
   myItems.push({
-    id: "user-" + Date.now(),
-    name: selectedItem.name,
-    category: selectedItem.category,
-    size,
-    src: selectedItem.image.split("|")[0]
-  });
+  id: "user-" + Date.now(),
+  sheetId: selectedItem.id, // 🔥 IMPORTANT
+  name: selectedItem.name,
+  category: selectedItem.category,
+  size,
+  src: selectedItem.image.split("|")[0]
+});
 
   localStorage.setItem("myItems", JSON.stringify(myItems));
 
