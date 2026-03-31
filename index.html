@@ -229,7 +229,7 @@ function displayItems(list){
       const params = new URLSearchParams();
 
 if(item.id.startsWith("user-")){
-  params.set("name", item.name);
+  params.set("id", item.sheetId || item.id);
 } else {
   params.set("id", item.id);
 }
