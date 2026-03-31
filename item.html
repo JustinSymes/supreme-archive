@@ -113,12 +113,8 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   rows.forEach(cols => {
 
     if(id && cols[0] === id){
-      foundRow = cols;
-    }
-
-    if(name && cols[1] && cols[1].toLowerCase() === name.toLowerCase()){
-      foundRow = cols;
-    }
+  foundRow = cols;
+}
 
   });
 
