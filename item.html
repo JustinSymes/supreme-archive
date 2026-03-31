@@ -98,36 +98,37 @@ img { width:100%; max-width:400px; }
 
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
-const name = params.get("name");
+
+// 🔍 DEBUG
+console.log("ID:", id);
 
 fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0")
 .then(res=>res.text())
 .then(data=>{
 
-  // ✅ FIXED CSV parsing
   const parsed = Papa.parse(data, { skipEmptyLines: true }).data;
   const rows = parsed.slice(1);
 
   let foundRow = null;
 
-// get user items ONCE
-const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
-const oldItem = myItems.find(i => i.id === id);
+  // ✅ get user items once
+  const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+  const oldItem = myItems.find(i => i.id === id);
 
-rows.forEach(cols => {
+  rows.forEach(cols => {
 
-  // ✅ primary: match by sheet ID (new system)
-  if(id && cols[0] === id){
-    foundRow = cols;
-  }
+    // ✅ match by sheetId (main system)
+    if(id && cols[0] === id){
+      foundRow = cols;
+    }
 
-  // ✅ fallback: match old items by name
-  if(!foundRow && oldItem && cols[1] &&
-     cols[1].toLowerCase() === oldItem.name.toLowerCase()){
-    foundRow = cols;
-  }
+    // ✅ fallback for old items
+    if(!foundRow && oldItem && cols[1] &&
+       cols[1].toLowerCase() === oldItem.name.toLowerCase()){
+      foundRow = cols;
+    }
 
-});
+  });
 
   if(!foundRow){
     document.getElementById("content").innerHTML = "Item not found";
@@ -136,29 +137,29 @@ rows.forEach(cols => {
 
   const cols = foundRow;
 
-  // ✅ safe fallback
+  // 📸 images (cleaned)
   const images = (cols[8] || "")
-  .split("|")
-  .map(s => s.trim())
-  .filter(Boolean);
-  console.log(images);
+    .split("|")
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  console.log("Images:", images);
+
   const priceCad = cols[10];
   const priceUsd = cols[11];
 
+  // 📏 size override
   let displaySize = cols[3] || "";
 
-// check if user owns item
-const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+  const owned = myItems.find(i =>
+    i.id === id || i.sheetId === id
+  );
 
-const owned = myItems.find(i =>
-  (id && (i.id === id || i.sheetId === id)) ||
-  (name && i.name && i.name.toLowerCase() === cols[1].toLowerCase())
-);
+  if(owned && owned.size){
+    displaySize = owned.size;
+  }
 
-if(owned && owned.size){
-  displaySize = owned.size;
-}
-  
+  // 🧱 render
   document.getElementById("content").innerHTML = `
     <h2>${cols[1]}</h2>
 
@@ -184,7 +185,7 @@ if(owned && owned.size){
 
   buildCarousel(images);
 
-  // 💰 PRICE TOGGLE
+  // 💰 price toggle
   let currency = "CAD";
 
   function formatMoney(n){
@@ -243,7 +244,7 @@ function buildCarousel(images){
 
     const slide = document.createElement("div");
     slide.className = "slide";
-    slide.innerHTML = `<img src="${src.trim()}">`;
+    slide.innerHTML = `<img src="${src}">`;
     track.appendChild(slide);
 
     if (images.length > 1) {
