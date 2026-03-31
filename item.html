@@ -110,22 +110,26 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
 
   let foundRow = null;
 
-  rows.forEach(cols => {
+  let foundRow = null;
 
-    if(id && cols[0] === id){
-  foundRow = cols;
-}
+// get user items ONCE
+const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+const oldItem = myItems.find(i => i.id === id);
 
-  // 🔥 fallback: match by name for old items
-  const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
-  const oldItem = myItems.find(i => i.id === id);
+rows.forEach(cols => {
 
-  if(oldItem && cols[1] && cols[1].toLowerCase() === oldItem.name.toLowerCase()){
+  // ✅ primary: match by sheet ID (new system)
+  if(id && cols[0] === id){
     foundRow = cols;
   }
-}
 
-  });
+  // ✅ fallback: match old items by name
+  if(!foundRow && oldItem && cols[1] &&
+     cols[1].toLowerCase() === oldItem.name.toLowerCase()){
+    foundRow = cols;
+  }
+
+});
 
   if(!foundRow){
     document.getElementById("content").innerHTML = "Item not found";
