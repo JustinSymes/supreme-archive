@@ -112,8 +112,19 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
 
   rows.forEach(cols => {
 
-    if(id && cols[0] === id){
-  foundRow = cols;
+    if(id){
+  // match by sheet ID
+  if(cols[0] === id){
+    foundRow = cols;
+  }
+
+  // 🔥 fallback: match by name for old items
+  const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+  const oldItem = myItems.find(i => i.id === id);
+
+  if(oldItem && cols[1] && cols[1].toLowerCase() === oldItem.name.toLowerCase()){
+    foundRow = cols;
+  }
 }
 
   });
