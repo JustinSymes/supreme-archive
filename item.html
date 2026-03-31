@@ -130,7 +130,11 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   const cols = foundRow;
 
   // ✅ safe fallback
-  const images = (cols[8] || "").split("|");
+  const images = (cols[8] || "")
+  .split("|")
+  .map(s => s.trim())
+  .filter(Boolean);
+  console.log(images);
   const priceCad = cols[10];
   const priceUsd = cols[11];
 
