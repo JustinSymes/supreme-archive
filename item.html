@@ -153,7 +153,7 @@ rows.forEach(cols => {
 const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
 const owned = myItems.find(i =>
-  (id && i.id === id) ||
+  (id && (i.id === id || i.sheetId === id)) ||
   (name && i.name && i.name.toLowerCase() === cols[1].toLowerCase())
 );
 
