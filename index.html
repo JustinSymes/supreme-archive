@@ -228,14 +228,17 @@ function displayItems(list){
     div.onclick = () => {
       const params = new URLSearchParams();
 
-if(item.id.startsWith("user-")){
-  params.set("id", item.sheetId || item.id);
-} else {
-  params.set("id", item.id);
-}
+  // ✅ if it's a user item, use sheetId
+  if(item.sheetId){
+    params.set("id", item.sheetId);
+  } 
+  // ✅ otherwise it's a normal archive item
+  else {
+    params.set("id", item.id);
+  }
 
-window.location = "item.html?" + params.toString();
-    };
+  window.location = "item.html?" + params.toString();
+};
 
     enableDragDelete(div, item);
 
