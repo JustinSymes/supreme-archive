@@ -200,6 +200,8 @@ fetch(sheetURL)
 
   allItems = [...myItems, ...items];
 
+  localStorage.setItem("archiveItems", JSON.stringify(items));
+
   document.getElementById("counter").innerText =
     `Total Pieces: ${allItems.length}`;
 
