@@ -547,58 +547,59 @@ document.getElementById("saveFitBtn").onclick = saveToGalleryOnly;
 document.getElementById("fitsBtn").onclick = () => {
   window.location.href = "fits.html";
 };
+
 fetch(sheetURL)
 .then(r=>r.text())
 .then(data=>{
 
-  // ✅ get ONLY items already shown on archive page
-  const sheetItems = JSON.parse(localStorage.getItem("archiveItems") || "[]");
+const rows=data.split("\n").slice(1);
 
-  // ✅ get user items
-  const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+const items=rows.map(r=>r.split(",")).map(c=>({
 
-  // ✅ merge (same as archive page)
-  const allItems = [...myItems, ...sheetItems];
+name:c[1]?.trim(),
+category:c[2]?.trim(),
+src:c[8]?.split("|")[0]?.trim()
 
-  // ✅ filter categories
-  tops = allItems.filter(i => i.category === "Tops");
-  bottoms = allItems.filter(i => i.category === "Bottoms");
+}));
 
-  hats = [BLANK, ...allItems.filter(i => i.category === "Hats")];
-  accs = [BLANK, ...allItems.filter(i => i.category === "Accessories")];
+tops=items.filter(i=>i.category==="Tops");
+bottoms=items.filter(i=>i.category==="Bottoms");
 
-  // --- edit fit logic ---
+hats=[BLANK,...items.filter(i=>i.category==="Hats")];
+accs=[BLANK,...items.filter(i=>i.category==="Accessories")];
+
   const editFit = JSON.parse(localStorage.getItem("editFit") || "null");
 
-  function matchIndex(list, src){
-    if(!src) return 0;
+function matchIndex(list, src){
+  if(!src) return 0;
 
-    return list.findIndex(i => {
-      if(!i.src) return false;
-      return src.includes(i.src) || i.src.includes(src);
-    });
-  }
+  return list.findIndex(i => {
+    if(!i.src) return false;
+    return src.includes(i.src) || i.src.includes(src);
+  });
+}
 
-  if(editFit){
-    idxTop = matchIndex(tops, editFit.top);
-    idxBot = matchIndex(bottoms, editFit.bottom);
-    idxHat = matchIndex(hats, editFit.hat);
-    idxAcc = matchIndex(accs, editFit.acc);
+if(editFit){
 
-    if(idxTop < 0) idxTop = 0;
-    if(idxBot < 0) idxBot = 0;
-    if(idxHat < 0) idxHat = 0;
-    if(idxAcc < 0) idxAcc = 0;
+  idxTop = matchIndex(tops, editFit.top);
+  idxBot = matchIndex(bottoms, editFit.bottom);
+  idxHat = matchIndex(hats, editFit.hat);
+  idxAcc = matchIndex(accs, editFit.acc);
 
-    localStorage.removeItem("editFit");
-  }
+  if(idxTop < 0) idxTop = 0;
+  if(idxBot < 0) idxBot = 0;
+  if(idxHat < 0) idxHat = 0;
+  if(idxAcc < 0) idxAcc = 0;
 
-  render();
+  localStorage.removeItem("editFit");
+}
 
-  attachSwipe(topSlot,()=>tops,()=>idxTop,v=>idxTop=v);
-  attachSwipe(botSlot,()=>bottoms,()=>idxBot,v=>idxBot=v);
-  attachSwipe(hatSlot,()=>hats,()=>idxHat,v=>idxHat=v);
-  attachSwipe(accSlot,()=>accs,()=>idxAcc,v=>idxAcc=v);
+render();
+
+attachSwipe(topSlot,()=>tops,()=>idxTop,v=>idxTop=v);
+attachSwipe(botSlot,()=>bottoms,()=>idxBot,v=>idxBot=v);
+attachSwipe(hatSlot,()=>hats,()=>idxHat,v=>idxHat=v);
+attachSwipe(accSlot,()=>accs,()=>idxAcc,v=>idxAcc=v);
 
 }); 
 
