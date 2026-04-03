@@ -564,7 +564,10 @@ fetch(sheetURL)
   const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
   // 🔥 MERGE (same as archive page)
-  const allItems = [...myItems, ...sheetItems];
+  const sheetItems = JSON.parse(localStorage.getItem("archiveItems") || "[]");
+const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+
+const allItems = [...myItems, ...sheetItems];
 
   // 🔥 NOW FILTER FROM MERGED LIST
   tops = allItems.filter(i => i.category === "Tops");
