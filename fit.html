@@ -551,32 +551,23 @@ fetch(sheetURL)
 .then(r=>r.text())
 .then(data=>{
 
-  const rows = data.split("\n").slice(1);
+  // ✅ get ONLY items already shown on archive page
+  const sheetItems = JSON.parse(localStorage.getItem("archiveItems") || "[]");
 
-  const sheetItems = rows.map(r=>r.split(",")).map(c=>({
-    id: c[0],
-    name: c[1],
-    category: c[2],
-    src: c[8]?.split("|")[0]?.trim()
-  }));
-
-  // 🔥 get user items
+  // ✅ get user items
   const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
-  // 🔥 MERGE (same as archive page)
-  const sheetItems = JSON.parse(localStorage.getItem("archiveItems") || "[]");
-const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+  // ✅ merge (same as archive page)
+  const allItems = [...myItems, ...sheetItems];
 
-const allItems = [...myItems, ...sheetItems];
-
-  // 🔥 NOW FILTER FROM MERGED LIST
+  // ✅ filter categories
   tops = allItems.filter(i => i.category === "Tops");
   bottoms = allItems.filter(i => i.category === "Bottoms");
 
   hats = [BLANK, ...allItems.filter(i => i.category === "Hats")];
   accs = [BLANK, ...allItems.filter(i => i.category === "Accessories")];
 
-  // --- keep your existing editFit logic ---
+  // --- edit fit logic ---
   const editFit = JSON.parse(localStorage.getItem("editFit") || "null");
 
   function matchIndex(list, src){
