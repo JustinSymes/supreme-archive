@@ -182,6 +182,38 @@ function clean(v){
   return (v ?? "").toString().trim().replace(/^"+|"+$/g,"");
 }
 
+function sortArchiveItems(list){
+  const categoryOrder = {
+    "Tops": 0,
+    "Bottoms": 1,
+    "Hats": 2,
+    "Bags": 3,
+    "Accessories": 4,
+    "Skate": 5
+  };
+
+  const getNumericId = (item) => {
+    if (!item?.id) return 0;
+
+    if (String(item.id).startsWith("user-")) {
+      return Number(String(item.id).replace("user-", "")) || 0;
+    }
+
+    const match = String(item.id).match(/\d+/g);
+    if (!match) return 0;
+    return Number(match.join("")) || 0;
+  };
+
+  return [...list].sort((a, b) => {
+    const catA = categoryOrder[a.category] ?? 999;
+    const catB = categoryOrder[b.category] ?? 999;
+
+    if (catA !== catB) return catA - catB;
+
+    return getNumericId(b) - getNumericId(a);
+  });
+}
+
 fetch(sheetURL)
 .then(res=>res.text())
 .then(csv=>{
@@ -198,7 +230,7 @@ fetch(sheetURL)
 
   let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
-  allItems = [...myItems, ...items];
+  allItems = sortArchiveItems([...myItems, ...items]);
 
   localStorage.setItem("archiveItems", JSON.stringify(items));
 
@@ -377,6 +409,7 @@ function deleteItem(id){
   localStorage.setItem("myItems", JSON.stringify(myItems));
 
   allItems = allItems.filter(i => i.id !== id);
+  allItems = sortArchiveItems(allItems);
 
   document.getElementById("counter").innerText =
     `Total Pieces: ${allItems.length}`;
