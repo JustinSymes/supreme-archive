@@ -215,6 +215,10 @@ body{
 
 <script>
 
+const STRICT_MODE = true; 
+// true = only added items
+// false = current system (everything)
+
 const sheetURL =
 "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 
@@ -552,23 +556,38 @@ fetch(sheetURL)
 .then(r=>r.text())
 .then(data=>{
 
-const rows=data.split("\n").slice(1);
+const rows = data.split("\n").slice(1);
 
-const items=rows.map(r=>r.split(",")).map(c=>({
-
-name:c[1]?.trim(),
-category:c[2]?.trim(),
-src:c[8]?.split("|")[0]?.trim()
-
+// 🔥 sheet items (same as before)
+const sheetItems = rows.map(r=>r.split(",")).map(c=>({
+  id: c[0],
+  name: c[1]?.trim(),
+  category: c[2]?.trim(),
+  src: c[8]?.split("|")[0]?.trim()
 }));
 
-tops=items.filter(i=>i.category==="Tops");
-bottoms=items.filter(i=>i.category==="Bottoms");
+// 🔥 user items
+const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
-hats=[BLANK,...items.filter(i=>i.category==="Hats")];
-accs=[BLANK,...items.filter(i=>i.category==="Accessories")];
+// 🔥 SWITCH SYSTEM
+let sourceItems;
 
-  const editFit = JSON.parse(localStorage.getItem("editFit") || "null");
+if(STRICT_MODE){
+  sourceItems = myItems; // ONLY added items
+} else {
+  sourceItems = [...myItems, ...sheetItems]; // original behavior
+}
+
+// 🔥 BUILD LISTS FROM SOURCE
+tops = sourceItems.filter(i=>i.category==="Tops");
+bottoms = sourceItems.filter(i=>i.category==="Bottoms");
+
+hats = [BLANK, ...sourceItems.filter(i=>i.category==="Hats")];
+accs = [BLANK, ...sourceItems.filter(i=>i.category==="Accessories")];
+
+
+// --- KEEP YOUR EXISTING EDIT LOGIC ---
+const editFit = JSON.parse(localStorage.getItem("editFit") || "null");
 
 function matchIndex(list, src){
   if(!src) return 0;
