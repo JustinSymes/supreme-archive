@@ -235,6 +235,11 @@ let idxBot=Number(localStorage.getItem("fitBot"))||0;
 let idxHat=Number(localStorage.getItem("fitHat"))||0;
 let idxAcc=Number(localStorage.getItem("fitAcc"))||0;
 
+let lockTop = false;
+let lockBot = false;
+let lockHat = false;
+let lockAcc = false;
+
 /* DOM references (fix for iOS bug) */
 
 const topImg=document.getElementById("topImg");
@@ -339,13 +344,35 @@ return Math.floor(Math.random()*n);
 
 function randomize(){
 
-if(tops.length) idxTop=rand(tops.length);
-if(bottoms.length) idxBot=rand(bottoms.length);
-if(hats.length) idxHat=rand(hats.length);
-if(accs.length) idxAcc=rand(accs.length);
+  if(tops.length && !lockTop) idxTop = rand(tops.length);
+  if(bottoms.length && !lockBot) idxBot = rand(bottoms.length);
+  if(hats.length && !lockHat) idxHat = rand(hats.length);
+  if(accs.length && !lockAcc) idxAcc = rand(accs.length);
 
-render();
+  render();
 
+}
+
+function toggleLock(slotName){
+  if(slotName === "top"){
+    lockTop = !lockTop;
+    showToast(lockTop ? "Top Locked 🔒" : "Top Unlocked 🔓");
+  }
+
+  if(slotName === "bottom"){
+    lockBot = !lockBot;
+    showToast(lockBot ? "Bottom Locked 🔒" : "Bottom Unlocked 🔓");
+  }
+
+  if(slotName === "hat"){
+    lockHat = !lockHat;
+    showToast(lockHat ? "Hat Locked 🔒" : "Hat Unlocked 🔓");
+  }
+
+  if(slotName === "acc"){
+    lockAcc = !lockAcc;
+    showToast(lockAcc ? "Accessory Locked 🔒" : "Accessory Unlocked 🔓");
+  }
 }
 
 function saveFitToGallery(canvas){
@@ -552,6 +579,11 @@ document.getElementById("saveFitBtn").onclick = saveToGalleryOnly;
 document.getElementById("fitsBtn").onclick = () => {
   window.location.href = "fits.html";
 };
+
+topSlot.addEventListener("click", () => toggleLock("top"));
+botSlot.addEventListener("click", () => toggleLock("bottom"));
+hatSlot.addEventListener("click", () => toggleLock("hat"));
+accSlot.addEventListener("click", () => toggleLock("acc"));
 
 fetch(sheetURL)
 .then(r=>r.text())
