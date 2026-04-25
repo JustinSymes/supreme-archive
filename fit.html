@@ -14,6 +14,11 @@
 
 *{ box-sizing:border-box; }
 
+/* 🔥 NEW: stop zoom gestures */
+html, body, .stage, .slot, .slot img, button {
+  touch-action: manipulation;
+}
+
 body{
   margin:0;
   background:#fff;
@@ -21,6 +26,9 @@ body{
   color:#111;
   overflow:hidden;
   -webkit-tap-highlight-color:transparent;
+
+  /* 🔥 NEW */
+  overscroll-behavior: none;
 }
 
 /* Top bar */
@@ -121,22 +129,10 @@ body{
 }
 
 /* Size adjustments */
-.slot.hat img{
-  max-height:95%;
-}
-
-.slot.acc img{
-  max-height:75%;
-  max-width:75%;
-}
-
-.slot.top img{
-  max-height:79%;
-}
-
-.slot.bottom img{
-  max-height:92%;
-}
+.slot.hat img{ max-height:95%; }
+.slot.acc img{ max-height:75%; max-width:75%; }
+.slot.top img{ max-height:79%; }
+.slot.bottom img{ max-height:92%; }
 
 .blankHint{
   position:absolute;
@@ -144,7 +140,8 @@ body{
   color:#bbb;
   opacity:0;
 }
-  #toast{
+
+#toast{
   position:fixed;
   bottom:40px;
   left:50%;
@@ -184,7 +181,6 @@ body{
 </div>
 
 <div class="row-top">
-
 <div class="slot hat" id="hatSlot">
 <span class="blankHint">Hat</span>
 <img id="hatImg">
@@ -194,7 +190,6 @@ body{
 <span class="blankHint">Accessory</span>
 <img id="accImg">
 </div>
-
 </div>
 
 <div class="row-mid">
@@ -214,6 +209,19 @@ body{
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <script>
+
+// 🔥 NEW: FULL iOS double-tap zoom blocker
+let lastTouchEnd = 0;
+
+document.addEventListener("touchend", function(e){
+  const now = Date.now();
+
+  if(now - lastTouchEnd <= 300){
+    e.preventDefault();
+  }
+
+  lastTouchEnd = now;
+}, { passive:false });
 
 const STRICT_MODE = true; 
 // true = only added items
