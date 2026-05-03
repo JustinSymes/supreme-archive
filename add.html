@@ -166,7 +166,7 @@ document.getElementById("search").addEventListener("input", e=>{
     i.name.toLowerCase().includes(val)
   );
 
-  results.slice(0, 20).forEach(item => {
+  results.forEach(item => {
 
     const img = (item.image || "").split("|")[0];
 
