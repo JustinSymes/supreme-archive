@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Request Item</title>
+<style>
+body{margin:0;font-family:-apple-system;padding:20px;}
+.topbar{height:64px;display:flex;align-items:center;justify-content:center;position:relative;}
+.back{position:absolute;left:0;color:#e10600;font-weight:700;cursor:pointer;}
+.title{font-weight:800;font-size:20px;}
+.form{display:flex;flex-direction:column;gap:14px;margin-top:24px;}
+input{padding:14px;border-radius:12px;border:1px solid #ddd;font-size:16px;}
+button{padding:14px;border:0;border-radius:12px;background:#e10600;color:white;font-weight:800;font-size:16px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="back" onclick="history.back()">← Back</div>
+  <div class="title">Request Item</div>
+</div>
+
+<div class="form">
+  <input id="email" placeholder="Your email">
+  <input id="itemName" placeholder="Item name">
+  <input id="season" placeholder="Season">
+  <button onclick="submitRequest()">Submit</button>
+</div>
+
+<script>
+function submitRequest(){
+  const email = document.getElementById("email").value;
+  const itemName = document.getElementById("itemName").value;
+  const season = document.getElementById("season").value;
+
+  const subject = encodeURIComponent("Supreme Archive Item Request");
+  const body = encodeURIComponent(
+    `Email: ${email}\nItem Name: ${itemName}\nSeason: ${season}`
+  );
+
+  window.location.href =
+    `mailto:premearchive@gmail.com?subject=${subject}&body=${body}`;
+}
+</script>
+
+</body>
+</html>
