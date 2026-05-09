@@ -16,7 +16,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 
 <style>
-
 body{
   margin:0;
   background:#fff;
@@ -25,15 +24,8 @@ body{
 
 .header-wrap{
   padding:20px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:12px;
+  text-align:center;
   position:relative;
-}
-
-.header-wrap.right{
-  flex-direction:row-reverse;
 }
 
 .header{
@@ -44,15 +36,22 @@ body{
 }
 
 .menu-btn{
+  position:absolute;
+  top:18px;
+  left:calc(50% - 150px);
   background:none;
   border:none;
   color:#e10600;
-  font-size:26px;
+  font-size:28px;
   font-weight:800;
   cursor:pointer;
+  z-index:5100;
 }
 
-/* DROPDOWN */
+.menu-btn.right{
+  left:auto;
+  right:calc(50% - 150px);
+}
 
 .dropdown{
   position:absolute;
@@ -80,8 +79,6 @@ body{
   text-align:left;
   font-size:17px;
 }
-
-/* SETTINGS MODAL */
 
 .settingsOverlay{
   position:fixed;
@@ -223,7 +220,7 @@ body{
   width:100%;
   height:100%;
   object-fit:contain;
-  -webkit-user-drag:none;
+  -webkit-user-drag: none;
 }
 
 .name{
@@ -250,6 +247,12 @@ body{
   opacity:0;
 }
 
+img {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+  
 #trashBin.show{
   bottom:28px;
   opacity:1;
@@ -258,13 +261,6 @@ body{
 #trashBin.active{
   transform:translateX(-50%) scale(1.2);
 }
-
-img{
-  -webkit-user-drag:none;
-  -webkit-touch-callout:none;
-  user-select:none;
-}
-
 </style>
 </head>
 
@@ -272,78 +268,41 @@ img{
 
 <div id="trashBin">🗑</div>
 
-<div class="header-wrap" id="headerWrap">
+<div class="header-wrap">
   <button id="menuBtn" class="menu-btn">☰</button>
   <div class="header">Supreme Archive</div>
 </div>
 
-<!-- DROPDOWN -->
-
 <div class="dropdown" id="dropdownMenu">
-
-  <button onclick="window.location.href='request.html'">
-    Request Items
-  </button>
-
-  <button onclick="openSettings()">
-    Currency & Language
-  </button>
-
-  <button onclick="alert('Socials coming soon')">
-    Socials
-  </button>
-
+  <button onclick="window.location.href='request.html'">Request Items</button>
+  <button onclick="openSettings()">Currency</button>
+  <button onclick="openSettings()">Language</button>
+  <button onclick="alert('Socials coming soon')">Socials</button>
 </div>
 
-<!-- SETTINGS -->
-
 <div class="settingsOverlay" id="settingsOverlay">
-
   <div class="settingsModal">
-
     <h2>Change your settings</h2>
-
-    <p>
-      Choose your language & preferred currency below
-    </p>
+    <p>Choose your language & preferred currency below</p>
 
     <div class="settingsBody">
-
       <label>Language</label>
-
       <select id="languageSelect">
         <option value="English">English</option>
       </select>
 
       <label>Currency</label>
-
       <select id="currencySelect">
         <option value="CAD">$ CAD</option>
         <option value="USD">$ USD</option>
       </select>
-
     </div>
 
     <div class="settingsActions">
-
-      <button
-        class="cancelBtn"
-        onclick="closeSettings()"
-      >
-        Cancel
-      </button>
-
-      <button
-        class="saveSettingsBtn"
-        onclick="saveSettings()"
-      >
-        Save Changes
-      </button>
-
+      <button class="cancelBtn" onclick="closeSettings()">Cancel</button>
+      <button class="saveSettingsBtn" onclick="saveSettings()">Save Changes</button>
     </div>
-
   </div>
-
 </div>
 
 <div class="counter-row">
@@ -367,81 +326,346 @@ img{
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <script>
+const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
+
+let items = [];
+let allItems = [];
 
 const menuBtn = document.getElementById("menuBtn");
 const dropdownMenu = document.getElementById("dropdownMenu");
-const headerWrap = document.getElementById("headerWrap");
 
 if(localStorage.getItem("menuSide") === "right"){
-  headerWrap.classList.add("right");
+  menuBtn.classList.add("right");
 }
 
-menuBtn.onclick = () => {
-  dropdownMenu.classList.toggle("show");
+let menuHoldTimer = null;
+let menuDragging = false;
+let menuGhost = null;
+let menuDidDrag = false;
 
-  menuBtn.textContent =
-    dropdownMenu.classList.contains("show")
-    ? "×"
-    : "☰";
+menuBtn.onclick = () => {
+  if(menuDidDrag){
+    menuDidDrag = false;
+    return;
+  }
+
+  dropdownMenu.classList.toggle("show");
+  menuBtn.textContent = dropdownMenu.classList.contains("show") ? "×" : "☰";
 };
 
-let menuHoldTimer = null;
+menuBtn.addEventListener("touchstart", e=>{
+  const t = e.touches[0];
 
-menuBtn.addEventListener("touchstart", () => {
+  menuHoldTimer = setTimeout(()=>{
+    menuDragging = true;
+    menuDidDrag = true;
 
-  menuHoldTimer = setTimeout(() => {
+    dropdownMenu.classList.remove("show");
+    menuBtn.textContent = "☰";
 
-    headerWrap.classList.toggle("right");
+    menuGhost = menuBtn.cloneNode(true);
+    menuGhost.style.position = "fixed";
+    menuGhost.style.left = (t.clientX - 20) + "px";
+    menuGhost.style.top = (t.clientY - 20) + "px";
+    menuGhost.style.zIndex = "9000";
+    menuGhost.style.pointerEvents = "none";
+    menuGhost.style.opacity = "0.9";
 
-    localStorage.setItem(
-      "menuSide",
-      headerWrap.classList.contains("right")
-      ? "right"
-      : "left"
-    );
+    document.body.appendChild(menuGhost);
+    menuBtn.style.opacity = "0.3";
+  }, 350);
+},{passive:true});
 
-  }, 500);
+menuBtn.addEventListener("touchmove", e=>{
+  if(!menuDragging) return;
 
-}, {passive:true});
+  e.preventDefault();
 
-menuBtn.addEventListener("touchend", () => {
+  const t = e.touches[0];
+  menuGhost.style.left = (t.clientX - 20) + "px";
+  menuGhost.style.top = (t.clientY - 20) + "px";
+},{passive:false});
+
+menuBtn.addEventListener("touchend", e=>{
   clearTimeout(menuHoldTimer);
+
+  if(!menuDragging) return;
+
+  const t = e.changedTouches[0];
+
+  if(t.clientX > window.innerWidth / 2){
+    menuBtn.classList.add("right");
+    localStorage.setItem("menuSide", "right");
+  } else {
+    menuBtn.classList.remove("right");
+    localStorage.setItem("menuSide", "left");
+  }
+
+  if(menuGhost) menuGhost.remove();
+  menuGhost = null;
+  menuDragging = false;
+  menuBtn.style.opacity = "";
+
+  setTimeout(()=> menuDidDrag = false, 250);
 });
 
 function openSettings(){
-
   document.getElementById("currencySelect").value =
     localStorage.getItem("currency") || "CAD";
 
   document.getElementById("languageSelect").value =
     localStorage.getItem("language") || "English";
 
-  document
-    .getElementById("settingsOverlay")
-    .classList.add("show");
+  document.getElementById("settingsOverlay").classList.add("show");
 }
 
 function closeSettings(){
-  document
-    .getElementById("settingsOverlay")
-    .classList.remove("show");
+  document.getElementById("settingsOverlay").classList.remove("show");
 }
 
 function saveSettings(){
-
-  localStorage.setItem(
-    "currency",
-    document.getElementById("currencySelect").value
-  );
-
-  localStorage.setItem(
-    "language",
-    document.getElementById("languageSelect").value
-  );
-
+  localStorage.setItem("currency", document.getElementById("currencySelect").value);
+  localStorage.setItem("language", document.getElementById("languageSelect").value);
   closeSettings();
 }
 
+function firstPhoto(imageField){
+  if(!imageField) return "";
+  return imageField.split("|")[0].trim();
+}
+
+function clean(v){
+  return (v ?? "").toString().trim().replace(/^"+|"+$/g,"");
+}
+
+function sortArchiveItems(list){
+  const categoryOrder = {
+    "Tops": 0,
+    "Bottoms": 1,
+    "Hats": 2,
+    "Bags": 3,
+    "Accessories": 4,
+    "Skate": 5
+  };
+
+  const getNumericId = (item) => {
+    if (!item?.id) return 0;
+
+    if (String(item.id).startsWith("user-")) {
+      return Number(String(item.id).replace("user-", "")) || 0;
+    }
+
+    const match = String(item.id).match(/\d+/g);
+    if (!match) return 0;
+    return Number(match.join("")) || 0;
+  };
+
+  return [...list].sort((a, b) => {
+    const catA = categoryOrder[a.category] ?? 999;
+    const catB = categoryOrder[b.category] ?? 999;
+
+    if (catA !== catB) return catA - catB;
+
+    return getNumericId(b) - getNumericId(a);
+  });
+}
+
+fetch(sheetURL)
+.then(res=>res.text())
+.then(csv=>{
+
+  const rows = Papa.parse(csv,{skipEmptyLines:true}).data;
+
+  items = rows.slice(1).map(c=>({
+    id: clean(c[0]),
+    name: clean(c[1]),
+    category: clean(c[2]),
+    image: clean(c[8])
+  }))
+  .filter(i=>i.id && i.name && i.image);
+
+  let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+
+  allItems = sortArchiveItems([...myItems, ...items]);
+
+  localStorage.setItem("archiveItems", JSON.stringify(items));
+
+  document.getElementById("counter").innerText =
+    `Total Pieces: ${allItems.length}`;
+
+  displayItems(allItems);
+});
+
+function displayItems(list){
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  list.forEach(item=>{
+
+    const imgSrc = item.image || item.src;
+
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <div class="thumb">
+        <img src="${firstPhoto(imgSrc)}">
+      </div>
+      <div class="name">${item.name}</div>
+    `;
+
+    div.onclick = () => {
+      const params = new URLSearchParams();
+
+      if(item.sheetId){
+        params.set("id", item.sheetId);
+      } else {
+        params.set("id", item.id);
+      }
+
+      window.location = "item.html?" + params.toString();
+    };
+
+    enableDragDelete(div, item);
+
+    grid.appendChild(div);
+  });
+}
+
+function filterCategory(cat){
+  if(cat==="All") return displayItems(allItems);
+  displayItems(allItems.filter(i=>i.category===cat));
+}
+
+let holdTimer=null;
+let dragGhost=null;
+let didLongPress=false;
+
+function enableDragDelete(card,item){
+
+  let startX=0,startY=0,isDragging=false;
+
+  card.addEventListener("touchstart",e=>{
+
+    if(!isUserItem(item)) return;
+
+    const t=e.touches[0];
+    startX=t.clientX;
+    startY=t.clientY;
+
+    holdTimer=setTimeout(()=>{
+      isDragging=true;
+      didLongPress=true;
+
+      showTrash();
+
+      dragGhost=card.cloneNode(true);
+      dragGhost.style.position="fixed";
+      dragGhost.style.left=(t.clientX-100)+"px";
+      dragGhost.style.top=(t.clientY-100)+"px";
+      dragGhost.style.width=card.offsetWidth+"px";
+      dragGhost.style.pointerEvents="none";
+      dragGhost.style.zIndex="2000";
+      dragGhost.style.opacity="0.95";
+
+      document.body.appendChild(dragGhost);
+
+      card.style.opacity="0.3";
+
+    },300);
+
+  },{passive:true});
+
+  card.addEventListener("touchmove",e=>{
+
+    const t=e.touches[0];
+
+    if(!isDragging){
+      if(Math.abs(t.clientX-startX)>10 || Math.abs(t.clientY-startY)>10){
+        clearTimeout(holdTimer);
+      }
+      return;
+    }
+
+    e.preventDefault();
+
+    dragGhost.style.left=(t.clientX-100)+"px";
+    dragGhost.style.top=(t.clientY-100)+"px";
+
+    const trash=document.getElementById("trashBin").getBoundingClientRect();
+
+    const over =
+      t.clientX>trash.left &&
+      t.clientX<trash.right &&
+      t.clientY>trash.top &&
+      t.clientY<trash.bottom;
+
+    document.getElementById("trashBin").classList.toggle("active",over);
+
+  },{passive:false});
+
+  card.addEventListener("touchend",e=>{
+
+    clearTimeout(holdTimer);
+
+    if(!isDragging) return;
+
+    const t=e.changedTouches[0];
+    const trash=document.getElementById("trashBin").getBoundingClientRect();
+
+    const dropped =
+      t.clientX>trash.left &&
+      t.clientX<trash.right &&
+      t.clientY>trash.top &&
+      t.clientY<trash.bottom;
+
+    cleanup(card);
+
+    if(dropped) deleteItem(item.id);
+
+  });
+
+  card.addEventListener("click",e=>{
+    if(didLongPress){
+      e.preventDefault();
+      e.stopPropagation();
+      didLongPress=false;
+    }
+  },true);
+}
+
+function cleanup(card){
+  card.style.opacity="";
+  if(dragGhost) dragGhost.remove();
+  dragGhost=null;
+  document.getElementById("trashBin").classList.remove("show","active");
+}
+
+function showTrash(){
+  document.getElementById("trashBin").classList.add("show");
+}
+
+function deleteItem(id){
+
+  let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+
+  myItems = myItems.filter(i => i.id !== id);
+
+  localStorage.setItem("myItems", JSON.stringify(myItems));
+
+  allItems = allItems.filter(i => i.id !== id);
+  allItems = sortArchiveItems(allItems);
+
+  document.getElementById("counter").innerText =
+    `Total Pieces: ${allItems.length}`;
+
+  displayItems(allItems);
+}
+
+function isUserItem(item){
+  const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+  return myItems.some(i=>i.id===item.id);
+}
 </script>
 
 </body>
