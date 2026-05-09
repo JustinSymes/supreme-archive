@@ -31,6 +31,168 @@ body{
   font-style:italic;
 }
 
+  .header-wrap{
+  padding:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  position:relative;
+}
+
+<div class="dropdown" id="dropdownMenu">
+  <button onclick="window.location.href='request.html'">Request Items</button>
+  <button onclick="openSettings('currency')">Currency</button>
+  <button onclick="openSettings('language')">Language</button>
+  <button onclick="alert('Socials coming soon')">Socials</button>
+</div>
+
+<div class="settingsOverlay" id="settingsOverlay">
+  <div class="settingsModal">
+    <h2>Change your settings</h2>
+    <p>Choose your language & preferred currency below</p>
+
+    <div class="settingsBody">
+      <label>Language</label>
+      <select id="languageSelect">
+        <option value="English">English</option>
+      </select>
+
+      <label>Currency</label>
+      <select id="currencySelect">
+        <option value="CAD">$ CAD</option>
+        <option value="USD">$ USD</option>
+      </select>
+    </div>
+
+    <div class="settingsActions">
+      <button class="cancelBtn" onclick="closeSettings()">Cancel</button>
+      <button class="saveSettingsBtn" onclick="saveSettings()">Save Changes</button>
+    </div>
+  </div>
+</div>
+  
+
+.header-wrap.right{
+  flex-direction:row-reverse;
+}
+
+.header{
+  padding:0;
+}
+
+.menu-btn{
+  background:none;
+  border:none;
+  color:#e10600;
+  font-size:26px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.dropdown{
+  position:absolute;
+  top:62px;
+  left:20px;
+  right:20px;
+  background:white;
+  border-radius:18px;
+  box-shadow:0 12px 35px rgba(0,0,0,.18);
+  overflow:hidden;
+  z-index:5000;
+  display:none;
+}
+
+.dropdown.show{
+  display:block;
+}
+
+.dropdown button{
+  width:100%;
+  padding:16px 18px;
+  background:white;
+  border:0;
+  border-bottom:1px solid #eee;
+  text-align:left;
+  font-size:17px;
+}
+
+.settingsOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:6000;
+}
+
+.settingsOverlay.show{
+  display:flex;
+}
+
+.settingsModal{
+  width:86%;
+  background:white;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 16px 45px rgba(0,0,0,.25);
+}
+
+.settingsModal h2{
+  margin:0;
+  padding:20px 20px 4px;
+  font-size:22px;
+}
+
+.settingsModal p{
+  margin:0;
+  padding:0 20px 16px;
+  color:#333;
+}
+
+.settingsBody{
+  padding:18px 20px;
+}
+
+.settingsBody label{
+  display:block;
+  margin-bottom:8px;
+  font-size:16px;
+}
+
+.settingsBody select{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  font-size:16px;
+  margin-bottom:18px;
+}
+
+.settingsActions{
+  display:flex;
+  justify-content:space-between;
+  padding:0 20px 20px;
+}
+
+.cancelBtn{
+  background:white;
+  border:1px solid #111;
+  border-radius:22px;
+  padding:12px 22px;
+  font-weight:700;
+}
+
+.saveSettingsBtn{
+  background:#111;
+  color:white;
+  border:none;
+  border-radius:22px;
+  padding:12px 22px;
+  font-weight:700;
+}
+  
 .counter-row{
   display:flex;
   justify-content:center;
@@ -145,7 +307,10 @@ img {
 
 <div id="trashBin">🗑</div>
 
-<div class="header">Supreme Archive</div>
+<div class="header-wrap" id="headerWrap">
+  <button id="menuBtn" class="menu-btn">☰</button>
+  <div class="header">Supreme Archive</div>
+</div>
 
 <div class="counter-row">
   <a class="add-link" href="add.html">+ Add</a>
@@ -421,6 +586,58 @@ function isUserItem(item){
   const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
   return myItems.some(i=>i.id===item.id);
 }
+
+
+const menuBtn = document.getElementById("menuBtn");
+const dropdownMenu = document.getElementById("dropdownMenu");
+const headerWrap = document.getElementById("headerWrap");
+
+if(localStorage.getItem("menuSide") === "right"){
+  headerWrap.classList.add("right");
+}
+
+menuBtn.onclick = () => {
+  dropdownMenu.classList.toggle("show");
+  menuBtn.textContent = dropdownMenu.classList.contains("show") ? "×" : "☰";
+};
+
+let menuHoldTimer = null;
+
+menuBtn.addEventListener("touchstart", () => {
+  menuHoldTimer = setTimeout(() => {
+    headerWrap.classList.toggle("right");
+    localStorage.setItem(
+      "menuSide",
+      headerWrap.classList.contains("right") ? "right" : "left"
+    );
+  }, 500);
+}, {passive:true});
+
+menuBtn.addEventListener("touchend", () => {
+  clearTimeout(menuHoldTimer);
+});
+
+function openSettings(){
+  document.getElementById("currencySelect").value =
+    localStorage.getItem("currency") || "CAD";
+
+  document.getElementById("languageSelect").value =
+    localStorage.getItem("language") || "English";
+
+  document.getElementById("settingsOverlay").classList.add("show");
+}
+
+function closeSettings(){
+  document.getElementById("settingsOverlay").classList.remove("show");
+}
+
+function saveSettings(){
+  localStorage.setItem("currency", document.getElementById("currencySelect").value);
+  localStorage.setItem("language", document.getElementById("languageSelect").value);
+  closeSettings();
+}
+  
+  
 </script>
 
 </body>
