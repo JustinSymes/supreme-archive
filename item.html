@@ -186,7 +186,7 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   buildCarousel(images);
 
   // 💰 price toggle
-  let currency = "CAD";
+  let currency = localStorage.getItem("currency") || "CAD";
 
   function formatMoney(n){
     const num = Number(String(n || "").replace(/[^0-9.]/g,""));
@@ -218,9 +218,10 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   renderPrice();
 
   document.getElementById("priceToggle")?.addEventListener("click", () => {
-    currency = currency === "CAD" ? "USD" : "CAD";
-    renderPrice();
-  });
+  currency = currency === "CAD" ? "USD" : "CAD";
+  localStorage.setItem("currency", currency);
+  renderPrice();
+});
 
 });
 
