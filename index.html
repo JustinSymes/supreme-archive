@@ -23,12 +23,15 @@ body{
 }
 
 .header-wrap{
-  padding:20px;
-  text-align:center;
   position:relative;
+  padding:20px 0 10px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 
 .header{
+  text-align:center;
   font-size:24px;
   font-family:'Montserrat', sans-serif;
   font-weight:800;
@@ -38,7 +41,7 @@ body{
 .menu-btn{
   position:absolute;
   top:18px;
-  left:calc(50% - 150px);
+  left:26px;
   background:none;
   border:none;
   color:#e10600;
@@ -50,110 +53,7 @@ body{
 
 .menu-btn.right{
   left:auto;
-  right:calc(50% - 150px);
-}
-
-.dropdown{
-  position:absolute;
-  top:72px;
-  left:20px;
-  right:20px;
-  background:white;
-  border-radius:18px;
-  box-shadow:0 12px 35px rgba(0,0,0,.18);
-  overflow:hidden;
-  z-index:5000;
-  display:none;
-}
-
-.dropdown.show{
-  display:block;
-}
-
-.dropdown button{
-  width:100%;
-  padding:16px 18px;
-  background:white;
-  border:0;
-  border-bottom:1px solid #eee;
-  text-align:left;
-  font-size:17px;
-}
-
-.settingsOverlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.45);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:6000;
-}
-
-.settingsOverlay.show{
-  display:flex;
-}
-
-.settingsModal{
-  width:86%;
-  background:white;
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:0 16px 45px rgba(0,0,0,.25);
-}
-
-.settingsModal h2{
-  margin:0;
-  padding:20px 20px 4px;
-  font-size:22px;
-}
-
-.settingsModal p{
-  margin:0;
-  padding:0 20px 16px;
-  color:#333;
-}
-
-.settingsBody{
-  padding:18px 20px;
-}
-
-.settingsBody label{
-  display:block;
-  margin-bottom:8px;
-  font-size:16px;
-}
-
-.settingsBody select{
-  width:100%;
-  padding:14px;
-  border-radius:12px;
-  border:1px solid #ccc;
-  font-size:16px;
-  margin-bottom:18px;
-}
-
-.settingsActions{
-  display:flex;
-  justify-content:space-between;
-  padding:0 20px 20px;
-}
-
-.cancelBtn{
-  background:white;
-  border:1px solid #111;
-  border-radius:22px;
-  padding:12px 22px;
-  font-weight:700;
-}
-
-.saveSettingsBtn{
-  background:#111;
-  color:white;
-  border:none;
-  border-radius:22px;
-  padding:12px 22px;
-  font-weight:700;
+  right:26px;
 }
 
 .counter-row{
@@ -196,6 +96,7 @@ body{
 .category{
   color:#e10600;
   cursor:pointer;
+  white-space:nowrap;
 }
 
 .grid{
@@ -220,13 +121,21 @@ body{
   width:100%;
   height:100%;
   object-fit:contain;
-  -webkit-user-drag: none;
+  -webkit-user-drag:none;
 }
 
 .name{
   margin-top:12px;
   font-family:'Special Elite', monospace;
 }
+
+img{
+  -webkit-user-drag:none;
+  -webkit-touch-callout:none;
+  user-select:none;
+}
+
+/* trash */
 
 #trashBin{
   position:fixed;
@@ -242,17 +151,11 @@ body{
   align-items:center;
   justify-content:center;
   border-radius:22px;
-  transition:all 0.2s ease;
+  transition:all .2s ease;
   z-index:3000;
   opacity:0;
 }
 
-img {
-  -webkit-user-drag: none;
-  -webkit-touch-callout: none;
-  user-select: none;
-}
-  
 #trashBin.show{
   bottom:28px;
   opacity:1;
@@ -260,6 +163,110 @@ img {
 
 #trashBin.active{
   transform:translateX(-50%) scale(1.2);
+}
+
+/* dropdown */
+
+.dropdown{
+  position:absolute;
+  top:62px;
+  left:20px;
+  right:20px;
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 12px 35px rgba(0,0,0,.18);
+  overflow:hidden;
+  z-index:6000;
+  display:none;
+}
+
+.dropdown.show{
+  display:block;
+}
+
+.dropdown button{
+  width:100%;
+  padding:16px 18px;
+  background:#fff;
+  border:none;
+  border-bottom:1px solid #eee;
+  text-align:left;
+  font-size:17px;
+}
+
+/* settings */
+
+.settingsOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:7000;
+}
+
+.settingsOverlay.show{
+  display:flex;
+}
+
+.settingsModal{
+  width:86%;
+  background:white;
+  border-radius:18px;
+  overflow:hidden;
+}
+
+.settingsModal h2{
+  margin:0;
+  padding:20px 20px 4px;
+  font-size:22px;
+}
+
+.settingsModal p{
+  margin:0;
+  padding:0 20px 16px;
+}
+
+.settingsBody{
+  padding:18px 20px;
+}
+
+.settingsBody label{
+  display:block;
+  margin-bottom:8px;
+}
+
+.settingsBody select{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  font-size:16px;
+  margin-bottom:18px;
+}
+
+.settingsActions{
+  display:flex;
+  justify-content:space-between;
+  padding:0 20px 20px;
+}
+
+.cancelBtn{
+  background:white;
+  border:1px solid #111;
+  border-radius:22px;
+  padding:12px 22px;
+  font-weight:700;
+}
+
+.saveSettingsBtn{
+  background:#111;
+  color:white;
+  border:none;
+  border-radius:22px;
+  padding:12px 22px;
+  font-weight:700;
 }
 </style>
 </head>
@@ -269,40 +276,18 @@ img {
 <div id="trashBin">🗑</div>
 
 <div class="header-wrap">
+
   <button id="menuBtn" class="menu-btn">☰</button>
+
   <div class="header">Supreme Archive</div>
-</div>
 
-<div class="dropdown" id="dropdownMenu">
-  <button onclick="window.location.href='request.html'">Request Items</button>
-  <button onclick="openSettings()">Currency</button>
-  <button onclick="openSettings()">Language</button>
-  <button onclick="alert('Socials coming soon')">Socials</button>
-</div>
-
-<div class="settingsOverlay" id="settingsOverlay">
-  <div class="settingsModal">
-    <h2>Change your settings</h2>
-    <p>Choose your language & preferred currency below</p>
-
-    <div class="settingsBody">
-      <label>Language</label>
-      <select id="languageSelect">
-        <option value="English">English</option>
-      </select>
-
-      <label>Currency</label>
-      <select id="currencySelect">
-        <option value="CAD">$ CAD</option>
-        <option value="USD">$ USD</option>
-      </select>
-    </div>
-
-    <div class="settingsActions">
-      <button class="cancelBtn" onclick="closeSettings()">Cancel</button>
-      <button class="saveSettingsBtn" onclick="saveSettings()">Save Changes</button>
-    </div>
+  <div class="dropdown" id="dropdownMenu">
+    <button onclick="window.location.href='request.html'">Request Items</button>
+    <button onclick="openSettings()">Currency</button>
+    <button onclick="openSettings()">Language</button>
+    <button onclick="alert('Socials coming soon')">Socials</button>
   </div>
+
 </div>
 
 <div class="counter-row">
@@ -323,6 +308,35 @@ img {
 
 <div class="grid" id="grid"></div>
 
+<div class="settingsOverlay" id="settingsOverlay">
+  <div class="settingsModal">
+
+    <h2>Change your settings</h2>
+    <p>Choose your language & preferred currency below</p>
+
+    <div class="settingsBody">
+
+      <label>Language</label>
+      <select id="languageSelect">
+        <option value="English">English</option>
+      </select>
+
+      <label>Currency</label>
+      <select id="currencySelect">
+        <option value="CAD">$ CAD</option>
+        <option value="USD">$ USD</option>
+      </select>
+
+    </div>
+
+    <div class="settingsActions">
+      <button class="cancelBtn" onclick="closeSettings()">Cancel</button>
+      <button class="saveSettingsBtn" onclick="saveSettings()">Save Changes</button>
+    </div>
+
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <script>
@@ -330,104 +344,6 @@ const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTto
 
 let items = [];
 let allItems = [];
-
-const menuBtn = document.getElementById("menuBtn");
-const dropdownMenu = document.getElementById("dropdownMenu");
-
-if(localStorage.getItem("menuSide") === "right"){
-  menuBtn.classList.add("right");
-}
-
-let menuHoldTimer = null;
-let menuDragging = false;
-let menuGhost = null;
-let menuDidDrag = false;
-
-menuBtn.onclick = () => {
-  if(menuDidDrag){
-    menuDidDrag = false;
-    return;
-  }
-
-  dropdownMenu.classList.toggle("show");
-  menuBtn.textContent = dropdownMenu.classList.contains("show") ? "×" : "☰";
-};
-
-menuBtn.addEventListener("touchstart", e=>{
-  const t = e.touches[0];
-
-  menuHoldTimer = setTimeout(()=>{
-    menuDragging = true;
-    menuDidDrag = true;
-
-    dropdownMenu.classList.remove("show");
-    menuBtn.textContent = "☰";
-
-    menuGhost = menuBtn.cloneNode(true);
-    menuGhost.style.position = "fixed";
-    menuGhost.style.left = (t.clientX - 20) + "px";
-    menuGhost.style.top = (t.clientY - 20) + "px";
-    menuGhost.style.zIndex = "9000";
-    menuGhost.style.pointerEvents = "none";
-    menuGhost.style.opacity = "0.9";
-
-    document.body.appendChild(menuGhost);
-    menuBtn.style.opacity = "0.3";
-  }, 350);
-},{passive:true});
-
-menuBtn.addEventListener("touchmove", e=>{
-  if(!menuDragging) return;
-
-  e.preventDefault();
-
-  const t = e.touches[0];
-  menuGhost.style.left = (t.clientX - 20) + "px";
-  menuGhost.style.top = (t.clientY - 20) + "px";
-},{passive:false});
-
-menuBtn.addEventListener("touchend", e=>{
-  clearTimeout(menuHoldTimer);
-
-  if(!menuDragging) return;
-
-  const t = e.changedTouches[0];
-
-  if(t.clientX > window.innerWidth / 2){
-    menuBtn.classList.add("right");
-    localStorage.setItem("menuSide", "right");
-  } else {
-    menuBtn.classList.remove("right");
-    localStorage.setItem("menuSide", "left");
-  }
-
-  if(menuGhost) menuGhost.remove();
-  menuGhost = null;
-  menuDragging = false;
-  menuBtn.style.opacity = "";
-
-  setTimeout(()=> menuDidDrag = false, 250);
-});
-
-function openSettings(){
-  document.getElementById("currencySelect").value =
-    localStorage.getItem("currency") || "CAD";
-
-  document.getElementById("languageSelect").value =
-    localStorage.getItem("language") || "English";
-
-  document.getElementById("settingsOverlay").classList.add("show");
-}
-
-function closeSettings(){
-  document.getElementById("settingsOverlay").classList.remove("show");
-}
-
-function saveSettings(){
-  localStorage.setItem("currency", document.getElementById("currencySelect").value);
-  localStorage.setItem("language", document.getElementById("languageSelect").value);
-  closeSettings();
-}
 
 function firstPhoto(imageField){
   if(!imageField) return "";
@@ -439,35 +355,42 @@ function clean(v){
 }
 
 function sortArchiveItems(list){
+
   const categoryOrder = {
-    "Tops": 0,
-    "Bottoms": 1,
-    "Hats": 2,
-    "Bags": 3,
-    "Accessories": 4,
-    "Skate": 5
+    "Tops":0,
+    "Bottoms":1,
+    "Hats":2,
+    "Bags":3,
+    "Accessories":4,
+    "Skate":5
   };
 
-  const getNumericId = (item) => {
-    if (!item?.id) return 0;
+  const getNumericId = (item)=>{
+    if(!item?.id) return 0;
 
-    if (String(item.id).startsWith("user-")) {
-      return Number(String(item.id).replace("user-", "")) || 0;
+    if(String(item.id).startsWith("user-")){
+      return Number(String(item.id).replace("user-","")) || 0;
     }
 
     const match = String(item.id).match(/\d+/g);
-    if (!match) return 0;
+    if(!match) return 0;
+
     return Number(match.join("")) || 0;
   };
 
-  return [...list].sort((a, b) => {
+  return [...list].sort((a,b)=>{
+
     const catA = categoryOrder[a.category] ?? 999;
     const catB = categoryOrder[b.category] ?? 999;
 
-    if (catA !== catB) return catA - catB;
+    if(catA !== catB){
+      return catA - catB;
+    }
 
     return getNumericId(b) - getNumericId(a);
+
   });
+
 }
 
 fetch(sheetURL)
@@ -488,15 +411,15 @@ fetch(sheetURL)
 
   allItems = sortArchiveItems([...myItems, ...items]);
 
-  localStorage.setItem("archiveItems", JSON.stringify(items));
-
   document.getElementById("counter").innerText =
     `Total Pieces: ${allItems.length}`;
 
   displayItems(allItems);
+
 });
 
 function displayItems(list){
+
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
@@ -514,7 +437,8 @@ function displayItems(list){
       <div class="name">${item.name}</div>
     `;
 
-    div.onclick = () => {
+    div.onclick = ()=>{
+
       const params = new URLSearchParams();
 
       if(item.sheetId){
@@ -524,12 +448,15 @@ function displayItems(list){
       }
 
       window.location = "item.html?" + params.toString();
+
     };
 
-    enableDragDelete(div, item);
+    enableDragDelete(div,item);
 
     grid.appendChild(div);
+
   });
+
 }
 
 function filterCategory(cat){
@@ -537,29 +464,36 @@ function filterCategory(cat){
   displayItems(allItems.filter(i=>i.category===cat));
 }
 
-let holdTimer=null;
-let dragGhost=null;
-let didLongPress=false;
+/* delete */
+
+let holdTimer = null;
+let dragGhost = null;
+let didLongPress = false;
 
 function enableDragDelete(card,item){
 
-  let startX=0,startY=0,isDragging=false;
+  let startX=0;
+  let startY=0;
+  let isDragging=false;
 
   card.addEventListener("touchstart",e=>{
 
     if(!isUserItem(item)) return;
 
     const t=e.touches[0];
+
     startX=t.clientX;
     startY=t.clientY;
 
     holdTimer=setTimeout(()=>{
+
       isDragging=true;
       didLongPress=true;
 
       showTrash();
 
       dragGhost=card.cloneNode(true);
+
       dragGhost.style.position="fixed";
       dragGhost.style.left=(t.clientX-100)+"px";
       dragGhost.style.top=(t.clientY-100)+"px";
@@ -581,9 +515,11 @@ function enableDragDelete(card,item){
     const t=e.touches[0];
 
     if(!isDragging){
+
       if(Math.abs(t.clientX-startX)>10 || Math.abs(t.clientY-startY)>10){
         clearTimeout(holdTimer);
       }
+
       return;
     }
 
@@ -592,79 +528,172 @@ function enableDragDelete(card,item){
     dragGhost.style.left=(t.clientX-100)+"px";
     dragGhost.style.top=(t.clientY-100)+"px";
 
-    const trash=document.getElementById("trashBin").getBoundingClientRect();
-
-    const over =
-      t.clientX>trash.left &&
-      t.clientX<trash.right &&
-      t.clientY>trash.top &&
-      t.clientY<trash.bottom;
-
-    document.getElementById("trashBin").classList.toggle("active",over);
-
   },{passive:false});
 
-  card.addEventListener("touchend",e=>{
+  card.addEventListener("touchend",()=>{
 
     clearTimeout(holdTimer);
 
-    if(!isDragging) return;
+    if(dragGhost) dragGhost.remove();
 
-    const t=e.changedTouches[0];
-    const trash=document.getElementById("trashBin").getBoundingClientRect();
+    dragGhost=null;
 
-    const dropped =
-      t.clientX>trash.left &&
-      t.clientX<trash.right &&
-      t.clientY>trash.top &&
-      t.clientY<trash.bottom;
-
-    cleanup(card);
-
-    if(dropped) deleteItem(item.id);
+    card.style.opacity="";
 
   });
 
-  card.addEventListener("click",e=>{
-    if(didLongPress){
-      e.preventDefault();
-      e.stopPropagation();
-      didLongPress=false;
-    }
-  },true);
-}
-
-function cleanup(card){
-  card.style.opacity="";
-  if(dragGhost) dragGhost.remove();
-  dragGhost=null;
-  document.getElementById("trashBin").classList.remove("show","active");
 }
 
 function showTrash(){
   document.getElementById("trashBin").classList.add("show");
 }
 
-function deleteItem(id){
-
-  let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
-
-  myItems = myItems.filter(i => i.id !== id);
-
-  localStorage.setItem("myItems", JSON.stringify(myItems));
-
-  allItems = allItems.filter(i => i.id !== id);
-  allItems = sortArchiveItems(allItems);
-
-  document.getElementById("counter").innerText =
-    `Total Pieces: ${allItems.length}`;
-
-  displayItems(allItems);
-}
-
 function isUserItem(item){
   const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
   return myItems.some(i=>i.id===item.id);
+}
+
+/* menu */
+
+const menuBtn = document.getElementById("menuBtn");
+const dropdownMenu = document.getElementById("dropdownMenu");
+
+if(localStorage.getItem("menuSide") === "right"){
+  menuBtn.classList.add("right");
+}
+
+menuBtn.onclick = ()=>{
+
+  if(menuDidDrag){
+    menuDidDrag = false;
+    return;
+  }
+
+  dropdownMenu.classList.toggle("show");
+
+  menuBtn.textContent =
+    dropdownMenu.classList.contains("show")
+    ? "×"
+    : "☰";
+
+};
+
+let menuHoldTimer = null;
+let menuDragging = false;
+let menuGhost = null;
+let menuDidDrag = false;
+let menuOffsetX = 0;
+let menuOffsetY = 0;
+
+menuBtn.addEventListener("touchstart", e=>{
+
+  const t = e.touches[0];
+
+  menuHoldTimer = setTimeout(()=>{
+
+    menuDragging = true;
+    menuDidDrag = true;
+
+    dropdownMenu.classList.remove("show");
+    menuBtn.textContent = "☰";
+
+    const rect = menuBtn.getBoundingClientRect();
+
+    menuOffsetX = t.clientX - rect.left;
+    menuOffsetY = t.clientY - rect.top;
+
+    menuGhost = menuBtn.cloneNode(true);
+
+    menuGhost.style.position = "fixed";
+    menuGhost.style.left = (t.clientX - menuOffsetX) + "px";
+    menuGhost.style.top = (t.clientY - menuOffsetY) + "px";
+    menuGhost.style.zIndex = "9000";
+    menuGhost.style.pointerEvents = "none";
+    menuGhost.style.opacity = "0.9";
+
+    document.body.appendChild(menuGhost);
+
+    menuBtn.style.opacity = "0.3";
+
+  },350);
+
+},{passive:true});
+
+menuBtn.addEventListener("touchmove", e=>{
+
+  if(!menuDragging) return;
+
+  e.preventDefault();
+
+  const t = e.touches[0];
+
+  menuGhost.style.left = (t.clientX - menuOffsetX) + "px";
+  menuGhost.style.top = (t.clientY - menuOffsetY) + "px";
+
+},{passive:false});
+
+menuBtn.addEventListener("touchend", e=>{
+
+  clearTimeout(menuHoldTimer);
+
+  if(!menuDragging) return;
+
+  const t = e.changedTouches[0];
+
+  const half = window.innerWidth / 2;
+
+  if(t.clientX > half){
+    menuBtn.classList.add("right");
+    localStorage.setItem("menuSide","right");
+  } else {
+    menuBtn.classList.remove("right");
+    localStorage.setItem("menuSide","left");
+  }
+
+  menuDragging = false;
+
+  if(menuGhost) menuGhost.remove();
+
+  menuGhost = null;
+
+  menuBtn.style.opacity = "1";
+
+});
+
+/* settings */
+
+function openSettings(){
+
+  document.getElementById("currencySelect").value =
+    localStorage.getItem("currency") || "CAD";
+
+  document.getElementById("languageSelect").value =
+    localStorage.getItem("language") || "English";
+
+  document.getElementById("settingsOverlay")
+    .classList.add("show");
+
+}
+
+function closeSettings(){
+  document.getElementById("settingsOverlay")
+    .classList.remove("show");
+}
+
+function saveSettings(){
+
+  localStorage.setItem(
+    "currency",
+    document.getElementById("currencySelect").value
+  );
+
+  localStorage.setItem(
+    "language",
+    document.getElementById("languageSelect").value
+  );
+
+  closeSettings();
+
 }
 </script>
 
