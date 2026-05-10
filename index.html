@@ -283,9 +283,8 @@ img{
 
   <div class="dropdown" id="dropdownMenu">
     <button onclick="window.location.href='request.html'">Request Items</button>
-    <button onclick="openSettings()">Currency</button>
-    <button onclick="openSettings()">Language</button>
     <button onclick="alert('Socials coming soon')">Socials</button>
+    <button onclick="openSettings()">Language & Currency</button>
   </div>
 
 </div>
@@ -472,28 +471,23 @@ let didLongPress = false;
 
 function enableDragDelete(card,item){
 
-  let startX=0;
-  let startY=0;
-  let isDragging=false;
+  let startX=0,startY=0,isDragging=false;
 
   card.addEventListener("touchstart",e=>{
 
     if(!isUserItem(item)) return;
 
     const t=e.touches[0];
-
     startX=t.clientX;
     startY=t.clientY;
 
     holdTimer=setTimeout(()=>{
-
       isDragging=true;
       didLongPress=true;
 
       showTrash();
 
       dragGhost=card.cloneNode(true);
-
       dragGhost.style.position="fixed";
       dragGhost.style.left=(t.clientX-100)+"px";
       dragGhost.style.top=(t.clientY-100)+"px";
@@ -510,16 +504,15 @@ function enableDragDelete(card,item){
 
   },{passive:true});
 
+
   card.addEventListener("touchmove",e=>{
 
     const t=e.touches[0];
 
     if(!isDragging){
-
       if(Math.abs(t.clientX-startX)>10 || Math.abs(t.clientY-startY)>10){
         clearTimeout(holdTimer);
       }
-
       return;
     }
 
@@ -528,24 +521,79 @@ function enableDragDelete(card,item){
     dragGhost.style.left=(t.clientX-100)+"px";
     dragGhost.style.top=(t.clientY-100)+"px";
 
+    const trash=document.getElementById("trashBin").getBoundingClientRect();
+
+    const over =
+      t.clientX>trash.left &&
+      t.clientX<trash.right &&
+      t.clientY>trash.top &&
+      t.clientY<trash.bottom;
+
+    document.getElementById("trashBin").classList.toggle("active",over);
+
   },{passive:false});
 
-  card.addEventListener("touchend",()=>{
+
+  card.addEventListener("touchend",e=>{
 
     clearTimeout(holdTimer);
 
-    if(dragGhost) dragGhost.remove();
+    if(!isDragging){
+      cleanup(card);
+      return;
+    }
 
-    dragGhost=null;
+    const t=e.changedTouches[0];
+    const trash=document.getElementById("trashBin").getBoundingClientRect();
 
-    card.style.opacity="";
+    const dropped =
+      t.clientX>trash.left &&
+      t.clientX<trash.right &&
+      t.clientY>trash.top &&
+      t.clientY<trash.bottom;
+
+    cleanup(card);
+
+    if(dropped) deleteItem(item.id);
 
   });
 
+
+  card.addEventListener("click",e=>{
+    if(didLongPress){
+      e.preventDefault();
+      e.stopPropagation();
+      didLongPress=false;
+    }
+  },true);
+}
+
+function cleanup(card){
+  card.style.opacity="";
+  if(dragGhost) dragGhost.remove();
+  dragGhost=null;
+  document.getElementById("trashBin").classList.remove("show","active");
 }
 
 function showTrash(){
   document.getElementById("trashBin").classList.add("show");
+}
+
+function deleteItem(id){
+
+  let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+
+  myItems = myItems.filter(i => i.id !== id);
+
+  localStorage.setItem("myItems", JSON.stringify(myItems));
+
+  allItems = allItems.filter(i => i.id !== id);
+  allItems = sortArchiveItems(allItems);
+
+  document.getElementById("counter").innerText =
+    `Total Pieces: ${allItems.length}`;
+
+  displayItems(allItems);
 }
 
 function isUserItem(item){
