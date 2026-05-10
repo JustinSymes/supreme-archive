@@ -3,16 +3,67 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Request Item</title>
+
 <style>
-body{margin:0;font-family:-apple-system;padding:20px;}
-.topbar{height:64px;display:flex;align-items:center;justify-content:center;position:relative;}
-.back{position:absolute;left:0;color:#e10600;font-weight:700;cursor:pointer;}
-.title{font-weight:800;font-size:20px;}
-.form{display:flex;flex-direction:column;gap:14px;margin-top:24px;}
-input{padding:14px;border-radius:12px;border:1px solid #ddd;font-size:16px;}
-button{padding:14px;border:0;border-radius:12px;background:#e10600;color:white;font-weight:800;font-size:16px;}
+body{
+  margin:0;
+  font-family:-apple-system;
+  padding:20px;
+}
+
+.topbar{
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+.back{
+  position:absolute;
+  left:0;
+  color:#e10600;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.title{
+  font-weight:800;
+  font-size:20px;
+}
+
+.form{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  margin-top:24px;
+}
+
+input{
+  padding:14px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  font-size:16px;
+}
+
+button{
+  padding:14px;
+  border:0;
+  border-radius:12px;
+  background:#e10600;
+  color:white;
+  font-weight:800;
+  font-size:16px;
+}
+
+#status{
+  margin-top:16px;
+  text-align:center;
+  font-weight:700;
+}
 </style>
 </head>
+
 <body>
 
 <div class="topbar">
@@ -21,25 +72,67 @@ button{padding:14px;border:0;border-radius:12px;background:#e10600;color:white;f
 </div>
 
 <div class="form">
-  <input id="email" placeholder="Your email">
+  <input id="email" placeholder="Your email (optional)">
   <input id="itemName" placeholder="Item name">
   <input id="season" placeholder="Season">
   <button onclick="submitRequest()">Submit</button>
 </div>
 
+<div id="status"></div>
+
 <script>
-function submitRequest(){
-  const email = document.getElementById("email").value;
-  const itemName = document.getElementById("itemName").value;
-  const season = document.getElementById("season").value;
+async function submitRequest(){
 
-  const subject = encodeURIComponent("Supreme Archive Item Request");
-  const body = encodeURIComponent(
-    `Email: ${email}\nItem Name: ${itemName}\nSeason: ${season}`
-  );
+  const email = document.getElementById("email").value.trim();
+  const itemName = document.getElementById("itemName").value.trim();
+  const season = document.getElementById("season").value.trim();
+  const status = document.getElementById("status");
 
-  window.location.href =
-    `mailto:premearchive@gmail.com?subject=${subject}&body=${body}`;
+  if(!itemName){
+    status.textContent = "Enter item name";
+    return;
+  }
+
+  if(!season){
+    status.textContent = "Enter season";
+    return;
+  }
+
+  status.textContent = "Sending...";
+
+  const formData = new FormData();
+
+  formData.append("access_key", "YOUR_ACCESS_KEY");
+  formData.append("subject", "Supreme Archive Item Request");
+  formData.append("from_name", "Supreme Archive App");
+  formData.append("Item Name", itemName);
+  formData.append("Season", season);
+
+  if(email){
+    formData.append("User Email", email);
+  }
+
+  try{
+    const res = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+      status.textContent = "Request sent ✓";
+
+      document.getElementById("email").value = "";
+      document.getElementById("itemName").value = "";
+      document.getElementById("season").value = "";
+    } else {
+      status.textContent = "Could not send request";
+    }
+
+  } catch(err){
+    status.textContent = "Error sending request";
+  }
 }
 </script>
 
