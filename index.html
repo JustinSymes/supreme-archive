@@ -19,7 +19,7 @@
 body{
   margin:0;
   background:#fff;
-  font-family:-apple-system;
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 
 .header-wrap{
@@ -33,7 +33,7 @@ body{
 .header{
   text-align:center;
   font-size:24px;
-  font-family:'Montserrat', sans-serif;
+  font-family:'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-weight:800;
   font-style:italic;
 }
@@ -126,7 +126,7 @@ body{
 
 .name{
   margin-top:12px;
-  font-family:'Special Elite', monospace;
+  font-family:'Special Elite', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 
 img{
@@ -282,17 +282,17 @@ img{
   <div class="header">Supreme Archive</div>
 
   <div class="dropdown" id="dropdownMenu">
-    <button onclick="window.location.href='request.html'">Request Items</button>
-    <button onclick="alert('Socials coming soon')">Socials</button>
-    <button onclick="openSettings()">Language & Currency</button>
+    <button id="requestText" onclick="window.location.href='request.html'">Request Items</button>
+    <button id="settingsText" onclick="openSettings()">Language & Currency</button>
+    <button id="socialsText" onclick="alert('Socials coming soon')">Socials</button>
   </div>
 
 </div>
 
 <div class="counter-row">
-  <a class="add-link" href="add.html">+ Add</a>
+  <a class="add-link" id="addText" href="add.html">+ Add</a>
   <div class="counter" id="counter"></div>
-  <a class="fit-link" href="fit.html">Build a Fit</a>
+  <a class="fit-link" id="fitText" href="fit.html">Build a Fit</a>
 </div>
 
 <div class="category-bar">
@@ -310,17 +310,25 @@ img{
 <div class="settingsOverlay" id="settingsOverlay">
   <div class="settingsModal">
 
-    <h2>Change your settings</h2>
-    <p>Choose your language & preferred currency below</p>
+    <h2 id="settingsTitle">Change your settings</h2>
+    <p id="settingsSub">Choose your language & preferred currency below</p>
 
     <div class="settingsBody">
 
-      <label>Language</label>
+      <label id="languageLabel">Language</label>
       <select id="languageSelect">
         <option value="English">English</option>
+        <option value="French">Français</option>
+        <option value="Spanish">Español</option>
+        <option value="Japanese">日本語</option>
+        <option value="Korean">한국어</option>
+        <option value="Chinese">中文</option>
+        <option value="German">Deutsch</option>
+        <option value="Italian">Italiano</option>
+        <option value="Portuguese">Português</option>
       </select>
 
-      <label>Currency</label>
+      <label id="currencyLabel">Currency</label>
       <select id="currencySelect">
         <option value="CAD">$ CAD</option>
         <option value="USD">$ USD</option>
@@ -329,8 +337,8 @@ img{
     </div>
 
     <div class="settingsActions">
-      <button class="cancelBtn" onclick="closeSettings()">Cancel</button>
-      <button class="saveSettingsBtn" onclick="saveSettings()">Save Changes</button>
+      <button class="cancelBtn" id="cancelText" onclick="closeSettings()">Cancel</button>
+      <button class="saveSettingsBtn" id="saveText" onclick="saveSettings()">Save Changes</button>
     </div>
 
   </div>
@@ -343,6 +351,166 @@ const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTto
 
 let items = [];
 let allItems = [];
+
+/* translations */
+
+const translations = {
+  English: {
+    add: "+ Add",
+    buildFit: "Build a Fit",
+    requestItems: "Request Items",
+    languageCurrency: "Language & Currency",
+    socials: "Socials",
+    settingsTitle: "Change your settings",
+    settingsSub: "Choose your language & preferred currency below",
+    language: "Language",
+    currency: "Currency",
+    cancel: "Cancel",
+    save: "Save Changes",
+    totalPieces: "Total Pieces"
+  },
+  French: {
+    add: "+ Ajouter",
+    buildFit: "Créer un Fit",
+    requestItems: "Demander des items",
+    languageCurrency: "Langue et devise",
+    socials: "Réseaux sociaux",
+    settingsTitle: "Modifier vos réglages",
+    settingsSub: "Choisissez votre langue et votre devise préférée",
+    language: "Langue",
+    currency: "Devise",
+    cancel: "Annuler",
+    save: "Enregistrer",
+    totalPieces: "Pièces totales"
+  },
+  Spanish: {
+    add: "+ Agregar",
+    buildFit: "Crear outfit",
+    requestItems: "Solicitar artículos",
+    languageCurrency: "Idioma y moneda",
+    socials: "Redes sociales",
+    settingsTitle: "Cambiar ajustes",
+    settingsSub: "Elige tu idioma y moneda preferida",
+    language: "Idioma",
+    currency: "Moneda",
+    cancel: "Cancelar",
+    save: "Guardar",
+    totalPieces: "Piezas totales"
+  },
+  Japanese: {
+    add: "+ 追加",
+    buildFit: "コーデ作成",
+    requestItems: "アイテムをリクエスト",
+    languageCurrency: "言語と通貨",
+    socials: "SNS",
+    settingsTitle: "設定を変更",
+    settingsSub: "言語と希望の通貨を選択してください",
+    language: "言語",
+    currency: "通貨",
+    cancel: "キャンセル",
+    save: "保存",
+    totalPieces: "合計アイテム"
+  },
+  Korean: {
+    add: "+ 추가",
+    buildFit: "핏 만들기",
+    requestItems: "아이템 요청",
+    languageCurrency: "언어 및 통화",
+    socials: "소셜",
+    settingsTitle: "설정 변경",
+    settingsSub: "언어와 선호 통화를 선택하세요",
+    language: "언어",
+    currency: "통화",
+    cancel: "취소",
+    save: "저장",
+    totalPieces: "총 아이템"
+  },
+  Chinese: {
+    add: "+ 添加",
+    buildFit: "搭配造型",
+    requestItems: "请求单品",
+    languageCurrency: "语言和货币",
+    socials: "社交",
+    settingsTitle: "更改设置",
+    settingsSub: "选择你的语言和首选货币",
+    language: "语言",
+    currency: "货币",
+    cancel: "取消",
+    save: "保存",
+    totalPieces: "总件数"
+  },
+  German: {
+    add: "+ Hinzufügen",
+    buildFit: "Fit erstellen",
+    requestItems: "Items anfragen",
+    languageCurrency: "Sprache & Währung",
+    socials: "Soziales",
+    settingsTitle: "Einstellungen ändern",
+    settingsSub: "Wähle deine Sprache und bevorzugte Währung",
+    language: "Sprache",
+    currency: "Währung",
+    cancel: "Abbrechen",
+    save: "Speichern",
+    totalPieces: "Gesamtteile"
+  },
+  Italian: {
+    add: "+ Aggiungi",
+    buildFit: "Crea fit",
+    requestItems: "Richiedi articoli",
+    languageCurrency: "Lingua e valuta",
+    socials: "Social",
+    settingsTitle: "Modifica impostazioni",
+    settingsSub: "Scegli lingua e valuta preferita",
+    language: "Lingua",
+    currency: "Valuta",
+    cancel: "Annulla",
+    save: "Salva",
+    totalPieces: "Totale pezzi"
+  },
+  Portuguese: {
+    add: "+ Adicionar",
+    buildFit: "Criar look",
+    requestItems: "Solicitar itens",
+    languageCurrency: "Idioma e moeda",
+    socials: "Redes sociais",
+    settingsTitle: "Alterar configurações",
+    settingsSub: "Escolha seu idioma e moeda preferida",
+    language: "Idioma",
+    currency: "Moeda",
+    cancel: "Cancelar",
+    save: "Salvar",
+    totalPieces: "Total de peças"
+  }
+};
+
+function getLang(){
+  return localStorage.getItem("language") || "English";
+}
+
+function t(key){
+  return translations[getLang()]?.[key] || translations.English[key];
+}
+
+function applyLanguage(){
+  document.getElementById("addText").textContent = t("add");
+  document.getElementById("fitText").textContent = t("buildFit");
+  document.getElementById("requestText").textContent = t("requestItems");
+  document.getElementById("settingsText").textContent = t("languageCurrency");
+  document.getElementById("socialsText").textContent = t("socials");
+  document.getElementById("settingsTitle").textContent = t("settingsTitle");
+  document.getElementById("settingsSub").textContent = t("settingsSub");
+  document.getElementById("languageLabel").textContent = t("language");
+  document.getElementById("currencyLabel").textContent = t("currency");
+  document.getElementById("cancelText").textContent = t("cancel");
+  document.getElementById("saveText").textContent = t("save");
+
+  if(allItems.length){
+    document.getElementById("counter").innerText =
+      `${t("totalPieces")}: ${allItems.length}`;
+  }
+}
+
+/* helpers */
 
 function firstPhoto(imageField){
   if(!imageField) return "";
@@ -392,6 +560,8 @@ function sortArchiveItems(list){
 
 }
 
+/* data */
+
 fetch(sheetURL)
 .then(res=>res.text())
 .then(csv=>{
@@ -410,12 +580,18 @@ fetch(sheetURL)
 
   allItems = sortArchiveItems([...myItems, ...items]);
 
+  localStorage.setItem("archiveItems", JSON.stringify(items));
+
   document.getElementById("counter").innerText =
-    `Total Pieces: ${allItems.length}`;
+    `${t("totalPieces")}: ${allItems.length}`;
+
+  applyLanguage();
 
   displayItems(allItems);
 
 });
+
+/* display */
 
 function displayItems(list){
 
@@ -591,7 +767,7 @@ function deleteItem(id){
   allItems = sortArchiveItems(allItems);
 
   document.getElementById("counter").innerText =
-    `Total Pieces: ${allItems.length}`;
+    `${t("totalPieces")}: ${allItems.length}`;
 
   displayItems(allItems);
 }
@@ -740,9 +916,13 @@ function saveSettings(){
     document.getElementById("languageSelect").value
   );
 
+  applyLanguage();
+
   closeSettings();
 
 }
+
+applyLanguage();
 </script>
 
 </body>
