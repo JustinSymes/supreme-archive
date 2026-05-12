@@ -91,6 +91,8 @@ img { width:100%; max-width:400px; }
 
 <body>
 
+<div class="back" id="backText" onclick="history.back()">← Back to Archive</div>
+  
 <div class="back" onclick="history.back()">← Back to Archive</div>
 <div id="content"></div>
 
@@ -100,6 +102,8 @@ img { width:100%; max-width:400px; }
 
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
+
+setText("backText", "backArchive");
 
 // 🔍 DEBUG
 console.log("ID:", id);
