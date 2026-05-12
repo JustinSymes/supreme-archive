@@ -167,15 +167,42 @@ function getLang(){
 }
 
 function t(key){
-  return translations[getLang()]?.[key] || translations.English[key] || key;
+  const lang = getLang();
+
+  if(
+    translations[lang] &&
+    translations[lang][key]
+  ){
+    return translations[lang][key];
+  }
+
+  if(translations.English[key]){
+    return translations.English[key];
+  }
+
+  return key;
 }
 
-function setText(id, key){
+function setText(id,key){
   const el = document.getElementById(id);
-  if(el) el.textContent = t(key);
+
+  if(!el) return;
+
+  el.textContent = t(key);
 }
 
-function setPlaceholder(id, key){
+function setHTML(id,key){
   const el = document.getElementById(id);
-  if(el) el.placeholder = t(key);
+
+  if(!el) return;
+
+  el.innerHTML = t(key);
+}
+
+function setPlaceholder(id,key){
+  const el = document.getElementById(id);
+
+  if(!el) return;
+
+  el.placeholder = t(key);
 }
