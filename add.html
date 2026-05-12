@@ -2,10 +2,11 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body{
   margin:0;
-  font-family:-apple-system;
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   padding:20px;
 }
 
@@ -83,8 +84,12 @@ button{
 
 <body>
 
-<div class="back" id="backText" onclick="history.back()">← Back</div>
-<div class="title" id="titleText">Add Item</div>
+<div class="topbar">
+  <div class="back" id="backText" onclick="history.back()">← Back</div>
+  <div class="title" id="titleText">Add Item</div>
+</div>
+
+<div class="form">
 
 <input id="search" placeholder="Search item name...">
 
@@ -94,33 +99,29 @@ button{
 
 <button id="addBtn">Add Item</button>
 
-<div class="topbar">
-  <div class="back" onclick="history.back()">← Back</div>
-  <div class="title">Add Item</div>
-</div>
-
-<div class="form">
-
-<input id="search" placeholder="Search item name...">
-
-<select id="size">
-  <option value="">Select size</option>
-</select>
-
-<button id="addBtn">Add Item</button>
-
 </div>
 
 <div class="result" id="result"></div>
 
 <script src="lang.js"></script>
-  
+
 <script>
 
 const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 
 let items = [];
 let selectedItem = null;
+
+function applyLanguage(){
+  setText("backText", "back");
+  setText("titleText", "addItem");
+  setPlaceholder("search", "searchItem");
+  setText("selectSizeText", "selectSize");
+  setText("addBtn", "addItemBtn");
+}
+
+applyLanguage();
+
 
 // 📦 LOAD DATA
 fetch(sheetURL)
@@ -133,18 +134,10 @@ fetch(sheetURL)
     name: c[1],
     category: c[2],
     image: c[8],
-  }));
+  }))
+  .filter(i => i.id && i.name && i.image);
 });
 
-function applyLanguage(){
-  setText("backText", "back");
-  setText("titleText", "addItem");
-  setPlaceholder("search", "searchItem");
-  setText("selectSizeText", "selectSize");
-  setText("addBtn", "addItemBtn");
-}
-
-applyLanguage();
 
 // 🔥 SIZE LOGIC
 function setSizeOptions(item){
@@ -163,19 +156,19 @@ function setSizeOptions(item){
     sizes = ["S", "M", "L", "XL"];
   }
   else if(item.category === "Hats"){
-  sizes = ["S/M", "M/L", "One Size"];
+    sizes = ["S/M", "M/L", "One Size"];
   }
   else{
     sizes = ["One Size"];
   }
 
   sizeSelect.innerHTML =
-    `<option value="">Select size</option>` +
+    `<option value="">${t("selectSize")}</option>` +
     sizes.map(s => `<option value="${s}">${s}</option>`).join("");
 }
 
 
-// 🔍 SEARCH (FIXED)
+// 🔍 SEARCH
 document.getElementById("search").addEventListener("input", e=>{
   const val = e.target.value.toLowerCase();
 
@@ -216,24 +209,24 @@ document.getElementById("search").addEventListener("input", e=>{
 });
 
 
-// ➕ ADD ITEM (OUTSIDE search)
+// ➕ ADD ITEM
 document.getElementById("addBtn").onclick = () => {
 
   if(!selectedItem) return alert("Select item");
 
   const size = document.getElementById("size").value;
-  if(!size) return alert("Select size");
+  if(!size) return alert(t("selectSize"));
 
   let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
   myItems.push({
-  id: "user-" + Date.now(),
-  sheetId: selectedItem.id, // 🔥 IMPORTANT
-  name: selectedItem.name,
-  category: selectedItem.category,
-  size,
-  src: selectedItem.image.split("|")[0]
-});
+    id: "user-" + Date.now(),
+    sheetId: selectedItem.id,
+    name: selectedItem.name,
+    category: selectedItem.category,
+    size,
+    src: selectedItem.image.split("|")[0]
+  });
 
   localStorage.setItem("myItems", JSON.stringify(myItems));
 
