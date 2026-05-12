@@ -296,13 +296,13 @@ img{
 </div>
 
 <div class="category-bar">
-  <div class="category" onclick="filterCategory('All')">All</div>
-  <div class="category" onclick="filterCategory('Tops')">Tops</div>
-  <div class="category" onclick="filterCategory('Bottoms')">Bottoms</div>
-  <div class="category" onclick="filterCategory('Hats')">Hats</div>
-  <div class="category" onclick="filterCategory('Bags')">Bags</div>
-  <div class="category" onclick="filterCategory('Accessories')">Accessories</div>
-  <div class="category" onclick="filterCategory('Skate')">Skate</div>
+  <div class="category" id="catAll" onclick="filterCategory('All')">All</div>
+  <div class="category" id="catTops" onclick="filterCategory('Tops')">Tops</div>
+  <div class="category" id="catBottoms" onclick="filterCategory('Bottoms')">Bottoms</div>
+  <div class="category" id="catHats" onclick="filterCategory('Hats')">Hats</div>
+  <div class="category" id="catBags" onclick="filterCategory('Bags')">Bags</div>
+  <div class="category" id="catAccessories" onclick="filterCategory('Accessories')">Accessories</div>
+  <div class="category" id="catSkate" onclick="filterCategory('Skate')">Skate</div>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -353,144 +353,7 @@ const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTto
 let items = [];
 let allItems = [];
 
-/* translations */
-
-const translations = {
-  English: {
-    add: "+ Add",
-    buildFit: "Build a Fit",
-    requestItems: "Request Items",
-    languageCurrency: "Language & Currency",
-    socials: "Socials",
-    settingsTitle: "Change your settings",
-    settingsSub: "Choose your language & preferred currency below",
-    language: "Language",
-    currency: "Currency",
-    cancel: "Cancel",
-    save: "Save Changes",
-    totalPieces: "Total Pieces"
-  },
-  French: {
-    add: "+ Ajouter",
-    buildFit: "Créer un Fit",
-    requestItems: "Demander des items",
-    languageCurrency: "Langue et devise",
-    socials: "Réseaux sociaux",
-    settingsTitle: "Modifier vos réglages",
-    settingsSub: "Choisissez votre langue et votre devise préférée",
-    language: "Langue",
-    currency: "Devise",
-    cancel: "Annuler",
-    save: "Enregistrer",
-    totalPieces: "Pièces totales"
-  },
-  Spanish: {
-    add: "+ Agregar",
-    buildFit: "Crear outfit",
-    requestItems: "Solicitar artículos",
-    languageCurrency: "Idioma y moneda",
-    socials: "Redes sociales",
-    settingsTitle: "Cambiar ajustes",
-    settingsSub: "Elige tu idioma y moneda preferida",
-    language: "Idioma",
-    currency: "Moneda",
-    cancel: "Cancelar",
-    save: "Guardar",
-    totalPieces: "Piezas totales"
-  },
-  Japanese: {
-    add: "+ 追加",
-    buildFit: "コーデ作成",
-    requestItems: "アイテムをリクエスト",
-    languageCurrency: "言語と通貨",
-    socials: "SNS",
-    settingsTitle: "設定を変更",
-    settingsSub: "言語と希望の通貨を選択してください",
-    language: "言語",
-    currency: "通貨",
-    cancel: "キャンセル",
-    save: "保存",
-    totalPieces: "合計アイテム"
-  },
-  Korean: {
-    add: "+ 추가",
-    buildFit: "핏 만들기",
-    requestItems: "아이템 요청",
-    languageCurrency: "언어 및 통화",
-    socials: "소셜",
-    settingsTitle: "설정 변경",
-    settingsSub: "언어와 선호 통화를 선택하세요",
-    language: "언어",
-    currency: "통화",
-    cancel: "취소",
-    save: "저장",
-    totalPieces: "총 아이템"
-  },
-  Chinese: {
-    add: "+ 添加",
-    buildFit: "搭配造型",
-    requestItems: "请求单品",
-    languageCurrency: "语言和货币",
-    socials: "社交",
-    settingsTitle: "更改设置",
-    settingsSub: "选择你的语言和首选货币",
-    language: "语言",
-    currency: "货币",
-    cancel: "取消",
-    save: "保存",
-    totalPieces: "总件数"
-  },
-  German: {
-    add: "+ Hinzufügen",
-    buildFit: "Fit erstellen",
-    requestItems: "Items anfragen",
-    languageCurrency: "Sprache & Währung",
-    socials: "Soziales",
-    settingsTitle: "Einstellungen ändern",
-    settingsSub: "Wähle deine Sprache und bevorzugte Währung",
-    language: "Sprache",
-    currency: "Währung",
-    cancel: "Abbrechen",
-    save: "Speichern",
-    totalPieces: "Gesamtteile"
-  },
-  Italian: {
-    add: "+ Aggiungi",
-    buildFit: "Crea fit",
-    requestItems: "Richiedi articoli",
-    languageCurrency: "Lingua e valuta",
-    socials: "Social",
-    settingsTitle: "Modifica impostazioni",
-    settingsSub: "Scegli lingua e valuta preferita",
-    language: "Lingua",
-    currency: "Valuta",
-    cancel: "Annulla",
-    save: "Salva",
-    totalPieces: "Totale pezzi"
-  },
-  Portuguese: {
-    add: "+ Adicionar",
-    buildFit: "Criar look",
-    requestItems: "Solicitar itens",
-    languageCurrency: "Idioma e moeda",
-    socials: "Redes sociais",
-    settingsTitle: "Alterar configurações",
-    settingsSub: "Escolha seu idioma e moeda preferida",
-    language: "Idioma",
-    currency: "Moeda",
-    cancel: "Cancelar",
-    save: "Salvar",
-    totalPieces: "Total de peças"
-  }
-};
-
-function getLang(){
-  return localStorage.getItem("language") || "English";
-}
-
-function t(key){
-  return translations[getLang()]?.[key] || translations.English[key];
-}
+/* language */
 
 function applyLanguage(){
   document.getElementById("addText").textContent = t("add");
@@ -498,12 +361,21 @@ function applyLanguage(){
   document.getElementById("requestText").textContent = t("requestItems");
   document.getElementById("settingsText").textContent = t("languageCurrency");
   document.getElementById("socialsText").textContent = t("socials");
+
   document.getElementById("settingsTitle").textContent = t("settingsTitle");
   document.getElementById("settingsSub").textContent = t("settingsSub");
   document.getElementById("languageLabel").textContent = t("language");
   document.getElementById("currencyLabel").textContent = t("currency");
   document.getElementById("cancelText").textContent = t("cancel");
-  document.getElementById("saveText").textContent = t("save");
+  document.getElementById("saveText").textContent = t("saveChanges");
+
+  document.getElementById("catAll").textContent = t("all");
+  document.getElementById("catTops").textContent = t("tops");
+  document.getElementById("catBottoms").textContent = t("bottoms");
+  document.getElementById("catHats").textContent = t("hats");
+  document.getElementById("catBags").textContent = t("bags");
+  document.getElementById("catAccessories").textContent = t("accessories");
+  document.getElementById("catSkate").textContent = t("skate");
 
   if(allItems.length){
     document.getElementById("counter").innerText =
@@ -590,6 +462,10 @@ fetch(sheetURL)
 
   displayItems(allItems);
 
+})
+.catch(err=>{
+  console.error(err);
+  document.getElementById("counter").innerText = "Error loading items";
 });
 
 /* display */
