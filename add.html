@@ -126,10 +126,14 @@ function applyLanguage(){
 
 applyLanguage();
 
+
+// 📦 LOAD DATA
 fetch(sheetURL)
 .then(r=>r.text())
 .then(csv=>{
   const rows = Papa.parse(csv,{skipEmptyLines:true}).data;
+
+  console.log("ROWS:", rows);
 
   items = rows.slice(1).map(c=>({
     id: clean(c[0]),
@@ -137,18 +141,25 @@ fetch(sheetURL)
     category: clean(c[2]),
     image: clean(c[8])
   }))
-  .filter(i => i.id && i.name && i.image);
+  .filter(i => i.id && i.name);
+
+  console.log("ITEMS LOADED:", items.length, items);
+
+  document.getElementById("result").innerHTML =
+    `<div style="color:#999;font-size:14px;">Loaded ${items.length} items</div>`;
 })
 .catch(err=>{
-  console.error(err);
+  console.error("ADD PAGE LOAD ERROR:", err);
   document.getElementById("result").innerHTML = "Error loading items";
 });
 
+
+// 🔥 SIZE LOGIC
 function setSizeOptions(item){
   const sizeSelect = document.getElementById("size");
 
   let sizes = [];
-  const name = item.name.toLowerCase();
+  const name = (item.name || "").toLowerCase();
 
   if(name.includes("jean")){
     sizes = ["30", "32", "34", "36", "38"];
@@ -171,6 +182,8 @@ function setSizeOptions(item){
     sizes.map(s => `<option value="${s}">${s}</option>`).join("");
 }
 
+
+// 🔍 SEARCH
 document.getElementById("search").addEventListener("input", e=>{
   const val = e.target.value.toLowerCase();
 
@@ -179,20 +192,31 @@ document.getElementById("search").addEventListener("input", e=>{
 
   selectedItem = null;
 
-  if(!val) return;
+  if(!val){
+    container.innerHTML =
+      `<div style="color:#999;font-size:14px;">Loaded ${items.length} items</div>`;
+    return;
+  }
 
   const results = items.filter(i =>
-    i.name.toLowerCase().includes(val)
+    (i.name || "").toLowerCase().includes(val)
   );
 
+  if(results.length === 0){
+    container.innerHTML =
+      `<div style="color:#999;font-size:14px;">No results</div>`;
+    return;
+  }
+
   results.forEach(item => {
-    const img = (item.image || "").split("|")[0];
+
+    const img = item.image ? item.image.split("|")[0].trim() : "";
 
     const div = document.createElement("div");
     div.className = "result-item";
 
     div.innerHTML = `
-      <img src="${img}">
+      ${img ? `<img src="${img}">` : ""}
       <div>${item.name}</div>
     `;
 
@@ -211,6 +235,8 @@ document.getElementById("search").addEventListener("input", e=>{
   });
 });
 
+
+// ➕ ADD ITEM
 document.getElementById("addBtn").onclick = () => {
 
   if(!selectedItem) return alert("Select item");
@@ -226,7 +252,7 @@ document.getElementById("addBtn").onclick = () => {
     name: selectedItem.name,
     category: selectedItem.category,
     size,
-    src: selectedItem.image.split("|")[0]
+    src: selectedItem.image ? selectedItem.image.split("|")[0].trim() : ""
   });
 
   localStorage.setItem("myItems", JSON.stringify(myItems));
@@ -235,6 +261,7 @@ document.getElementById("addBtn").onclick = () => {
 
   window.location.href = "index.html";
 };
+
 </script>
 
 </body>
