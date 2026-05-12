@@ -107,7 +107,6 @@ button{
 <script src="lang.js"></script>
 
 <script>
-
 const sheetURL =
 "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 
@@ -139,33 +138,36 @@ fetch(sheetURL)
 .then(res => res.text())
 .then(csv => {
 
-  console.log("RAW CSV:", csv.slice(0, 500));
-
   const rows = Papa.parse(csv, {
-    skipEmptyLines: true
+    skipEmptyLines:true
   }).data;
 
-  console.log("ROWS:", rows.length, rows[0], rows[1]);
+  items = rows.slice(1).map((c, index) => {
 
-  items = rows.slice(1).map(c => ({
-    id: clean(c[0]),
-    name: clean(c[1]),
-    category: clean(c[2]),
-    image: clean(c[8])
-  }))
+    const sheetId = clean(c[0]);
+    const name = clean(c[1]);
+    const category = clean(c[2]);
+    const image = clean(c[8]);
+
+    return {
+      id: sheetId || "sheet-row-" + index,
+      sheetId: sheetId || "sheet-row-" + index,
+      name,
+      category,
+      image
+    };
+
+  })
+  // ✅ only require name now, because you said some columns are blank
   .filter(i => i.name);
 
-  console.log("ITEMS:", items.length, items[0]);
+  showLoaded();
 
-  document.getElementById("result").innerHTML =
-    `<div style="color:#999;font-size:14px;">Loaded ${items.length} items</div>`;
 })
 .catch(err => {
   console.error("ADD LOAD ERROR:", err);
   document.getElementById("result").innerHTML = "Error loading items";
 });
-
-loadItems();
 
 
 // 🔥 SIZE LOGIC
@@ -194,7 +196,10 @@ function setSizeOptions(item){
 
   sizeSelect.innerHTML =
     `<option value="">${t("selectSize")}</option>` +
-    sizes.map(s => `<option value="${s}">${s}</option>`).join("");
+    sizes.map(s =>
+      `<option value="${s}">${s}</option>`
+    ).join("");
+
 }
 
 
@@ -202,9 +207,11 @@ function setSizeOptions(item){
 document.getElementById("search").addEventListener("input", e=>{
 
   const val = e.target.value.toLowerCase();
+
   const container = document.getElementById("result");
 
   container.innerHTML = "";
+
   selectedItem = null;
 
   if(!val){
@@ -224,9 +231,13 @@ document.getElementById("search").addEventListener("input", e=>{
 
   results.forEach(item => {
 
-    const img = item.image ? item.image.split("|")[0].trim() : "";
+    const img =
+      item.image
+      ? item.image.split("|")[0].trim()
+      : "";
 
     const div = document.createElement("div");
+
     div.className = "result-item";
 
     div.innerHTML = `
@@ -235,16 +246,24 @@ document.getElementById("search").addEventListener("input", e=>{
     `;
 
     div.onclick = () => {
+
       document.querySelectorAll(".result-item")
-        .forEach(el => el.classList.remove("selected"));
+      .forEach(el =>
+        el.classList.remove("selected")
+      );
 
       div.classList.add("selected");
+
       selectedItem = item;
+
       setSizeOptions(item);
+
     };
 
     container.appendChild(div);
+
   });
+
 });
 
 
@@ -255,28 +274,36 @@ document.getElementById("addBtn").onclick = () => {
     return alert("Select item");
   }
 
-  const size = document.getElementById("size").value;
+  const size =
+    document.getElementById("size").value;
 
   if(!size){
     return alert(t("selectSize"));
   }
 
-  let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+  let myItems =
+    JSON.parse(localStorage.getItem("myItems") || "[]");
 
   myItems.push({
     id: "user-" + Date.now(),
-    sheetId: selectedItem.id,
+    sheetId: selectedItem.sheetId || selectedItem.id,
     name: selectedItem.name,
     category: selectedItem.category,
     size,
-    src: selectedItem.image ? selectedItem.image.split("|")[0].trim() : ""
+    src: selectedItem.image
+      ? selectedItem.image.split("|")[0].trim()
+      : ""
   });
 
-  localStorage.setItem("myItems", JSON.stringify(myItems));
+  localStorage.setItem(
+    "myItems",
+    JSON.stringify(myItems)
+  );
 
   alert("Added ✓");
 
   window.location.href = "index.html";
+
 };
 
 </script>
