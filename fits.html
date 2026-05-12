@@ -2,10 +2,11 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body{
   margin:0;
-  font-family:-apple-system;
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   background:#fff;
 }
 
@@ -33,6 +34,7 @@ body{
   width:100%;
   display:block;
 }
+
 .topbar{
   height:64px;
   display:grid;
@@ -60,18 +62,25 @@ body{
 <body>
 
 <div class="topbar">
-  <a class="back" href="fit.html">← Back</a>
-  <div class="title">Your Fits</div>
+  <a class="back" id="backText" href="fit.html">← Back</a>
+  <div class="title" id="titleText">Your Fits</div>
   <div></div>
 </div>
 
 <div class="grid" id="grid"></div>
 
 <script src="lang.js"></script>
-  
+
 <script>
 
-  function downloadImage(dataUrl){
+function applyLanguage(){
+  setText("backText", "back");
+  setText("titleText", "yourFits");
+}
+
+applyLanguage();
+
+function downloadImage(dataUrl){
   const link = document.createElement("a");
   link.href = dataUrl;
   link.download = "fit.png";
@@ -81,7 +90,6 @@ body{
 }
 
 let dragIndex = null;
-  
 let fits = JSON.parse(localStorage.getItem("savedFits") || "[]");
 const grid = document.getElementById("grid");
 
@@ -99,28 +107,27 @@ function renderFits(){
 
     card.draggable = true;
 
-  card.ondragstart = () => {
-    dragIndex = index;
-  };
+    card.ondragstart = () => {
+      dragIndex = index;
+    };
 
-  card.ondragover = (e) => {
-    e.preventDefault();
-  };
+    card.ondragover = (e) => {
+      e.preventDefault();
+    };
 
-  card.ondrop = () => {
-    if(dragIndex === null) return;
+    card.ondrop = () => {
+      if(dragIndex === null) return;
 
-    const moved = fits.splice(dragIndex,1)[0];
-    fits.splice(index,0,moved);
+      const moved = fits.splice(dragIndex,1)[0];
+      fits.splice(index,0,moved);
 
-    saveFits();
-    renderFits();
-  };
+      saveFits();
+      renderFits();
+    };
 
     const img = document.createElement("img");
     img.src = fit.img;
 
-    // 🔍 FULLSCREEN VIEW
     img.onclick = () => openViewer(index);
 
     const nameRow = document.createElement("div");
@@ -130,13 +137,12 @@ function renderFits(){
     nameRow.style.padding = "6px 8px";
 
     const name = document.createElement("div");
-    name.textContent = fit.name || "Tap to name";
+    name.textContent = fit.name || t("tapToName");
     name.style.fontSize = "14px";
     name.style.cursor = "pointer";
 
-    // ✏️ EDIT NAME
     name.onclick = () => {
-      const newName = prompt("Name this fit:", fit.name || "");
+      const newName = prompt(t("nameThisFit"), fit.name || "");
       if(newName !== null){
         fits[index].name = newName;
         saveFits();
@@ -144,7 +150,6 @@ function renderFits(){
       }
     };
 
-    // 🗑 DELETE
     const del = document.createElement("div");
     del.textContent = "🗑";
     del.style.cursor = "pointer";
@@ -167,8 +172,6 @@ function renderFits(){
 
 renderFits();
 
-
-// 🔍 FULLSCREEN VIEW
 function openViewer(index){
 
   const viewer = document.createElement("div");
@@ -182,25 +185,22 @@ function openViewer(index){
   viewer.style.flexDirection = "column";
   viewer.style.zIndex = "999";
 
-  // 🔝 Top bar
   const topbar = document.createElement("div");
   topbar.style.display = "flex";
   topbar.style.justifyContent = "space-between";
   topbar.style.alignItems = "center";
   topbar.style.padding = "16px";
 
-  // 🔙 Back
   const back = document.createElement("div");
-  back.textContent = "← Back";
+  back.textContent = t("back");
   back.style.color = "#e10600";
   back.style.fontWeight = "600";
   back.style.cursor = "pointer";
 
   back.onclick = () => document.body.removeChild(viewer);
 
-  // ✏️ Edit Fit
   const edit = document.createElement("div");
-  edit.textContent = "Load in Builder";
+  edit.textContent = t("loadInBuilder");
   edit.style.color = "#e10600";
   edit.style.fontWeight = "700";
   edit.style.cursor = "pointer";
@@ -210,9 +210,8 @@ function openViewer(index){
     window.location.href = "fit.html";
   };
 
-  // 💾 Save Image
   const save = document.createElement("div");
-  save.textContent = "Save";
+  save.textContent = t("save");
   save.style.color = "#e10600";
   save.style.fontWeight = "700";
   save.style.cursor = "pointer";
@@ -223,7 +222,6 @@ function openViewer(index){
   topbar.appendChild(edit);
   topbar.appendChild(save);
 
-  // 🖼 Image
   const img = document.createElement("img");
   img.src = fits[index].img;
   img.style.width = "100%";
