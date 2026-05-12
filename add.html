@@ -114,6 +114,10 @@ const sheetURL =
 let items = [];
 let selectedItem = null;
 
+function clean(v){
+  return (v ?? "").toString().trim().replace(/^"+|"+$/g,"");
+}
+
 function applyLanguage(){
   setText("backText", "back");
   setText("titleText", "addItem");
@@ -124,35 +128,56 @@ function applyLanguage(){
 
 applyLanguage();
 
-function clean(v){
-  return (v ?? "").toString().trim().replace(/^"+|"+$/g,"");
+function showLoaded(){
+  document.getElementById("result").innerHTML =
+    `<div style="color:#999;font-size:14px;">Loaded ${items.length} items</div>`;
 }
 
 
 // 📦 LOAD DATA
-fetch(sheetURL)
-.then(r => r.text())
-.then(csv => {
+function loadItems(){
 
-  const rows = Papa.parse(csv, { skipEmptyLines:true }).data;
+  const savedArchive = JSON.parse(localStorage.getItem("archiveItems") || "[]");
 
-  items = rows.slice(1).map(c => ({
-    id: clean(c[0]),
-    name: clean(c[1]),
-    category: clean(c[2]),
-    image: clean(c[8])
-  }))
-  .filter(i => i.id && i.name);
+  if(savedArchive.length > 0){
 
-  document.getElementById("result").innerHTML =
-    `<div style="color:#999;font-size:14px;">
-      Loaded ${items.length} items
-    </div>`;
-})
-.catch(err => {
-  console.error(err);
-  document.getElementById("result").innerHTML = "Error loading items";
-});
+    items = savedArchive.map(i => ({
+      id: clean(i.id),
+      name: clean(i.name),
+      category: clean(i.category),
+      image: clean(i.image || i.src)
+    }))
+    .filter(i => i.id && i.name);
+
+    showLoaded();
+    return;
+  }
+
+  fetch(sheetURL)
+  .then(r => r.text())
+  .then(csv => {
+
+    const rows = Papa.parse(csv, { skipEmptyLines:true }).data;
+
+    items = rows.slice(1).map(c => ({
+      id: clean(c[0]),
+      name: clean(c[1]),
+      category: clean(c[2]),
+      image: clean(c[8])
+    }))
+    .filter(i => i.id && i.name);
+
+    localStorage.setItem("archiveItems", JSON.stringify(items));
+
+    showLoaded();
+  })
+  .catch(err => {
+    console.error(err);
+    document.getElementById("result").innerHTML = "Error loading items";
+  });
+}
+
+loadItems();
 
 
 // 🔥 SIZE LOGIC
@@ -181,60 +206,39 @@ function setSizeOptions(item){
 
   sizeSelect.innerHTML =
     `<option value="">${t("selectSize")}</option>` +
-    sizes.map(s =>
-      `<option value="${s}">${s}</option>`
-    ).join("");
-
+    sizes.map(s => `<option value="${s}">${s}</option>`).join("");
 }
 
 
 // 🔍 SEARCH
-document.getElementById("search")
-.addEventListener("input", e=>{
+document.getElementById("search").addEventListener("input", e=>{
 
   const val = e.target.value.toLowerCase();
-
   const container = document.getElementById("result");
 
   container.innerHTML = "";
-
   selectedItem = null;
 
   if(!val){
-
-    container.innerHTML =
-      `<div style="color:#999;font-size:14px;">
-        Loaded ${items.length} items
-      </div>`;
-
+    showLoaded();
     return;
   }
 
   const results = items.filter(i =>
-    (i.name || "")
-    .toLowerCase()
-    .includes(val)
+    (i.name || "").toLowerCase().includes(val)
   );
 
   if(results.length === 0){
-
     container.innerHTML =
-      `<div style="color:#999;font-size:14px;">
-        No results
-      </div>`;
-
+      `<div style="color:#999;font-size:14px;">No results</div>`;
     return;
   }
 
   results.forEach(item => {
 
-    const img =
-      item.image
-      ? item.image.split("|")[0].trim()
-      : "";
+    const img = item.image ? item.image.split("|")[0].trim() : "";
 
     const div = document.createElement("div");
-
     div.className = "result-item";
 
     div.innerHTML = `
@@ -243,24 +247,16 @@ document.getElementById("search")
     `;
 
     div.onclick = () => {
-
       document.querySelectorAll(".result-item")
-      .forEach(el =>
-        el.classList.remove("selected")
-      );
+        .forEach(el => el.classList.remove("selected"));
 
       div.classList.add("selected");
-
       selectedItem = item;
-
       setSizeOptions(item);
-
     };
 
     container.appendChild(div);
-
   });
-
 });
 
 
@@ -271,15 +267,13 @@ document.getElementById("addBtn").onclick = () => {
     return alert("Select item");
   }
 
-  const size =
-    document.getElementById("size").value;
+  const size = document.getElementById("size").value;
 
   if(!size){
     return alert(t("selectSize"));
   }
 
-  let myItems =
-    JSON.parse(localStorage.getItem("myItems") || "[]");
+  let myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
 
   myItems.push({
     id: "user-" + Date.now(),
@@ -287,20 +281,14 @@ document.getElementById("addBtn").onclick = () => {
     name: selectedItem.name,
     category: selectedItem.category,
     size,
-    src: selectedItem.image
-      ? selectedItem.image.split("|")[0].trim()
-      : ""
+    src: selectedItem.image ? selectedItem.image.split("|")[0].trim() : ""
   });
 
-  localStorage.setItem(
-    "myItems",
-    JSON.stringify(myItems)
-  );
+  localStorage.setItem("myItems", JSON.stringify(myItems));
 
   alert("Added ✓");
 
   window.location.href = "index.html";
-
 };
 
 </script>
