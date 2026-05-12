@@ -8,9 +8,22 @@
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <style>
-body { font-family: Helvetica, Arial, sans-serif; padding:20px; }
-img { width:100%; max-width:400px; }
-.back { color:#e10600; cursor:pointer; margin-bottom:15px; display:inline-block; }
+body {
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  padding:20px;
+}
+
+img {
+  width:100%;
+  max-width:400px;
+}
+
+.back {
+  color:#e10600;
+  cursor:pointer;
+  margin-bottom:15px;
+  display:inline-block;
+}
 
 .carousel {
   position: relative;
@@ -92,21 +105,17 @@ img { width:100%; max-width:400px; }
 <body>
 
 <div class="back" id="backText" onclick="history.back()">← Back to Archive</div>
-  
-<div class="back" onclick="history.back()">← Back to Archive</div>
+
 <div id="content"></div>
 
 <script src="lang.js"></script>
-  
-<script>
 
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
+<script>
 
 setText("backText", "backArchive");
 
-// 🔍 DEBUG
-console.log("ID:", id);
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
 
 fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0")
 .then(res=>res.text())
@@ -117,18 +126,15 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
 
   let foundRow = null;
 
-  // ✅ get user items once
   const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
   const oldItem = myItems.find(i => i.id === id);
 
   rows.forEach(cols => {
 
-    // ✅ match by sheetId (main system)
     if(id && cols[0] === id){
       foundRow = cols;
     }
 
-    // ✅ fallback for old items
     if(!foundRow && oldItem && cols[1] &&
        cols[1].toLowerCase() === oldItem.name.toLowerCase()){
       foundRow = cols;
@@ -143,18 +149,14 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
 
   const cols = foundRow;
 
-  // 📸 images (cleaned)
   const images = (cols[8] || "")
     .split("|")
     .map(s => s.trim())
     .filter(Boolean);
 
-  console.log("Images:", images);
-
   const priceCad = cols[10];
   const priceUsd = cols[11];
 
-  // 📏 size override
   let displaySize = cols[3] || "";
 
   const owned = myItems.find(i =>
@@ -165,7 +167,6 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
     displaySize = owned.size;
   }
 
-  // 🧱 render
   document.getElementById("content").innerHTML = `
     <h2>${cols[1]}</h2>
 
@@ -176,22 +177,21 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
 
     <div class="meta-row">
       <div class="meta-left">
-        <span class="label">Category:</span> ${cols[2] || ""}
+        <span class="label">${t("category")}:</span> ${cols[2] || ""}
       </div>
 
       <div class="meta-right">
-        <span class="label">Retail:</span>
+        <span class="label">${t("retail")}:</span>
         <span class="price-value" id="priceValue"></span>
         <span class="price-toggle" id="priceToggle">CAD</span>
       </div>
     </div>
 
-    <p>Size: ${displaySize}</p>
+    <p>${t("size")}: ${displaySize}</p>
   `;
 
   buildCarousel(images);
 
-  // 💰 price toggle
   let currency = localStorage.getItem("currency") || "CAD";
 
   function formatMoney(n){
@@ -224,15 +224,13 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   renderPrice();
 
   document.getElementById("priceToggle")?.addEventListener("click", () => {
-  currency = currency === "CAD" ? "USD" : "CAD";
-  localStorage.setItem("currency", currency);
-  renderPrice();
-});
+    currency = currency === "CAD" ? "USD" : "CAD";
+    localStorage.setItem("currency", currency);
+    renderPrice();
+  });
 
 });
 
-
-// 📸 CAROUSEL
 function buildCarousel(images){
   const track = document.getElementById("track");
   const dots = document.getElementById("dots");
