@@ -83,6 +83,17 @@ button{
 
 <body>
 
+<div class="back" id="backText" onclick="history.back()">← Back</div>
+<div class="title" id="titleText">Add Item</div>
+
+<input id="search" placeholder="Search item name...">
+
+<select id="size">
+  <option value="" id="selectSizeText">Select size</option>
+</select>
+
+<button id="addBtn">Add Item</button>
+
 <div class="topbar">
   <div class="back" onclick="history.back()">← Back</div>
   <div class="title">Add Item</div>
@@ -125,6 +136,15 @@ fetch(sheetURL)
   }));
 });
 
+function applyLanguage(){
+  setText("backText", "back");
+  setText("titleText", "addItem");
+  setPlaceholder("search", "searchItem");
+  setText("selectSizeText", "selectSize");
+  setText("addBtn", "addItemBtn");
+}
+
+applyLanguage();
 
 // 🔥 SIZE LOGIC
 function setSizeOptions(item){
