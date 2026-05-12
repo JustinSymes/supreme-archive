@@ -7,7 +7,7 @@
 <style>
 body{
   margin:0;
-  font-family:-apple-system;
+  font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   padding:20px;
 }
 
@@ -67,15 +67,15 @@ button{
 <body>
 
 <div class="topbar">
-  <div class="back" onclick="history.back()">← Back</div>
-  <div class="title">Request Item</div>
+  <div class="back" id="backText" onclick="history.back()">← Back</div>
+  <div class="title" id="titleText">Request Item</div>
 </div>
 
 <div class="form">
   <input id="email" placeholder="Your email (optional)">
   <input id="itemName" placeholder="Item name">
   <input id="season" placeholder="Season">
-  <button onclick="submitRequest()">Submit</button>
+  <button id="submitBtn" onclick="submitRequest()">Submit</button>
 </div>
 
 <div id="status"></div>
@@ -83,6 +83,18 @@ button{
 <script src="lang.js"></script>
   
 <script>
+
+function applyLanguage(){
+  setText("backText", "back");
+  setText("titleText", "requestItem");
+  setPlaceholder("email", "yourEmail");
+  setPlaceholder("itemName", "itemName");
+  setPlaceholder("season", "season");
+  setText("submitBtn", "submit");
+}
+
+applyLanguage();
+
 async function submitRequest(){
 
   const email = document.getElementById("email").value.trim();
@@ -91,16 +103,16 @@ async function submitRequest(){
   const status = document.getElementById("status");
 
   if(!itemName){
-    status.textContent = "Enter item name";
+    status.textContent = t("enterItemName") || "Enter item name";
     return;
   }
 
   if(!season){
-    status.textContent = "Enter season";
+    status.textContent = t("enterSeason") || "Enter season";
     return;
   }
 
-  status.textContent = "Sending...";
+  status.textContent = t("sending") || "Sending...";
 
   const formData = new FormData();
 
@@ -123,17 +135,17 @@ async function submitRequest(){
     const data = await res.json();
 
     if(data.success){
-      status.textContent = "Request sent ✓";
+      status.textContent = t("requestSent") || "Request sent ✓";
 
       document.getElementById("email").value = "";
       document.getElementById("itemName").value = "";
       document.getElementById("season").value = "";
     } else {
-      status.textContent = "Could not send request";
+      status.textContent = t("couldNotSend") || "Could not send request";
     }
 
   } catch(err){
-    status.textContent = "Error sending request";
+    status.textContent = t("errorSending") || "Error sending request";
   }
 }
 </script>
