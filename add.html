@@ -135,47 +135,35 @@ function showLoaded(){
 
 
 // 📦 LOAD DATA
-function loadItems(){
+fetch(sheetURL)
+.then(res => res.text())
+.then(csv => {
 
-  const savedArchive = JSON.parse(localStorage.getItem("archiveItems") || "[]");
+  console.log("RAW CSV:", csv.slice(0, 500));
 
-  if(savedArchive.length > 0){
+  const rows = Papa.parse(csv, {
+    skipEmptyLines: true
+  }).data;
 
-    items = savedArchive.map(i => ({
-      id: clean(i.id),
-      name: clean(i.name),
-      category: clean(i.category),
-      image: clean(i.image || i.src)
-    }))
-    .filter(i => i.id && i.name);
+  console.log("ROWS:", rows.length, rows[0], rows[1]);
 
-    showLoaded();
-    return;
-  }
+  items = rows.slice(1).map(c => ({
+    id: clean(c[0]),
+    name: clean(c[1]),
+    category: clean(c[2]),
+    image: clean(c[8])
+  }))
+  .filter(i => i.name);
 
-  fetch(sheetURL)
-  .then(r => r.text())
-  .then(csv => {
+  console.log("ITEMS:", items.length, items[0]);
 
-    const rows = Papa.parse(csv, { skipEmptyLines:true }).data;
-
-    items = rows.slice(1).map(c => ({
-      id: clean(c[0]),
-      name: clean(c[1]),
-      category: clean(c[2]),
-      image: clean(c[8])
-    }))
-    .filter(i => i.id && i.name);
-
-    localStorage.setItem("archiveItems", JSON.stringify(items));
-
-    showLoaded();
-  })
-  .catch(err => {
-    console.error(err);
-    document.getElementById("result").innerHTML = "Error loading items";
-  });
-}
+  document.getElementById("result").innerHTML =
+    `<div style="color:#999;font-size:14px;">Loaded ${items.length} items</div>`;
+})
+.catch(err => {
+  console.error("ADD LOAD ERROR:", err);
+  document.getElementById("result").innerHTML = "Error loading items";
+});
 
 loadItems();
 
