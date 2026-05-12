@@ -322,7 +322,7 @@ const translations = {
     requestSent: "请求已发送 ✓",
     couldNotSend: "无法发送",
     errorSending: "发送错误"
-  }
+  },
     
 German: {
   add: "+ Hinzufügen",
