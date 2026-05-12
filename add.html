@@ -103,6 +103,7 @@ button{
 
 <div class="result" id="result"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="lang.js"></script>
 
 <script>
@@ -129,53 +130,29 @@ function clean(v){
 
 
 // 📦 LOAD DATA
-const savedArchive =
-  JSON.parse(localStorage.getItem("archiveItems") || "[]");
+fetch(sheetURL)
+.then(r => r.text())
+.then(csv => {
 
-if(savedArchive.length){
+  const rows = Papa.parse(csv, { skipEmptyLines:true }).data;
 
-  items = savedArchive.map(i => ({
-    id: i.id,
-    name: i.name,
-    category: i.category,
-    image: i.image || i.src
-  }));
+  items = rows.slice(1).map(c => ({
+    id: clean(c[0]),
+    name: clean(c[1]),
+    category: clean(c[2]),
+    image: clean(c[8])
+  }))
+  .filter(i => i.id && i.name);
 
   document.getElementById("result").innerHTML =
     `<div style="color:#999;font-size:14px;">
       Loaded ${items.length} items
     </div>`;
-
-} else {
-
-  fetch(sheetURL)
-  .then(r=>r.text())
-  .then(data=>{
-
-    const rows = data.split("\n").slice(1);
-
-    items = rows.map(r=>r.split(",")).map(c=>({
-      id: clean(c[0]),
-      name: clean(c[1]),
-      category: clean(c[2]),
-      image: clean(c[8]),
-    }))
-    .filter(i => i.id && i.name);
-
-    document.getElementById("result").innerHTML =
-      `<div style="color:#999;font-size:14px;">
-        Loaded ${items.length} items
-      </div>`;
-
-  })
-  .catch(err=>{
-    console.error(err);
-
-    document.getElementById("result").innerHTML =
-      "Error loading items";
-  });
-
-}
+})
+.catch(err => {
+  console.error(err);
+  document.getElementById("result").innerHTML = "Error loading items";
+});
 
 
 // 🔥 SIZE LOGIC
