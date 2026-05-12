@@ -670,14 +670,27 @@ menuBtn.onclick = ()=>{
     return;
   }
 
-  dropdownMenu.classList.toggle("show");
+  const isOpen = dropdownMenu.classList.contains("show");
 
-  menuBtn.textContent =
-    dropdownMenu.classList.contains("show")
-    ? "×"
-    : "☰";
+  // close first
+  dropdownMenu.classList.remove("show");
+  menuBtn.textContent = "☰";
+
+  // reopen only if it was closed
+  if(!isOpen){
+    dropdownMenu.classList.add("show");
+    menuBtn.textContent = "×";
+  }
 
 };
+
+// 🔥 always close menu when page loads
+window.addEventListener("pageshow", ()=>{
+
+  dropdownMenu.classList.remove("show");
+  menuBtn.textContent = "☰";
+
+});
 
 let menuHoldTimer = null;
 let menuDragging = false;
