@@ -104,13 +104,17 @@ button{
 <div class="result" id="result"></div>
 
 <script src="lang.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
 <script>
-
 const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
 
 let items = [];
 let selectedItem = null;
+
+function clean(v){
+  return (v ?? "").toString().trim().replace(/^"+|"+$/g,"");
+}
 
 function applyLanguage(){
   setText("backText", "back");
@@ -122,24 +126,24 @@ function applyLanguage(){
 
 applyLanguage();
 
-
-// 📦 LOAD DATA
 fetch(sheetURL)
 .then(r=>r.text())
-.then(data=>{
-  const rows = data.split("\n").slice(1);
+.then(csv=>{
+  const rows = Papa.parse(csv,{skipEmptyLines:true}).data;
 
-  items = rows.map(r=>r.split(",")).map(c=>({
-    id: c[0],
-    name: c[1],
-    category: c[2],
-    image: c[8],
+  items = rows.slice(1).map(c=>({
+    id: clean(c[0]),
+    name: clean(c[1]),
+    category: clean(c[2]),
+    image: clean(c[8])
   }))
   .filter(i => i.id && i.name && i.image);
+})
+.catch(err=>{
+  console.error(err);
+  document.getElementById("result").innerHTML = "Error loading items";
 });
 
-
-// 🔥 SIZE LOGIC
 function setSizeOptions(item){
   const sizeSelect = document.getElementById("size");
 
@@ -167,13 +171,13 @@ function setSizeOptions(item){
     sizes.map(s => `<option value="${s}">${s}</option>`).join("");
 }
 
-
-// 🔍 SEARCH
 document.getElementById("search").addEventListener("input", e=>{
   const val = e.target.value.toLowerCase();
 
   const container = document.getElementById("result");
   container.innerHTML = "";
+
+  selectedItem = null;
 
   if(!val) return;
 
@@ -182,7 +186,6 @@ document.getElementById("search").addEventListener("input", e=>{
   );
 
   results.forEach(item => {
-
     const img = (item.image || "").split("|")[0];
 
     const div = document.createElement("div");
@@ -208,8 +211,6 @@ document.getElementById("search").addEventListener("input", e=>{
   });
 });
 
-
-// ➕ ADD ITEM
 document.getElementById("addBtn").onclick = () => {
 
   if(!selectedItem) return alert("Select item");
@@ -234,7 +235,6 @@ document.getElementById("addBtn").onclick = () => {
 
   window.location.href = "index.html";
 };
-
 </script>
 
 </body>
