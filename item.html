@@ -163,14 +163,18 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   const priceCad = cols[10];
   const priceUsd = cols[11];
 
-  let displaySize = cols[3] || "";
+  let displaySize = "";
 
-  const owned = myItems.find(i =>
-    i.id === id || i.sheetId === id
-  );
+const owned = myItems.find(i =>
+  i.id === id ||
+  i.sheetId === id
+);
 
-  if(owned && owned.size){
-    displaySize = owned.size;
+if(owned && owned.size){
+  displaySize = owned.size;
+}
+else if(cols[3]){
+  displaySize = cols[3];
   }
 
   document.getElementById("content").innerHTML = `
