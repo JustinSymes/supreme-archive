@@ -491,19 +491,17 @@ function displayItems(list){
       <div class="name">${item.name}</div>
     `;
 
-    div.onclick = ()=>{
+    div.onclick = () => {
+  const params = new URLSearchParams();
 
-      const params = new URLSearchParams();
+  if(item.sheetId){
+    params.set("id", item.sheetId);
+  } else {
+    params.set("name", item.name);
+  }
 
-      if(item.sheetId){
-        params.set("id", item.sheetId);
-      } else {
-        params.set("id", item.id);
-      }
-
-      window.location = "item.html?" + params.toString();
-
-    };
+  window.location = "item.html?" + params.toString();
+};
 
     enableDragDelete(div,item);
 
