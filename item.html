@@ -116,6 +116,7 @@ setText("backText", "backArchive");
 
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
+const name = params.get("name");
 
 fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0")
 .then(res=>res.text())
@@ -131,16 +132,21 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
 
   rows.forEach(cols => {
 
-    if(id && cols[0] === id){
-      foundRow = cols;
-    }
+  if(id && cols[0] === id){
+    foundRow = cols;
+  }
 
-    if(!foundRow && oldItem && cols[1] &&
-       cols[1].toLowerCase() === oldItem.name.toLowerCase()){
-      foundRow = cols;
-    }
+  if(!foundRow && name && cols[1] &&
+     cols[1].toLowerCase() === name.toLowerCase()){
+    foundRow = cols;
+  }
 
-  });
+  if(!foundRow && oldItem && cols[1] &&
+     cols[1].toLowerCase() === oldItem.name.toLowerCase()){
+    foundRow = cols;
+  }
+
+});
 
   if(!foundRow){
     document.getElementById("content").innerHTML = "Item not found";
