@@ -1,3 +1,5 @@
+Here’s your full index.html with the Socials modal added. Replace YOUR_TIKTOK_LINK_HERE and YOUR_DISCORD_INVITE_LINK_HERE with your real links.
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -268,6 +270,19 @@ img{
   padding:12px 22px;
   font-weight:700;
 }
+
+.socialBtn{
+  width:100%;
+  padding:14px;
+  margin-bottom:12px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  background:#fff;
+  color:#111;
+  font-size:17px;
+  font-weight:700;
+  text-align:left;
+}
 </style>
 </head>
 
@@ -283,7 +298,7 @@ img{
 
   <div class="dropdown" id="dropdownMenu">
     <button id="requestText" onclick="window.location.href='request.html'">Request Items</button>
-    <button id="socialsText" onclick="alert('Socials coming soon')">Socials</button>
+    <button id="socialsText" onclick="openSocials()">Socials</button>
     <button id="settingsText" onclick="openSettings()">Language & Currency</button>
   </div>
 
@@ -339,6 +354,29 @@ img{
     <div class="settingsActions">
       <button class="cancelBtn" id="cancelText" onclick="closeSettings()">Cancel</button>
       <button class="saveSettingsBtn" id="saveText" onclick="saveSettings()">Save Changes</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="settingsOverlay" id="socialsOverlay">
+  <div class="settingsModal">
+
+    <h2>Socials</h2>
+    <p>Follow Supreme Archive and join the community.</p>
+
+    <div class="settingsBody">
+      <button class="socialBtn" onclick="window.open('https://www.tiktok.com/@supreme.archive.app?_r=1&_t=ZS-96MOhokSqyz','_blank')">
+        TikTok
+      </button>
+
+      <button class="socialBtn" onclick="window.open('https://discord.gg/PZuTbzj6JE','_blank')">
+        Discord
+      </button>
+    </div>
+
+    <div class="settingsActions">
+      <button class="cancelBtn" onclick="closeSocials()">Close</button>
     </div>
 
   </div>
@@ -492,16 +530,16 @@ function displayItems(list){
     `;
 
     div.onclick = () => {
-  const params = new URLSearchParams();
+      const params = new URLSearchParams();
 
-  if(item.sheetId){
-    params.set("id", item.sheetId);
-  } else {
-    params.set("name", item.name);
-  }
+      if(item.sheetId){
+        params.set("id", item.sheetId);
+      } else {
+        params.set("name", item.name);
+      }
 
-  window.location = "item.html?" + params.toString();
-};
+      window.location = "item.html?" + params.toString();
+    };
 
     enableDragDelete(div,item);
 
@@ -672,11 +710,9 @@ menuBtn.onclick = ()=>{
 
   const isOpen = dropdownMenu.classList.contains("show");
 
-  // close first
   dropdownMenu.classList.remove("show");
   menuBtn.textContent = "☰";
 
-  // reopen only if it was closed
   if(!isOpen){
     dropdownMenu.classList.add("show");
     menuBtn.textContent = "×";
@@ -684,7 +720,6 @@ menuBtn.onclick = ()=>{
 
 };
 
-// 🔥 always close menu when page loads
 window.addEventListener("pageshow", ()=>{
 
   dropdownMenu.classList.remove("show");
@@ -778,6 +813,9 @@ menuBtn.addEventListener("touchend", e=>{
 
 function openSettings(){
 
+  dropdownMenu.classList.remove("show");
+  menuBtn.textContent = "☰";
+
   document.getElementById("currencySelect").value =
     localStorage.getItem("currency") || "CAD";
 
@@ -810,6 +848,18 @@ function saveSettings(){
 
   closeSettings();
 
+}
+
+/* socials */
+
+function openSocials(){
+  dropdownMenu.classList.remove("show");
+  menuBtn.textContent = "☰";
+  document.getElementById("socialsOverlay").classList.add("show");
+}
+
+function closeSocials(){
+  document.getElementById("socialsOverlay").classList.remove("show");
 }
 
 applyLanguage();
