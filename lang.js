@@ -4,6 +4,7 @@ const translations = {
     add: "+ Add",
     buildFit: "Build a Fit",
     requestItems: "Request Items",
+    captchaPractice: "Captcha Practice",
     languageCurrency: "Language & Currency",
     socials: "Socials",
     settingsTitle: "Change your settings",
