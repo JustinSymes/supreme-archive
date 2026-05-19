@@ -3,7 +3,9 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta charset="UTF-8">
-<title>Captcha Trainer</title>
+<title>Captcha Practice</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
 
 <style>
 body {
@@ -11,8 +13,31 @@ body {
   font-family: Arial, sans-serif;
   background: #eee;
   min-height:100vh;
-  padding:40px 16px 0;
+  padding:0 16px 0;
   box-sizing:border-box;
+}
+
+.topbar{
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  margin-bottom:30px;
+}
+
+.back{
+  position:absolute;
+  left:0;
+  color:#e10600;
+  font-weight:700;
+  cursor:pointer;
+  font-size:18px;
+}
+
+.title{
+  font-weight:800;
+  font-size:22px;
 }
 
 .hcaptcha-card {
@@ -131,10 +156,19 @@ body {
   cursor: not-allowed;
 }
 
+.tip-text{
+  margin-top:18px;
+  text-align:center;
+  font-size:15px;
+  line-height:1.7;
+  color:#666;
+  font-family:'Special Elite', cursive;
+}
+
 .box {
   display: none;
   width: min(340px, 100%);
-  margin: 0 auto 20px;
+  margin: 24px auto 20px;
   background: white;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,.2);
@@ -281,6 +315,11 @@ body {
 
 <body>
 
+<div class="topbar">
+  <div class="back" onclick="history.back()">← Back</div>
+  <div class="title">Captcha Practice</div>
+</div>
+
 <div id="mainScreen">
   <div class="hcaptcha-card">
     <div class="left">
@@ -298,6 +337,10 @@ body {
   </div>
 
   <button class="submit-btn" id="submitBtn" disabled>Submit</button>
+
+  <div class="tip-text">
+    * Tip — wait 1 second before clicking verify *
+  </div>
 
   <div class="box" id="captchaBox">
     <div class="header">
