@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Captcha Trainer</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #eee;
+  padding-top: 40px;
+}
+
+.hcaptcha-card {
+  width: 360px;
+  height: 78px;
+  margin: 0 auto 25px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  box-shadow: 0 1px 5px rgba(0,0,0,.15);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.checkbox {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #aaa;
+  border-radius: 4px;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkbox.active {
+  border-color: #15958f;
+}
+
+.checkbox.success {
+  border-color: #15958f;
+  color: #15958f;
+}
+
+.checkbox.fail {
+  border-color: #d93025;
+  color: #d93025;
+}
+
+.mark {
+  font-size: 28px;
+  transform: scale(0);
+  animation: popMark .45s ease forwards;
+}
+
+@keyframes popMark {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.pulse {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: rgba(255,122,58,.45);
+  border-radius: 50%;
+  transform: scale(0);
+  opacity: 0;
+}
+
+.checkbox.active .pulse {
+  animation: orangePulse .85s ease-out forwards;
+}
+
+@keyframes orangePulse {
+  0% { transform: scale(0); opacity: .9; }
+  80% { transform: scale(5); opacity: .35; }
+  100% { transform: scale(7); opacity: 0; }
+}
+
+.logo {
+  text-align: center;
+  font-size: 11px;
+  color: #777;
+}
+
+.logo-circle {
+  width: 40px;
+  height: 40px;
+  background: #1fb8aa;
+  border-radius: 50%;
+  margin: 0 auto 4px;
+}
+
+.logo strong {
+  display: block;
+  font-size: 14px;
+  color: #555;
+}
+
+.submit-btn {
+  display: block;
+  margin: 0 auto;
+  background: black;
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.submit-btn:disabled {
+  background: #777;
+  cursor: not-allowed;
+}
+
+.box {
+  display: none;
+  width: 340px;
+  margin: 0 auto 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  overflow: hidden;
+}
+
+.box.show {
+  display: block;
+}
+
+.header {
+  background: #0f8f87;
+  color: white;
+  padding: 16px;
+}
+
+.header span {
+  display: block;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.info {
+  padding: 10px;
+  font-size: 14px;
+  color: #555;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 10px;
+}
+
+.tile {
+  position: relative;
+  cursor: pointer;
+  border: 3px solid transparent;
+}
+
+.tile.answer-correct {
+  border-color: #10b981;
+}
+
+.tile.answer-wrong {
+  border-color: #ef4444;
+}
+
+.tile.selected {
+  box-shadow: inset 0 0 0 3px #0f8f87;
+}
+
+.tile img {
+  width: 100%;
+  height: 95px;
+  object-fit: cover;
+  display: block;
+}
+
+.check {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  background: #0f8f87;
+  border-radius: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.selected .check {
+  display: flex;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  height: 18px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  background: #374151;
+  border-radius: 50%;
+  opacity: .6;
+  transition: all .35s ease;
+}
+
+.dot.active {
+  width: 28px;
+  border-radius: 999px;
+  opacity: 1;
+}
+
+.footer {
+  text-align: right;
+  padding: 10px;
+}
+
+.verify-btn {
+  background: #0f8f87;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.loading-screen {
+  display: none;
+  text-align: center;
+  padding-top: 120px;
+}
+
+.archive-logo {
+  font-family: Arial Black, Arial, sans-serif;
+  font-size: 32px;
+  font-weight: 900;
+  font-style: italic;
+  color: black;
+  margin-bottom: 18px;
+}
+
+.bars {
+  font-size: 20px;
+  letter-spacing: 4px;
+  font-weight: bold;
+}
+
+.loading-text {
+  margin-top: 12px;
+  font-size: 11px;
+  color: #555;
+}
+</style>
+</head>
+
+<body>
+
+<div id="mainScreen">
+  <div class="hcaptcha-card">
+    <div class="left">
+      <div class="checkbox" id="humanCheck">
+        <div class="pulse"></div>
+      </div>
+      <div>I am human</div>
+    </div>
+
+    <div class="logo">
+      <div class="logo-circle"></div>
+      <strong>saCaptcha</strong>
+      Privacy · Terms
+    </div>
+  </div>
+
+  <button class="submit-btn" id="submitBtn" disabled>Submit</button>
+
+  <div class="box" id="captchaBox">
+    <div class="header">
+      Select all images with
+      <span>stairs</span>
+    </div>
+
+    <div class="info">Select all matching images, then continue.</div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="dots">
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+
+    <div class="footer">
+      <button class="verify-btn" id="verifyBtn">NEXT</button>
+    </div>
+  </div>
+</div>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="archive-logo">Supreme Archive</div>
+  <div class="bars">||||||</div>
+  <div class="loading-text">
+    we are experiencing high traffic.<br>
+    you have been added to the queue.
+  </div>
+</div>
+
+<script>
+const SHOW_ANSWER_OUTLINES = true;
+
+const stairImages = [
+  "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=400",
+  "https://images.unsplash.com/photo-1523419409543-a5a6f4a6a7c2?w=400",
+  "https://images.unsplash.com/photo-1549187774-b4e9b0445b41?w=400",
+  "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=400"
+];
+
+const nonStairImages = [
+  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400",
+  "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=400",
+  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400",
+  "https://images.unsplash.com/photo-1492724441997-5dc865305da7?w=400",
+  "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?w=400"
+];
+
+const humanCheck = document.getElementById("humanCheck");
+const captchaBox = document.getElementById("captchaBox");
+const grid = document.getElementById("grid");
+const verifyBtn = document.getElementById("verifyBtn");
+const submitBtn = document.getElementById("submitBtn");
+const dots = document.querySelectorAll(".dot");
+const mainScreen = document.getElementById("mainScreen");
+const loadingScreen = document.getElementById("loadingScreen");
+
+let page = 0;
+let tiles = [];
+let solved = false;
+let lastCorrectClickTime = 0;
+let pageResults = [false, false, false];
+
+function randomFrom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+humanCheck.onclick = () => {
+  if (solved) return;
+
+  humanCheck.className = "checkbox active";
+  humanCheck.innerHTML = '<div class="pulse"></div>';
+
+  setTimeout(() => {
+    captchaBox.classList.add("show");
+    page = 0;
+    pageResults = [false, false, false];
+    generateGrid();
+    updateDots();
+  }, 900);
+};
+
+function generateGrid() {
+  grid.innerHTML = "";
+  tiles = [];
+  verifyBtn.innerText = page === 2 ? "VERIFY" : "NEXT";
+
+  let stairCount = 3 + Math.floor(Math.random() * 2);
+  let pool = [];
+
+  for (let i = 0; i < stairCount; i++) {
+    pool.push({ src: randomFrom(stairImages), correct: true, selected: false });
+  }
+
+  while (pool.length < 9) {
+    pool.push({ src: randomFrom(nonStairImages), correct: false, selected: false });
+  }
+
+  pool.sort(() => Math.random() - 0.5);
+
+  pool.forEach(data => {
+    const div = document.createElement("div");
+    div.className = "tile";
+
+    if (SHOW_ANSWER_OUTLINES) {
+      div.classList.add(data.correct ? "answer-correct" : "answer-wrong");
+    }
+
+    const img = document.createElement("img");
+    img.src = data.src;
+
+    const check = document.createElement("div");
+    check.className = "check";
+    check.innerText = "✓";
+
+    div.appendChild(img);
+    div.appendChild(check);
+
+    div.onclick = () => {
+      data.selected = !data.selected;
+      div.classList.toggle("selected", data.selected);
+
+      if (page === 2 && allCorrectSelected()) {
+        lastCorrectClickTime = Date.now();
+      }
+    };
+
+    tiles.push(data);
+    grid.appendChild(div);
+  });
+}
+
+function allCorrectSelected() {
+  return tiles.every(t => t.correct === t.selected);
+}
+
+function updateDots() {
+  dots.forEach((dot, i) => {
+    dot.classList.toggle("active", i === page);
+  });
+}
+
+verifyBtn.onclick = () => {
+  const correctSelection = allCorrectSelected();
+  pageResults[page] = correctSelection;
+
+  if (page < 2) {
+    page++;
+    updateDots();
+    generateGrid();
+    return;
+  }
+
+  const allPagesCorrect = pageResults.every(Boolean);
+  const clickedTooFast = Date.now() - lastCorrectClickTime < 1000;
+
+  if (allPagesCorrect && (!clickedTooFast || Math.random() >= 0.5)) {
+    passCaptcha();
+  } else {
+    failCaptcha();
+  }
+};
+
+function passCaptcha() {
+  solved = true;
+  captchaBox.classList.remove("show");
+  humanCheck.className = "checkbox success";
+  humanCheck.innerHTML = '<div class="mark">✓</div>';
+  submitBtn.disabled = false;
+}
+
+function failCaptcha() {
+  captchaBox.classList.remove("show");
+  humanCheck.className = "checkbox fail";
+  humanCheck.innerHTML = '<div class="mark">×</div>';
+
+  setTimeout(() => {
+    humanCheck.className = "checkbox";
+    humanCheck.innerHTML = '<div class="pulse"></div>';
+    page = 0;
+    tiles = [];
+    pageResults = [false, false, false];
+    updateDots();
+  }, 1000);
+}
+
+submitBtn.onclick = () => {
+  if (!solved) return;
+
+  submitBtn.disabled = true;
+
+  setTimeout(() => {
+    mainScreen.style.display = "none";
+    loadingScreen.style.display = "block";
+
+    setTimeout(resetAll, 5000);
+  }, 1000);
+};
+
+function resetAll() {
+  loadingScreen.style.display = "none";
+  mainScreen.style.display = "block";
+  captchaBox.classList.remove("show");
+
+  solved = false;
+  page = 0;
+  tiles = [];
+  pageResults = [false, false, false];
+  submitBtn.disabled = true;
+
+  humanCheck.className = "checkbox";
+  humanCheck.innerHTML = '<div class="pulse"></div>';
+
+  updateDots();
+}
+</script>
+
+</body>
+</html>
