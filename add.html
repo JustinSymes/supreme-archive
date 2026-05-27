@@ -294,9 +294,7 @@ document.getElementById("addBtn").onclick = () => {
 
     category: selectedItem.category,
     size,
-    src: selectedItem.image
-      ? selectedItem.image.split("|")[0].trim()
-      : ""
+    src: selectedItem.image || ""
   });
 
   localStorage.setItem(
