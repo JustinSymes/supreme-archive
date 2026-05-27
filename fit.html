@@ -618,11 +618,21 @@ fetch(sheetURL)
     sourceItems = [...myItems, ...sheetItems];
   }
 
-  tops = sourceItems.filter(i=>i.category==="Tops");
-  bottoms = sourceItems.filter(i=>i.category==="Bottoms");
+  function firstFitPhoto(item){
+  const src = item.src || item.image || "";
+  return src.split("|")[0].trim();
+}
 
-  hats = [BLANK, ...sourceItems.filter(i=>i.category==="Hats")];
-  accs = [BLANK, ...sourceItems.filter(i=>i.category==="Accessories")];
+const fitItems = sourceItems.map(i => ({
+  ...i,
+  src: firstFitPhoto(i)
+}));
+
+tops = fitItems.filter(i=>i.category==="Tops");
+bottoms = fitItems.filter(i=>i.category==="Bottoms");
+
+hats = [BLANK, ...fitItems.filter(i=>i.category==="Hats")];
+accs = [BLANK, ...fitItems.filter(i=>i.category==="Accessories")];
 
   const editFit = JSON.parse(localStorage.getItem("editFit") || "null");
 
