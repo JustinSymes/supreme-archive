@@ -115,6 +115,7 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
+  touch-action:pan-y;
 }
 
 .thumb img{
@@ -134,8 +135,6 @@ img{
   -webkit-touch-callout:none;
   user-select:none;
 }
-
-/* trash */
 
 #trashBin{
   position:fixed;
@@ -165,8 +164,6 @@ img{
   transform:translateX(-50%) scale(1.2);
 }
 
-/* dropdown */
-
 .dropdown{
   position:absolute;
   top:62px;
@@ -193,8 +190,6 @@ img{
   text-align:left;
   font-size:17px;
 }
-
-/* settings */
 
 .settingsOverlay{
   position:fixed;
@@ -383,7 +378,6 @@ img{
   
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-
 <script src="lang.js"></script>
   
 <script>
@@ -391,8 +385,6 @@ const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTto
 
 let items = [];
 let allItems = [];
-
-/* language */
 
 function applyLanguage(){
   document.getElementById("addText").textContent = t("add");
@@ -422,8 +414,6 @@ function applyLanguage(){
       `${t("totalPieces")}: ${allItems.length}`;
   }
 }
-
-/* helpers */
 
 function getPhotos(imageField){
   if(!imageField) return [];
@@ -481,8 +471,6 @@ function sortArchiveItems(list){
 
 }
 
-/* data */
-
 fetch(sheetURL)
 .then(res=>res.text())
 .then(csv=>{
@@ -516,44 +504,38 @@ fetch(sheetURL)
   document.getElementById("counter").innerText = "Error loading items";
 });
 
-/* display */
-
-
-
 function enablePhotoSwipe(card, imgEl, photos){
   if(!photos || photos.length <= 1) return;
 
   let photoIndex = 0;
   let startX = 0;
   let startY = 0;
-  let isHorizontal = false;
-  let didSwipe = false;
+  let swiping = false;
 
-  card.addEventListener("touchstart", e=>{
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    isHorizontal = false;
-    didSwipe = false;
-  }, {passive:true});
+  card.addEventListener("pointerdown", e=>{
+    startX = e.clientX;
+    startY = e.clientY;
+    swiping = false;
+    card.dataset.swiped = "false";
+  });
 
-  card.addEventListener("touchmove", e=>{
-    const dx = e.touches[0].clientX - startX;
-    const dy = e.touches[0].clientY - startY;
+  card.addEventListener("pointermove", e=>{
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
 
     if(Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 20){
-      isHorizontal = true;
-      e.preventDefault();
+      swiping = true;
     }
-  }, {passive:false});
+  });
 
-  card.addEventListener("touchend", e=>{
-    if(!isHorizontal) return;
+  card.addEventListener("pointerup", e=>{
+    if(!swiping) return;
 
-    const dx = e.changedTouches[0].clientX - startX;
+    const dx = e.clientX - startX;
 
     if(Math.abs(dx) < 35) return;
 
-    didSwipe = true;
+    card.dataset.swiped = "true";
 
     if(dx < 0){
       photoIndex = (photoIndex + 1) % photos.length;
@@ -564,22 +546,11 @@ function enablePhotoSwipe(card, imgEl, photos){
     imgEl.src = photos[photoIndex];
 
     setTimeout(()=>{
-      didSwipe = false;
-    }, 250);
-  }, {passive:true});
-
-  card.addEventListener("click", e=>{
-    if(didSwipe){
-      e.preventDefault();
-      e.stopPropagation();
-      didSwipe = false;
-    }
-  }, true);
+      card.dataset.swiped = "false";
+    },300);
+  });
 }
 
-
-
-  
 function displayItems(list){
 
   const grid = document.getElementById("grid");
@@ -588,23 +559,25 @@ function displayItems(list){
   list.forEach(item=>{
 
     const imgSrc = item.image || item.src;
+    const photos = getPhotos(imgSrc);
 
     const div = document.createElement("div");
     div.className = "card";
+    div.dataset.swiped = "false";
 
-    const photos = getPhotos(imgSrc);
+    div.innerHTML = `
+      <div class="thumb">
+        <img src="${photos[0] || ""}">
+      </div>
+      <div class="name">${item.name}</div>
+    `;
 
-div.innerHTML = `
-  <div class="thumb">
-    <img src="${photos[0] || ""}">
-  </div>
-  <div class="name">${item.name}</div>
-`;
-
-const imgEl = div.querySelector("img");
-enablePhotoSwipe(div, imgEl, photos);
+    const imgEl = div.querySelector("img");
+    enablePhotoSwipe(div, imgEl, photos);
 
     div.onclick = () => {
+      if(div.dataset.swiped === "true") return;
+
       const params = new URLSearchParams();
 
       if(item.sheetId){
@@ -628,8 +601,6 @@ function filterCategory(cat){
   if(cat==="All") return displayItems(allItems);
   displayItems(allItems.filter(i=>i.category===cat));
 }
-
-/* delete */
 
 let holdTimer = null;
 let dragGhost = null;
@@ -767,8 +738,6 @@ function isUserItem(item){
   return myItems.some(i=>i.id===item.id);
 }
 
-/* menu */
-
 const menuBtn = document.getElementById("menuBtn");
 const dropdownMenu = document.getElementById("dropdownMenu");
 
@@ -796,10 +765,8 @@ menuBtn.onclick = ()=>{
 };
 
 window.addEventListener("pageshow", ()=>{
-
   dropdownMenu.classList.remove("show");
   menuBtn.textContent = "☰";
-
 });
 
 let menuHoldTimer = null;
@@ -884,8 +851,6 @@ menuBtn.addEventListener("touchend", e=>{
 
 });
 
-/* settings */
-
 function openSettings(){
 
   dropdownMenu.classList.remove("show");
@@ -924,8 +889,6 @@ function saveSettings(){
   closeSettings();
 
 }
-
-/* socials */
 
 function openSocials(){
   dropdownMenu.classList.remove("show");
