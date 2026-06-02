@@ -246,18 +246,23 @@ document.getElementById("search").addEventListener("input", e=>{
 
     div.onclick = () => {
 
-      document.querySelectorAll(".result-item")
-      .forEach(el =>
-        el.classList.remove("selected")
-      );
+  document.querySelectorAll(".result-item")
+  .forEach(el =>
+    el.classList.remove("selected")
+  );
 
-      div.classList.add("selected");
+  div.classList.add("selected");
 
-      selectedItem = item;
+  selectedItem = item;
 
-      setSizeOptions(item);
+  setSizeOptions(item);
 
-    };
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+};
 
     container.appendChild(div);
 
