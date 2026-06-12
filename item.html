@@ -166,9 +166,16 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   let displaySize = "";
 
 const owned = myItems.find(i =>
-  i.id === id ||
-  i.sheetId === id
+  (id && (i.id === id || i.sheetId === id)) ||
+  (name && i.name && i.name.toLowerCase() === name.toLowerCase())
 );
+
+if(owned && owned.size){
+  displaySize = owned.size;
+}
+else if(cols[3]){
+  displaySize = cols[3];
+}
 
 if(owned && owned.size){
   displaySize = owned.size;
