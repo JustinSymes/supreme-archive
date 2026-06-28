@@ -449,11 +449,12 @@ async function saveToGalleryOnly(){
       return slot;
     }
 
-    function cloneImageWithSrc(original){
-      const img = document.createElement("img");
-      img.src = original.src || "";
-      return img;
-    }
+  function cloneImageWithSrc(original){
+  const img = document.createElement("img");
+  img.crossOrigin = "anonymous";
+  img.src = original.src || "";
+  return img;
+}
 
     const hat = cloneImageWithSrc(hatImg);
     const acc = cloneImageWithSrc(accImg);
@@ -479,7 +480,7 @@ async function saveToGalleryOnly(){
     
     const canvas = await html2canvas(exportBox,{
       backgroundColor:"#ffffff",
-      scale:2,
+      scale:1,
       useCORS:true
     });
 
