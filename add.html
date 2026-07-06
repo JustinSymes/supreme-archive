@@ -37,13 +37,14 @@ body{
 
 .request-link{
   position:absolute;
-  right:16px;
+  right:0;
   top:50%;
   transform:translateY(-50%);
   color:#e10600;
-  font-weight:600;
+  font-weight:700;
   text-decoration:none;
   white-space:nowrap;
+  z-index:999;
 }
 }
 
@@ -140,7 +141,7 @@ function applyLanguage(){
   setPlaceholder("search", "searchItem");
   setText("selectSizeText", "selectSize");
   setText("addBtn", "addItemBtn");
-  setText("requestLinkText", "requestItem");
+  document.getElementById("requestLinkText").textContent = "Request";
 }
 
 applyLanguage();
