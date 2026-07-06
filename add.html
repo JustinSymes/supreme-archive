@@ -26,6 +26,14 @@ body{
   cursor:pointer;
 }
 
+  .request-link{
+  position:absolute;
+  right:16px;
+  color:#e10600;
+  font-weight:600;
+  text-decoration:none;
+}
+
 .title{
   font-weight:700;
   font-size:18px;
@@ -87,6 +95,7 @@ button{
 <div class="topbar">
   <div class="back" id="backText" onclick="history.back()">← Back</div>
   <div class="title" id="titleText">Add Item</div>
+  <a class="request-link" id="requestLinkText" href="request.html">Request</a>
 </div>
 
 <div class="form">
@@ -123,6 +132,7 @@ function applyLanguage(){
   setPlaceholder("search", "searchItem");
   setText("selectSizeText", "selectSize");
   setText("addBtn", "addItemBtn");
+  setText("requestLinkText", "requestItem");
 }
 
 applyLanguage();
