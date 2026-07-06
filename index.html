@@ -284,6 +284,60 @@ img{
   font-weight:700;
   text-align:left;
 }
+
+.setting-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:16px 0;
+  border-bottom:1px solid #eee;
+  font-size:17px;
+  font-weight:600;
+}
+
+.setting-row:last-child{
+  border-bottom:none;
+}
+
+.switch{
+  position:relative;
+  width:52px;
+  height:30px;
+  flex-shrink:0;
+}
+
+.switch input{
+  display:none;
+}
+
+.slider{
+  position:absolute;
+  inset:0;
+  background:#d1d1d6;
+  border-radius:999px;
+  transition:.25s;
+}
+
+.slider:before{
+  content:"";
+  position:absolute;
+  width:26px;
+  height:26px;
+  left:2px;
+  top:2px;
+  background:white;
+  border-radius:50%;
+  transition:.25s;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);
+}
+
+.switch input:checked + .slider{
+  background:#e10600;
+}
+
+.switch input:checked + .slider:before{
+  transform:translateX(22px);
+}
 </style>
 </head>
 
@@ -302,6 +356,7 @@ img{
     <button id="captchaText" onclick="window.location.href='captcha.html'">Captcha Practice</button>
     <button id="socialsText" onclick="openSocials()">Socials</button>
     <button id="settingsText" onclick="openSettings()">Language & Currency</button>
+    <button id="appSettingsText" onclick="openAppSettings()">Settings</button>
   </div>
 
 </div>
@@ -383,7 +438,39 @@ img{
 
   </div>
 </div>
-  
+
+<div class="settingsOverlay" id="appSettingsOverlay">
+  <div class="settingsModal">
+
+    <h2>Settings</h2>
+    <p>Customize Supreme Archive features.</p>
+
+    <div class="settingsBody">
+
+      <div class="setting-row" onclick="toggleSwitch('captchaAssistToggle')">
+        <span>Captcha Assist</span>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="captchaAssistToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-row" onclick="toggleSwitch('entireArchiveToggle')">
+        <span>Entire Archive in Build a Fit</span>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="entireArchiveToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+    </div>
+
+    <div class="settingsActions">
+      <button class="cancelBtn" onclick="closeAppSettings()">Close</button>
+    </div>
+
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="lang.js"></script>
@@ -401,6 +488,7 @@ function applyLanguage(){
   document.getElementById("captchaText").textContent = t("captchaPractice");
   document.getElementById("settingsText").textContent = t("languageCurrency");
   document.getElementById("socialsText").textContent = t("socials");
+  document.getElementById("appSettingsText").textContent = "Settings";
 
   document.getElementById("settingsTitle").textContent = t("settingsTitle");
   document.getElementById("settingsSub").textContent = t("settingsSub");
@@ -906,6 +994,44 @@ function openSocials(){
 
 function closeSocials(){
   document.getElementById("socialsOverlay").classList.remove("show");
+}
+
+function openAppSettings(){
+  dropdownMenu.classList.remove("show");
+  menuBtn.textContent = "☰";
+
+  document.getElementById("captchaAssistToggle").checked =
+    localStorage.getItem("captchaAssist") !== "off";
+
+  document.getElementById("entireArchiveToggle").checked =
+    localStorage.getItem("fitArchiveMode") === "all";
+
+  document.getElementById("appSettingsOverlay").classList.add("show");
+}
+
+function closeAppSettings(){
+  document.getElementById("appSettingsOverlay").classList.remove("show");
+}
+
+function toggleSwitch(id){
+  const toggle = document.getElementById(id);
+  toggle.checked = !toggle.checked;
+  saveAppSettings();
+}
+
+document.getElementById("captchaAssistToggle").addEventListener("change", saveAppSettings);
+document.getElementById("entireArchiveToggle").addEventListener("change", saveAppSettings);
+
+function saveAppSettings(){
+  localStorage.setItem(
+    "captchaAssist",
+    document.getElementById("captchaAssistToggle").checked ? "on" : "off"
+  );
+
+  localStorage.setItem(
+    "fitArchiveMode",
+    document.getElementById("entireArchiveToggle").checked ? "all" : "user"
+  );
 }
 
 applyLanguage();
