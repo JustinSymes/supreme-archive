@@ -12,26 +12,38 @@ body{
 
 .topbar{
   height:64px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
   position:relative;
 }
 
 .back{
   position:absolute;
   left:16px;
+  top:50%;
+  transform:translateY(-50%);
   color:#e10600;
   font-weight:600;
   cursor:pointer;
 }
 
-  .request-link{
+.title{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  font-weight:700;
+  font-size:18px;
+  white-space:nowrap;
+}
+
+.request-link{
   position:absolute;
   right:16px;
+  top:50%;
+  transform:translateY(-50%);
   color:#e10600;
   font-weight:600;
   text-decoration:none;
+  white-space:nowrap;
 }
 
 .title{
