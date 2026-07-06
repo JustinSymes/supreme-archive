@@ -228,9 +228,10 @@ document.addEventListener("touchend", function(e){
 }, { passive:false });
 
 
-const STRICT_MODE = false; 
+const STRICT_MODE =
+  localStorage.getItem("fitArchiveMode") !== "all";
 // true = only added items
-// false = current system (everything)
+// false = everything
 
 const sheetURL =
 "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
