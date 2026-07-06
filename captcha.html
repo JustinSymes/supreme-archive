@@ -382,8 +382,8 @@ body {
 </div>
 
 <script>
-const SHOW_ANSWER_OUTLINES = true;
-
+const SHOW_ANSWER_OUTLINES =
+  localStorage.getItem("captchaAssist") !== "off";
 const stairImages = [
 
   "0PlVg7y-OUUo85HoCms6xEwjI01ZHTLDurdxJ2Pl-NAi5fONSzMH0ZzLNgL5lU8qo098Bw7qEWj4U0QVKCWkelebn-7irJbqPBkfrptMiJaQPM2ncRev-SdH79GCYXulr6hj7bo8DffD4Qpn8M5Hjo8KIPRPuNoD3DhPE72Er.jfif",
