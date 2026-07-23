@@ -631,21 +631,54 @@ fetch(sheetURL)
 });
 
 const desktopPointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+let hoveredPhotoControl = null;
 
-function enablePhotoSwipe(card, imgEl, photos, item){
+window.addEventListener("keydown", e=>{
+  if(!desktopPointer.matches || !hoveredPhotoControl) return;
+
+  if(e.key === "ArrowRight" || e.key === "ArrowDown"){
+    e.preventDefault();
+    hoveredPhotoControl(1);
+  } else if(e.key === "ArrowLeft" || e.key === "ArrowUp"){
+    e.preventDefault();
+    hoveredPhotoControl(-1);
+  }
+});
+
+function enablePhotoSwipe(card, imgEl, photos){
   if(!photos || photos.length <= 1) return;
 
   let photoIndex = 0;
   let startX = 0;
   let startY = 0;
   let swiping = false;
+  let lastWheelChange = 0;
+
+  const changePhoto = direction=>{
+    photoIndex = (photoIndex + direction + photos.length) % photos.length;
+    imgEl.src = photos[photoIndex];
+  };
+
+  card.addEventListener("mouseenter", ()=>{
+    if(desktopPointer.matches) hoveredPhotoControl = changePhoto;
+  });
+
+  card.addEventListener("mouseleave", ()=>{
+    if(hoveredPhotoControl === changePhoto) hoveredPhotoControl = null;
+  });
+
+  card.addEventListener("wheel", e=>{
+    if(!desktopPointer.matches) return;
+    e.preventDefault();
+
+    const now = Date.now();
+    if(now-lastWheelChange < 180) return;
+    lastWheelChange = now;
+    changePhoto(e.deltaY >= 0 ? 1 : -1);
+  },{passive:false});
 
   card.addEventListener("pointerdown", e=>{
-    if(e.pointerType === "mouse"){
-      if(isUserItem(item)) return;
-      e.preventDefault();
-      card.setPointerCapture(e.pointerId);
-    }
+    if(e.pointerType === "mouse") return;
 
     startX = e.clientX;
     startY = e.clientY;
@@ -654,7 +687,7 @@ function enablePhotoSwipe(card, imgEl, photos, item){
   });
 
   card.addEventListener("pointermove", e=>{
-    if(e.pointerType === "mouse" && isUserItem(item)) return;
+    if(e.pointerType === "mouse") return;
 
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
@@ -665,7 +698,7 @@ function enablePhotoSwipe(card, imgEl, photos, item){
   });
 
   card.addEventListener("pointerup", e=>{
-    if(e.pointerType === "mouse" && isUserItem(item)) return;
+    if(e.pointerType === "mouse") return;
     if(!swiping) return;
 
     const dx = e.clientX - startX;
@@ -674,13 +707,7 @@ function enablePhotoSwipe(card, imgEl, photos, item){
 
     card.dataset.swiped = "true";
 
-    if(dx < 0){
-      photoIndex = (photoIndex + 1) % photos.length;
-    } else {
-      photoIndex = (photoIndex - 1 + photos.length) % photos.length;
-    }
-
-    imgEl.src = photos[photoIndex];
+    changePhoto(dx < 0 ? 1 : -1);
 
     setTimeout(()=>{
       card.dataset.swiped = "false";
@@ -691,6 +718,7 @@ function enablePhotoSwipe(card, imgEl, photos, item){
 function displayItems(list){
 
   const grid = document.getElementById("grid");
+  hoveredPhotoControl = null;
   grid.innerHTML = "";
 
   list.forEach(item=>{
@@ -710,7 +738,7 @@ function displayItems(list){
     `;
 
     const imgEl = div.querySelector("img");
-    enablePhotoSwipe(div, imgEl, photos, item);
+    enablePhotoSwipe(div, imgEl, photos);
 
     div.onclick = () => {
       if(div.dataset.swiped === "true") return;

@@ -303,6 +303,42 @@ function buildCarousel(images){
   let isHorizontal = false;
 
   const container = track.parentElement;
+  const desktopPointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+  let carouselHovered = false;
+  let lastWheelChange = 0;
+  const changeDesktopPhoto = direction => {
+    setIndex((index + direction + images.length) % images.length);
+  };
+
+  container.addEventListener("mouseenter", () => {
+    if(desktopPointer.matches) carouselHovered = true;
+  });
+
+  container.addEventListener("mouseleave", () => {
+    carouselHovered = false;
+  });
+
+  container.addEventListener("wheel", e => {
+    if(!desktopPointer.matches || images.length <= 1) return;
+    e.preventDefault();
+
+    const now = Date.now();
+    if(now-lastWheelChange < 180) return;
+    lastWheelChange = now;
+    changeDesktopPhoto(e.deltaY >= 0 ? 1 : -1);
+  }, {passive:false});
+
+  window.addEventListener("keydown", e => {
+    if(!desktopPointer.matches || !carouselHovered || images.length <= 1) return;
+
+    if(e.key === "ArrowRight" || e.key === "ArrowDown"){
+      e.preventDefault();
+      changeDesktopPhoto(1);
+    } else if(e.key === "ArrowLeft" || e.key === "ArrowUp"){
+      e.preventDefault();
+      changeDesktopPhoto(-1);
+    }
+  });
 
   container.addEventListener("touchstart", e => {
     startX = e.touches[0].clientX;
