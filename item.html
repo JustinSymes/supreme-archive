@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Item</title>
+<title>Supreme Item Details | Supreme Archive</title>
+<meta id="metaDescription" name="description" content="View Supreme item images, category, size, and original retail price in Supreme Archive.">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link id="canonicalUrl" rel="canonical" href="https://supremearchive.net/item.html">
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
@@ -154,6 +157,13 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   }
 
   const cols = foundRow;
+  document.title = `${cols[1]} | Supreme Archive`;
+  document.getElementById("metaDescription").content =
+    `View images, category, size, and original retail price for ${cols[1]} in Supreme Archive.`;
+  const canonicalUrl = new URL("https://supremearchive.net/item.html");
+  if(id) canonicalUrl.searchParams.set("id", id);
+  else if(name) canonicalUrl.searchParams.set("name", name);
+  document.getElementById("canonicalUrl").href = canonicalUrl.toString();
 
   const images = (cols[8] || "")
     .split("|")
