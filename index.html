@@ -419,8 +419,8 @@ img{
 <div class="settingsOverlay" id="socialsOverlay">
   <div class="settingsModal">
 
-    <h2>Socials</h2>
-    <p>Follow Supreme Archive and join the community.</p>
+    <h2 id="socialsTitle">Socials</h2>
+    <p id="socialsSub">Follow Supreme Archive and join the community.</p>
 
     <div class="settingsBody">
       <button class="socialBtn" onclick="window.open('https://www.tiktok.com/@supremearchive.net?_r=1&_t=ZS-97pCNW62C3Q')">
@@ -433,7 +433,7 @@ img{
     </div>
 
     <div class="settingsActions">
-      <button class="cancelBtn" onclick="closeSocials()">Close</button>
+      <button class="cancelBtn" id="socialsCloseText" onclick="closeSocials()">Close</button>
     </div>
 
   </div>
@@ -442,13 +442,13 @@ img{
 <div class="settingsOverlay" id="appSettingsOverlay">
   <div class="settingsModal">
 
-    <h2>Settings</h2>
-    <p>Customize Supreme Archive features.</p>
+    <h2 id="appSettingsTitle">Settings</h2>
+    <p id="appSettingsSub">Customize Supreme Archive features.</p>
 
     <div class="settingsBody">
 
       <div class="setting-row" onclick="toggleSwitch('captchaAssistToggle')">
-        <span>Captcha Assist</span>
+        <span id="captchaAssistText">Captcha Assist</span>
         <label class="switch" onclick="event.stopPropagation()">
           <input type="checkbox" id="captchaAssistToggle">
           <span class="slider"></span>
@@ -456,7 +456,7 @@ img{
       </div>
 
       <div class="setting-row" onclick="toggleSwitch('entireArchiveToggle')">
-        <span>Entire Archive in Build a Fit</span>
+        <span id="entireArchiveText">Entire Archive in Build a Fit</span>
         <label class="switch" onclick="event.stopPropagation()">
           <input type="checkbox" id="entireArchiveToggle">
           <span class="slider"></span>
@@ -466,7 +466,7 @@ img{
     </div>
 
     <div class="settingsActions">
-      <button class="cancelBtn" onclick="closeAppSettings()">Close</button>
+      <button class="cancelBtn" id="appSettingsCloseText" onclick="closeAppSettings()">Close</button>
     </div>
 
   </div>
@@ -488,7 +488,15 @@ function applyLanguage(){
   document.getElementById("captchaText").textContent = t("captchaPractice");
   document.getElementById("settingsText").textContent = t("languageCurrency");
   document.getElementById("socialsText").textContent = t("socials");
-  document.getElementById("appSettingsText").textContent = "Settings";
+  document.getElementById("appSettingsText").textContent = t("appSettings");
+  document.getElementById("socialsTitle").textContent = t("socials");
+  document.getElementById("socialsSub").textContent = t("socialsSub");
+  document.getElementById("socialsCloseText").textContent = t("close");
+  document.getElementById("appSettingsTitle").textContent = t("appSettings");
+  document.getElementById("appSettingsSub").textContent = t("appSettingsSub");
+  document.getElementById("captchaAssistText").textContent = t("captchaAssist");
+  document.getElementById("entireArchiveText").textContent = t("entireArchive");
+  document.getElementById("appSettingsCloseText").textContent = t("close");
 
   document.getElementById("settingsTitle").textContent = t("settingsTitle");
   document.getElementById("settingsSub").textContent = t("settingsSub");
