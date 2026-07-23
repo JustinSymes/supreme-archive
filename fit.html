@@ -46,7 +46,95 @@ body{
   font-weight:700;
 }
 
-.right-spacer{ justify-self:end; }
+.settings-link{
+  justify-self:end;
+  background:transparent;
+  border:0;
+  padding:0;
+  color:var(--red);
+  font:inherit;
+  font-size:18px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.settings-overlay{
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(0,0,0,.35);
+}
+
+.settings-overlay.show{ display:flex; }
+
+.settings-modal{
+  width:min(420px,100%);
+  padding:24px;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 12px 40px rgba(0,0,0,.2);
+}
+
+.settings-modal h2{ margin:0 0 8px; }
+.settings-modal p{ margin:0 0 22px; color:#666; }
+
+.setting-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  padding:14px 0;
+  font-weight:600;
+}
+
+.switch{
+  position:relative;
+  width:52px;
+  height:30px;
+  flex-shrink:0;
+}
+
+.switch input{ display:none; }
+
+.slider{
+  position:absolute;
+  inset:0;
+  border-radius:999px;
+  background:#d1d1d6;
+  transition:.25s;
+}
+
+.slider:before{
+  content:"";
+  position:absolute;
+  left:2px;
+  top:2px;
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);
+  transition:.25s;
+}
+
+.switch input:checked + .slider{ background:var(--red); }
+.switch input:checked + .slider:before{ transform:translateX(22px); }
+
+.settings-close{
+  width:100%;
+  margin-top:16px;
+  padding:12px;
+  border:0;
+  border-radius:10px;
+  background:#eee;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+}
 
 /* Stage */
 .stage{
@@ -160,7 +248,22 @@ body{
 <div class="topbar">
   <a class="back" id="backText" href="index.html">← Back</a>
   <div class="title" id="titleText">Build a Fit</div>
-  <div></div>
+  <button class="settings-link" id="settingsLink" onclick="openFitSettings()">Settings</button>
+</div>
+
+<div class="settings-overlay" id="fitSettingsOverlay" onclick="closeFitSettings(event)">
+  <div class="settings-modal" onclick="event.stopPropagation()">
+    <h2 id="fitSettingsTitle">Settings</h2>
+    <p id="fitSettingsSub">Customize Supreme Archive features.</p>
+    <div class="setting-row">
+      <span id="fitEntireArchiveText">Entire Archive in Build a Fit</span>
+      <label class="switch">
+        <input type="checkbox" id="fitEntireArchiveToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <button class="settings-close" id="fitSettingsClose" onclick="closeFitSettings()">Close</button>
+  </div>
 </div>
 
 <div class="stage" id="capture">
@@ -209,9 +312,30 @@ function applyLanguage(){
   setText("randomBtn", "random");
   setText("fitsBtn", "fits");
   setText("saveBtn", "save");
+  setText("settingsLink", "appSettings");
+  setText("fitSettingsTitle", "appSettings");
+  setText("fitSettingsSub", "appSettingsSub");
+  setText("fitEntireArchiveText", "entireArchive");
+  setText("fitSettingsClose", "close");
 }
 
 applyLanguage();
+
+function openFitSettings(){
+  document.getElementById("fitEntireArchiveToggle").checked =
+    localStorage.getItem("fitArchiveMode") === "all";
+  document.getElementById("fitSettingsOverlay").classList.add("show");
+}
+
+function closeFitSettings(event){
+  if(event && event.target !== event.currentTarget) return;
+  document.getElementById("fitSettingsOverlay").classList.remove("show");
+}
+
+document.getElementById("fitEntireArchiveToggle").addEventListener("change", event=>{
+  localStorage.setItem("fitArchiveMode", event.target.checked ? "all" : "user");
+  location.reload();
+});
 
 
 // prevent iOS double-tap zoom but still allow pinch zoom
