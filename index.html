@@ -630,7 +630,9 @@ fetch(sheetURL)
   document.getElementById("counter").innerText = "Error loading items";
 });
 
-function enablePhotoSwipe(card, imgEl, photos){
+const desktopPointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+
+function enablePhotoSwipe(card, imgEl, photos, item){
   if(!photos || photos.length <= 1) return;
 
   let photoIndex = 0;
@@ -639,6 +641,12 @@ function enablePhotoSwipe(card, imgEl, photos){
   let swiping = false;
 
   card.addEventListener("pointerdown", e=>{
+    if(e.pointerType === "mouse"){
+      if(isUserItem(item)) return;
+      e.preventDefault();
+      card.setPointerCapture(e.pointerId);
+    }
+
     startX = e.clientX;
     startY = e.clientY;
     swiping = false;
@@ -646,6 +654,8 @@ function enablePhotoSwipe(card, imgEl, photos){
   });
 
   card.addEventListener("pointermove", e=>{
+    if(e.pointerType === "mouse" && isUserItem(item)) return;
+
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
 
@@ -655,6 +665,7 @@ function enablePhotoSwipe(card, imgEl, photos){
   });
 
   card.addEventListener("pointerup", e=>{
+    if(e.pointerType === "mouse" && isUserItem(item)) return;
     if(!swiping) return;
 
     const dx = e.clientX - startX;
@@ -699,7 +710,7 @@ function displayItems(list){
     `;
 
     const imgEl = div.querySelector("img");
-    enablePhotoSwipe(div, imgEl, photos);
+    enablePhotoSwipe(div, imgEl, photos, item);
 
     div.onclick = () => {
       if(div.dataset.swiped === "true") return;
@@ -829,6 +840,82 @@ function enableDragDelete(card,item){
       didLongPress=false;
     }
   },true);
+
+  let mousePointerId = null;
+  let mouseStartX = 0;
+  let mouseStartY = 0;
+  let mouseDragging = false;
+
+  card.addEventListener("pointerdown", e=>{
+    if(!desktopPointer.matches || e.pointerType !== "mouse" || e.button !== 0) return;
+    if(!isUserItem(item)) return;
+
+    mousePointerId = e.pointerId;
+    mouseStartX = e.clientX;
+    mouseStartY = e.clientY;
+    mouseDragging = false;
+    card.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+
+  card.addEventListener("pointermove", e=>{
+    if(e.pointerId !== mousePointerId) return;
+
+    if(!mouseDragging){
+      const distance = Math.hypot(e.clientX-mouseStartX,e.clientY-mouseStartY);
+      if(distance < 6) return;
+
+      mouseDragging = true;
+      didLongPress = true;
+      showTrash();
+
+      dragGhost = card.cloneNode(true);
+      dragGhost.style.position = "fixed";
+      dragGhost.style.width = card.offsetWidth + "px";
+      dragGhost.style.pointerEvents = "none";
+      dragGhost.style.zIndex = "2000";
+      dragGhost.style.opacity = "0.95";
+      document.body.appendChild(dragGhost);
+      card.style.opacity = "0.3";
+    }
+
+    positionMouseDrag(e.clientX,e.clientY);
+  });
+
+  card.addEventListener("pointerup", e=>{
+    if(e.pointerId !== mousePointerId) return;
+
+    if(mouseDragging){
+      const trash = document.getElementById("trashBin").getBoundingClientRect();
+      const dropped =
+        e.clientX>trash.left && e.clientX<trash.right &&
+        e.clientY>trash.top && e.clientY<trash.bottom;
+
+      cleanup(card);
+      if(dropped) deleteItem(item.id);
+    }
+
+    mousePointerId = null;
+    mouseDragging = false;
+  });
+
+  card.addEventListener("pointercancel", e=>{
+    if(e.pointerId !== mousePointerId) return;
+    cleanup(card);
+    mousePointerId = null;
+    mouseDragging = false;
+  });
+}
+
+function positionMouseDrag(x,y){
+  if(!dragGhost) return;
+
+  dragGhost.style.left = (x-dragGhost.offsetWidth/2) + "px";
+  dragGhost.style.top = (y-dragGhost.offsetHeight/2) + "px";
+
+  const trash = document.getElementById("trashBin").getBoundingClientRect();
+  const over = x>trash.left && x<trash.right && y>trash.top && y<trash.bottom;
+  document.getElementById("trashBin").classList.toggle("active",over);
 }
 
 function cleanup(card){
@@ -975,6 +1062,77 @@ menuBtn.addEventListener("touchend", e=>{
 
   menuBtn.style.opacity = "1";
 
+});
+
+let menuMousePointerId = null;
+let menuMouseStartX = 0;
+let menuMouseStartY = 0;
+
+menuBtn.addEventListener("pointerdown", e=>{
+  if(!desktopPointer.matches || e.pointerType !== "mouse" || e.button !== 0) return;
+
+  menuMousePointerId = e.pointerId;
+  menuMouseStartX = e.clientX;
+  menuMouseStartY = e.clientY;
+  menuDragging = false;
+  menuBtn.setPointerCapture(e.pointerId);
+});
+
+menuBtn.addEventListener("pointermove", e=>{
+  if(e.pointerId !== menuMousePointerId) return;
+
+  if(!menuDragging){
+    if(Math.hypot(e.clientX-menuMouseStartX,e.clientY-menuMouseStartY) < 6) return;
+
+    menuDragging = true;
+    menuDidDrag = true;
+    dropdownMenu.classList.remove("show");
+    menuBtn.textContent = "☰";
+
+    const rect = menuBtn.getBoundingClientRect();
+    menuOffsetX = e.clientX - rect.left;
+    menuOffsetY = e.clientY - rect.top;
+    menuGhost = menuBtn.cloneNode(true);
+    menuGhost.style.position = "fixed";
+    menuGhost.style.zIndex = "9000";
+    menuGhost.style.pointerEvents = "none";
+    menuGhost.style.opacity = "0.9";
+    document.body.appendChild(menuGhost);
+    menuBtn.style.opacity = "0.3";
+  }
+
+  menuGhost.style.left = (e.clientX-menuOffsetX) + "px";
+  menuGhost.style.top = (e.clientY-menuOffsetY) + "px";
+});
+
+menuBtn.addEventListener("pointerup", e=>{
+  if(e.pointerId !== menuMousePointerId) return;
+
+  if(menuDragging){
+    if(e.clientX > window.innerWidth/2){
+      menuBtn.classList.add("right");
+      localStorage.setItem("menuSide","right");
+    } else {
+      menuBtn.classList.remove("right");
+      localStorage.setItem("menuSide","left");
+    }
+
+    menuDragging = false;
+    if(menuGhost) menuGhost.remove();
+    menuGhost = null;
+    menuBtn.style.opacity = "1";
+  }
+
+  menuMousePointerId = null;
+});
+
+menuBtn.addEventListener("pointercancel", e=>{
+  if(e.pointerId !== menuMousePointerId) return;
+  menuDragging = false;
+  if(menuGhost) menuGhost.remove();
+  menuGhost = null;
+  menuBtn.style.opacity = "1";
+  menuMousePointerId = null;
 });
 
 function openSettings(){
