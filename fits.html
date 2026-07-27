@@ -103,6 +103,33 @@ function saveFits(){
   localStorage.setItem("savedFits", JSON.stringify(fits));
 }
 
+function photoKey(src){
+  if(!src) return "";
+
+  try{
+    return decodeURIComponent(new URL(src, window.location.href).pathname).toLowerCase();
+  }catch{
+    return src.toLowerCase();
+  }
+}
+
+function canLoadFitFromUserArchive(fit){
+  if(localStorage.getItem("fitArchiveMode") === "all") return true;
+
+  const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
+  const userPhotos = myItems.flatMap(item =>
+    (item.src || item.image || "")
+      .split("|")
+      .map(photo => photoKey(photo.trim()))
+      .filter(Boolean)
+  );
+
+  return [fit.top, fit.bottom, fit.hat, fit.acc]
+    .map(photoKey)
+    .filter(Boolean)
+    .every(photo => userPhotos.includes(photo));
+}
+
 function renderFits(){
   grid.innerHTML = "";
 
@@ -212,6 +239,11 @@ function openViewer(index){
   edit.style.cursor = "pointer";
 
   edit.onclick = () => {
+    if(!canLoadFitFromUserArchive(fits[index])){
+      alert("Enable the Entire Archive to load fit.");
+      return;
+    }
+
     localStorage.setItem("editFit", JSON.stringify(fits[index]));
     window.location.href = "fit.html";
   };
