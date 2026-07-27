@@ -255,7 +255,7 @@ body{
   <button class="settings-link" id="settingsLink" onclick="openFitSettings()">Settings</button>
 </div>
 
-<div class="settings-overlay" id="fitSettingsOverlay" onclick="closeFitSettings(event)">
+<div class="settings-overlay" id="fitSettingsOverlay">
   <div class="settings-modal" onclick="event.stopPropagation()">
     <h2 id="fitSettingsTitle">Settings</h2>
     <p id="fitSettingsSub">Customize Supreme Archive features.</p>
@@ -328,17 +328,20 @@ applyLanguage();
 function openFitSettings(){
   document.getElementById("fitEntireArchiveToggle").checked =
     localStorage.getItem("fitArchiveMode") === "all";
+  fitSettingsChanged = false;
   document.getElementById("fitSettingsOverlay").classList.add("show");
 }
 
-function closeFitSettings(event){
-  if(event && event.target !== event.currentTarget) return;
+let fitSettingsChanged = false;
+
+function closeFitSettings(){
   document.getElementById("fitSettingsOverlay").classList.remove("show");
+  if(fitSettingsChanged) location.reload();
 }
 
 document.getElementById("fitEntireArchiveToggle").addEventListener("change", event=>{
   localStorage.setItem("fitArchiveMode", event.target.checked ? "all" : "user");
-  location.reload();
+  fitSettingsChanged = true;
 });
 
 

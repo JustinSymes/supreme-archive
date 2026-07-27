@@ -423,7 +423,7 @@ body {
   <button class="settings-link" id="settingsLink" onclick="openCaptchaSettings()">Settings</button>
 </div>
 
-<div class="settings-overlay" id="captchaSettingsOverlay" onclick="closeCaptchaSettings(event)">
+<div class="settings-overlay" id="captchaSettingsOverlay">
   <div class="settings-modal" onclick="event.stopPropagation()">
     <h2 id="captchaSettingsTitle">Settings</h2>
     <p id="captchaSettingsSub">Customize Supreme Archive features.</p>
@@ -503,17 +503,20 @@ setText("captchaSettingsClose", "close");
 function openCaptchaSettings(){
   document.getElementById("captchaAssistToggle").checked =
     localStorage.getItem("captchaAssist") !== "off";
+  captchaSettingsChanged = false;
   document.getElementById("captchaSettingsOverlay").classList.add("show");
 }
 
-function closeCaptchaSettings(event){
-  if(event && event.target !== event.currentTarget) return;
+let captchaSettingsChanged = false;
+
+function closeCaptchaSettings(){
   document.getElementById("captchaSettingsOverlay").classList.remove("show");
+  if(captchaSettingsChanged) location.reload();
 }
 
 document.getElementById("captchaAssistToggle").addEventListener("change", event=>{
   localStorage.setItem("captchaAssist", event.target.checked ? "on" : "off");
-  location.reload();
+  captchaSettingsChanged = true;
 });
 
 const SHOW_ANSWER_OUTLINES =
