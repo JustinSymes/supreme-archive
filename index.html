@@ -1040,6 +1040,7 @@ menuBtn.addEventListener("touchstart", e=>{
     menuGhost = menuBtn.cloneNode(true);
 
     menuGhost.style.position = "fixed";
+    menuGhost.style.right = "auto";
     menuGhost.style.left = (t.clientX - menuOffsetX) + "px";
     menuGhost.style.top = (t.clientY - menuOffsetY) + "px";
     menuGhost.style.zIndex = "9000";
@@ -1125,6 +1126,7 @@ menuBtn.addEventListener("pointermove", e=>{
     menuOffsetY = e.clientY - rect.top;
     menuGhost = menuBtn.cloneNode(true);
     menuGhost.style.position = "fixed";
+    menuGhost.style.right = "auto";
     menuGhost.style.zIndex = "9000";
     menuGhost.style.pointerEvents = "none";
     menuGhost.style.opacity = "0.9";
