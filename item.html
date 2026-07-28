@@ -231,12 +231,11 @@ else if(cols[3]){
   }
 
   function formatMoney(value, code){
-    const isConvertedCurrency = !["CAD", "USD"].includes(code);
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency: code,
-      minimumFractionDigits: isConvertedCurrency ? 0 : undefined,
-      maximumFractionDigits: isConvertedCurrency ? 0 : 2
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(value);
   }
 
