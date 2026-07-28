@@ -557,6 +557,33 @@ function getLang(){
   return localStorage.getItem("language") || "English";
 }
 
+function getDefaultCurrency(){
+  const euroRegions = new Set([
+    "AD", "AT", "BE", "CY", "DE", "EE", "ES", "FI", "FR", "GR",
+    "HR", "IE", "IT", "LT", "LU", "LV", "MC", "ME", "MT", "NL",
+    "PT", "SI", "SK", "SM", "VA", "XK"
+  ]);
+
+  let region = "";
+
+  try{
+    region = new Intl.Locale(navigator.language || "en-US").maximize().region || "";
+  }catch{
+    const localeParts = (navigator.language || "").split(/[-_]/);
+    region = localeParts.length > 1 ? localeParts[localeParts.length - 1].toUpperCase() : "";
+  }
+
+  if(region === "CA") return "CAD";
+  if(["GB", "GG", "IM", "JE"].includes(region)) return "GBP";
+  if(region === "JP") return "JPY";
+  if(euroRegions.has(region)) return "EUR";
+  return "USD";
+}
+
+function getCurrency(){
+  return localStorage.getItem("currency") || getDefaultCurrency();
+}
+
 function t(key){
   const lang = getLang();
 
