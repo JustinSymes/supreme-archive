@@ -231,10 +231,12 @@ else if(cols[3]){
   }
 
   function formatMoney(value, code){
+    const isConvertedCurrency = !["CAD", "USD"].includes(code);
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency: code,
-      maximumFractionDigits: code === "JPY" ? 0 : 2
+      minimumFractionDigits: isConvertedCurrency ? 0 : undefined,
+      maximumFractionDigits: isConvertedCurrency ? 0 : 2
     }).format(value);
   }
 
@@ -286,7 +288,7 @@ else if(cols[3]){
         ? cad / exchangeRates.CAD
         : null);
       if(usdValue && exchangeRates[currency]){
-        value = usdValue * exchangeRates[currency];
+        value = Math.round(usdValue * exchangeRates[currency]);
       }
     }
 
