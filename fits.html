@@ -114,7 +114,7 @@ function photoKey(src){
 }
 
 function canLoadFitFromUserArchive(fit){
-  if(localStorage.getItem("fitArchiveMode") === "all") return true;
+  if(localStorage.getItem("fitArchiveMode") !== "user") return true;
 
   const myItems = JSON.parse(localStorage.getItem("myItems") || "[]");
   const userPhotos = myItems.flatMap(item =>

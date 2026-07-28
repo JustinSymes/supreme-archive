@@ -327,7 +327,7 @@ applyLanguage();
 
 function openFitSettings(){
   document.getElementById("fitEntireArchiveToggle").checked =
-    localStorage.getItem("fitArchiveMode") === "all";
+    localStorage.getItem("fitArchiveMode") !== "user";
   fitSettingsChanged = false;
   document.getElementById("fitSettingsOverlay").classList.add("show");
 }
@@ -360,7 +360,7 @@ document.addEventListener("touchend", function(e){
 
 
 const STRICT_MODE =
-  localStorage.getItem("fitArchiveMode") !== "all";
+  localStorage.getItem("fitArchiveMode") === "user";
 // true = only added items
 // false = everything
 

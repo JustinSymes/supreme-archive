@@ -1220,7 +1220,7 @@ function openAppSettings(){
     localStorage.getItem("captchaAssist") !== "off";
 
   document.getElementById("entireArchiveToggle").checked =
-    localStorage.getItem("fitArchiveMode") === "all";
+    localStorage.getItem("fitArchiveMode") !== "user";
 
   document.getElementById("appSettingsOverlay").classList.add("show");
 }
