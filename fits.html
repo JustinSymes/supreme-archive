@@ -124,7 +124,7 @@ function canLoadFitFromUserArchive(fit){
       .filter(Boolean)
   );
 
-  return [fit.top, fit.bottom, fit.hat, fit.acc]
+  return [fit.top, fit.bottom, fit.hat, fit.acc, fit.shoe]
     .map(photoKey)
     .filter(Boolean)
     .every(photo => userPhotos.includes(photo));

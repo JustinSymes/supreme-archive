@@ -28,6 +28,7 @@ const translations = {
     hats: "Hats",
     bags: "Bags",
     accessories: "Accessories",
+    shoes: "Shoes",
     skate: "Skate",
 
     back: "← Back",
@@ -89,6 +90,7 @@ const translations = {
     hats: "Chapeaux",
     bags: "Sacs",
     accessories: "Accessoires",
+    shoes: "Chaussures",
     skate: "Skate",
 
     back: "← Retour",
@@ -150,6 +152,7 @@ const translations = {
     hats: "Gorras",
     bags: "Bolsos",
     accessories: "Accesorios",
+    shoes: "Zapatos",
     skate: "Skate",
 
     back: "← Volver",
@@ -211,6 +214,7 @@ const translations = {
     hats: "帽子",
     bags: "バッグ",
     accessories: "アクセサリー",
+    shoes: "シューズ",
     skate: "スケート",
 
     back: "← 戻る",
@@ -272,6 +276,7 @@ const translations = {
     hats: "모자",
     bags: "가방",
     accessories: "액세서리",
+    shoes: "신발",
     skate: "스케이트",
 
     back: "← 뒤로",
@@ -333,6 +338,7 @@ const translations = {
     hats: "帽子",
     bags: "包袋",
     accessories: "配件",
+    shoes: "鞋履",
     skate: "滑板",
 
     back: "← 返回",
@@ -394,6 +400,7 @@ German: {
   hats: "Hüte",
   bags: "Taschen",
   accessories: "Accessoires",
+  shoes: "Schuhe",
   skate: "Skate",
 
   back: "← Zurück",
@@ -455,6 +462,7 @@ Italian: {
   hats: "Cappelli",
   bags: "Borse",
   accessories: "Accessori",
+  shoes: "Scarpe",
   skate: "Skate",
 
   back: "← Indietro",
@@ -516,6 +524,7 @@ Portuguese: {
   hats: "Bonés",
   bags: "Bolsas",
   accessories: "Acessórios",
+  shoes: "Calçados",
   skate: "Skate",
 
   back: "← Voltar",

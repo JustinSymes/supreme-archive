@@ -396,6 +396,7 @@ img{
   <div class="category" id="catHats" onclick="filterCategory('Hats')">Hats</div>
   <div class="category" id="catBags" onclick="filterCategory('Bags')">Bags</div>
   <div class="category" id="catAccessories" onclick="filterCategory('Accessories')">Accessories</div>
+  <div class="category" id="catShoes" onclick="filterCategory('Shoes')">Shoes</div>
   <div class="category" id="catSkate" onclick="filterCategory('Skate')">Skate</div>
 </div>
 
@@ -536,6 +537,7 @@ function applyLanguage(){
   document.getElementById("catHats").textContent = t("hats");
   document.getElementById("catBags").textContent = t("bags");
   document.getElementById("catAccessories").textContent = t("accessories");
+  document.getElementById("catShoes").textContent = t("shoes");
   document.getElementById("catSkate").textContent = t("skate");
 
   if(allItems.length){
@@ -569,7 +571,8 @@ function sortArchiveItems(list){
     "Hats":2,
     "Bags":3,
     "Accessories":4,
-    "Skate":5
+    "Shoes":5,
+    "Skate":6
   };
 
   const getNumericId = (item)=>{

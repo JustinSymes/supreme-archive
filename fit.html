@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Supreme Outfit Builder | Supreme Archive</title>
-<meta name="description" content="Build and save Supreme outfits by combining tops, bottoms, hats, and accessories from your collection or the complete archive.">
+<meta name="description" content="Build and save Supreme outfits by combining tops, bottoms, hats, accessories, and shoes from your collection or the complete archive.">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://supremearchive.net/fit.html">
 <link rel="icon" type="image/png" href="/favicon.png">
@@ -81,6 +81,8 @@ body{
   border-radius:16px;
   background:#fff;
   box-shadow:0 12px 40px rgba(0,0,0,.2);
+  max-height:calc(100vh - 40px);
+  overflow-y:auto;
 }
 
 .settings-modal h2{ margin:0 0 8px; }
@@ -217,6 +219,16 @@ body{
 .slot.acc img{ max-height:75%; max-width:75%; }
 .slot.top img{ max-height:79%; }
 .slot.bottom img{ max-height:92%; }
+.slot.shoes{
+  position:absolute;
+  right:var(--pad);
+  bottom:78px;
+  width:38%;
+  height:24%;
+  z-index:2;
+  align-items:flex-end;
+}
+.slot.shoes img{ max-width:100%; max-height:100%; }
 
 .blankHint{
   position:absolute;
@@ -266,6 +278,18 @@ body{
         <span class="slider"></span>
       </label>
     </div>
+    <div class="setting-row">
+      <span>No headbands</span>
+      <label class="switch"><input type="checkbox" id="fitNoHeadbandsToggle"><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <span>Belts only</span>
+      <label class="switch"><input type="checkbox" id="fitBeltsOnlyToggle"><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <span>No sweatpants</span>
+      <label class="switch"><input type="checkbox" id="fitNoSweatpantsToggle"><span class="slider"></span></label>
+    </div>
     <button class="settings-close" id="fitSettingsClose" onclick="closeFitSettings()">Close</button>
   </div>
 </div>
@@ -303,6 +327,11 @@ body{
   </div>
 </div>
 
+<div class="slot shoes" id="shoeSlot">
+  <span class="blankHint">Shoes</span>
+  <img id="shoeImg">
+</div>
+
 </div>
 
 <script src="lang.js"></script>
@@ -328,6 +357,9 @@ applyLanguage();
 function openFitSettings(){
   document.getElementById("fitEntireArchiveToggle").checked =
     localStorage.getItem("fitArchiveMode") !== "user";
+  document.getElementById("fitNoHeadbandsToggle").checked = localStorage.getItem("fitNoHeadbands") === "true";
+  document.getElementById("fitBeltsOnlyToggle").checked = localStorage.getItem("fitBeltsOnly") === "true";
+  document.getElementById("fitNoSweatpantsToggle").checked = localStorage.getItem("fitNoSweatpants") === "true";
   fitSettingsChanged = false;
   document.getElementById("fitSettingsOverlay").classList.add("show");
 }
@@ -343,6 +375,15 @@ document.getElementById("fitEntireArchiveToggle").addEventListener("change", eve
   localStorage.setItem("fitArchiveMode", event.target.checked ? "all" : "user");
   fitSettingsChanged = true;
 });
+
+[
+  ["fitNoHeadbandsToggle", "fitNoHeadbands"],
+  ["fitBeltsOnlyToggle", "fitBeltsOnly"],
+  ["fitNoSweatpantsToggle", "fitNoSweatpants"]
+].forEach(([id, key]) => document.getElementById(id).addEventListener("change", event=>{
+  localStorage.setItem(key, String(event.target.checked));
+  fitSettingsChanged = true;
+}));
 
 
 // prevent iOS double-tap zoom but still allow pinch zoom
@@ -371,6 +412,7 @@ let tops=[];
 let bottoms=[];
 let hats=[];
 let accs=[];
+let shoes=[];
 
 const BLANK={name:"",src:""};
 
@@ -378,11 +420,13 @@ let idxTop=Number(localStorage.getItem("fitTop"))||0;
 let idxBot=Number(localStorage.getItem("fitBot"))||0;
 let idxHat=Number(localStorage.getItem("fitHat"))||0;
 let idxAcc=Number(localStorage.getItem("fitAcc"))||0;
+let idxShoe=Number(localStorage.getItem("fitShoe"))||0;
 
 let lockTop = false;
 let lockBot = false;
 let lockHat = false;
 let lockAcc = false;
+let lockShoe = false;
 
 /* DOM references */
 
@@ -390,11 +434,13 @@ const topImg=document.getElementById("topImg");
 const botImg=document.getElementById("botImg");
 const hatImg=document.getElementById("hatImg");
 const accImg=document.getElementById("accImg");
+const shoeImg=document.getElementById("shoeImg");
 
 const topSlot=document.getElementById("topSlot");
 const botSlot=document.getElementById("botSlot");
 const hatSlot=document.getElementById("hatSlot");
 const accSlot=document.getElementById("accSlot");
+const shoeSlot=document.getElementById("shoeSlot");
 
 function setImg(img,slot,src){
 
@@ -418,11 +464,13 @@ function render(){
   localStorage.setItem("fitBot",idxBot);
   localStorage.setItem("fitHat",idxHat);
   localStorage.setItem("fitAcc",idxAcc);
+  localStorage.setItem("fitShoe",idxShoe);
 
   setImg(topImg,topSlot,tops[idxTop]?.src);
   setImg(botImg,botSlot,bottoms[idxBot]?.src);
   setImg(hatImg,hatSlot,hats[idxHat]?.src);
   setImg(accImg,accSlot,accs[idxAcc]?.src);
+  setImg(shoeImg,shoeSlot,shoes[idxShoe]?.src);
 
 }
 
@@ -491,6 +539,7 @@ function randomize(){
   if(bottoms.length && !lockBot) idxBot = rand(bottoms.length);
   if(hats.length && !lockHat) idxHat = rand(hats.length);
   if(accs.length && !lockAcc) idxAcc = rand(accs.length);
+  if(shoes.length && !lockShoe) idxShoe = rand(shoes.length);
 
   render();
 
@@ -516,6 +565,10 @@ function toggleLock(slotName){
     lockAcc = !lockAcc;
     showToast(lockAcc ? "Accessory Locked 🔒" : "Accessory Unlocked 🔓");
   }
+  if(slotName === "shoe"){
+    lockShoe = !lockShoe;
+    showToast(lockShoe ? "Shoes Locked 🔒" : "Shoes Unlocked 🔓");
+  }
 }
 
 function saveFitToGallery(canvas){
@@ -530,7 +583,8 @@ function saveFitToGallery(canvas){
     top: topImg.src,
     bottom: botImg.src,
     hat: hatImg.src,
-    acc: accImg.src
+    acc: accImg.src,
+    shoe: shoeImg.src
   });
 
   if(fits.length === 10){
@@ -592,6 +646,7 @@ async function saveToGalleryOnly(){
     const acc = cloneImageWithSrc(accImg);
     const top = cloneImageWithSrc(topImg);
     const bot = cloneImageWithSrc(botImg);
+    const shoe = cloneImageWithSrc(shoeImg);
 
     const hatRow = document.createElement("div");
     hatRow.style.display = "flex";
@@ -604,7 +659,21 @@ async function saveToGalleryOnly(){
 
     exportBox.appendChild(hatRow);
     exportBox.appendChild(makeSlot(top,700));
-    exportBox.appendChild(makeSlot(bot,700));
+    const bottomRow = document.createElement("div");
+    bottomRow.style.position = "relative";
+    bottomRow.style.width = "100%";
+    bottomRow.style.height = "700px";
+    bottomRow.style.display = "flex";
+    bottomRow.style.justifyContent = "center";
+    const bottomSlot = makeSlot(bot,700);
+    const shoeSlotExport = makeSlot(shoe,250);
+    shoeSlotExport.style.position = "absolute";
+    shoeSlotExport.style.right = "3%";
+    shoeSlotExport.style.bottom = "0";
+    shoeSlotExport.style.width = "35%";
+    bottomRow.appendChild(bottomSlot);
+    bottomRow.appendChild(shoeSlotExport);
+    exportBox.appendChild(bottomRow);
 
     document.body.appendChild(exportBox);
 
@@ -669,6 +738,7 @@ async function saveFit(){
     const acc = accImg.cloneNode();
     const top = topImg.cloneNode();
     const bot = botImg.cloneNode();
+    const shoe = shoeImg.cloneNode();
 
     const hatRow = document.createElement("div");
     hatRow.style.display = "flex";
@@ -681,7 +751,21 @@ async function saveFit(){
 
     exportBox.appendChild(hatRow);
     exportBox.appendChild(makeSlot(top,700));
-    exportBox.appendChild(makeSlot(bot,700));
+    const bottomRow = document.createElement("div");
+    bottomRow.style.position = "relative";
+    bottomRow.style.width = "100%";
+    bottomRow.style.height = "700px";
+    bottomRow.style.display = "flex";
+    bottomRow.style.justifyContent = "center";
+    const bottomSlot = makeSlot(bot,700);
+    const shoeSlotExport = makeSlot(shoe,250);
+    shoeSlotExport.style.position = "absolute";
+    shoeSlotExport.style.right = "3%";
+    shoeSlotExport.style.bottom = "0";
+    shoeSlotExport.style.width = "35%";
+    bottomRow.appendChild(bottomSlot);
+    bottomRow.appendChild(shoeSlotExport);
+    exportBox.appendChild(bottomRow);
 
     document.body.appendChild(exportBox);
 
@@ -727,6 +811,7 @@ topSlot.addEventListener("click", () => toggleLock("top"));
 botSlot.addEventListener("click", () => toggleLock("bottom"));
 hatSlot.addEventListener("click", () => toggleLock("hat"));
 accSlot.addEventListener("click", () => toggleLock("acc"));
+shoeSlot.addEventListener("click", () => toggleLock("shoe"));
 
 fetch(sheetURL)
 .then(r=>r.text())
@@ -756,16 +841,35 @@ fetch(sheetURL)
   return src.split("|")[0].trim();
 }
 
-const fitItems = sourceItems.map(i => ({
+let fitItems = sourceItems.map(i => ({
   ...i,
   src: firstFitPhoto(i)
 }));
 
+if(localStorage.getItem("fitNoHeadbands") === "true"){
+  fitItems = fitItems.filter(i => !/\bheadbands?\b/i.test(i.name || ""));
+}
+
 tops = fitItems.filter(i=>i.category==="Tops");
 bottoms = fitItems.filter(i=>i.category==="Bottoms");
+if(localStorage.getItem("fitNoSweatpants") === "true"){
+  bottoms = bottoms.filter(i => !/\bsweat[\s-]?pants?\b/i.test(i.name || ""));
+}
 
 hats = [BLANK, ...fitItems.filter(i=>i.category==="Hats")];
-accs = [BLANK, ...fitItems.filter(i=>i.category==="Accessories")];
+const accessoryItems = fitItems.filter(i=>i.category==="Accessories" || i.category==="Bags");
+accs = [BLANK, ...(
+  localStorage.getItem("fitBeltsOnly") === "true"
+    ? accessoryItems.filter(i => /\bbelts?\b/i.test(i.name || ""))
+    : accessoryItems
+)];
+shoes = [BLANK, ...fitItems.filter(i=>i.category==="Shoes")];
+
+idxTop = Math.min(idxTop, Math.max(0, tops.length - 1));
+idxBot = Math.min(idxBot, Math.max(0, bottoms.length - 1));
+idxHat = Math.min(idxHat, Math.max(0, hats.length - 1));
+idxAcc = Math.min(idxAcc, Math.max(0, accs.length - 1));
+idxShoe = Math.min(idxShoe, Math.max(0, shoes.length - 1));
 
   const editFit = JSON.parse(localStorage.getItem("editFit") || "null");
 
@@ -784,11 +888,13 @@ accs = [BLANK, ...fitItems.filter(i=>i.category==="Accessories")];
     idxBot = matchIndex(bottoms, editFit.bottom);
     idxHat = matchIndex(hats, editFit.hat);
     idxAcc = matchIndex(accs, editFit.acc);
+    idxShoe = matchIndex(shoes, editFit.shoe);
 
     if(idxTop < 0) idxTop = 0;
     if(idxBot < 0) idxBot = 0;
     if(idxHat < 0) idxHat = 0;
     if(idxAcc < 0) idxAcc = 0;
+    if(idxShoe < 0) idxShoe = 0;
 
     localStorage.removeItem("editFit");
   }
@@ -799,6 +905,7 @@ accs = [BLANK, ...fitItems.filter(i=>i.category==="Accessories")];
   attachSwipe(botSlot,()=>bottoms,()=>idxBot,v=>idxBot=v);
   attachSwipe(hatSlot,()=>hats,()=>idxHat,v=>idxHat=v);
   attachSwipe(accSlot,()=>accs,()=>idxAcc,v=>idxAcc=v);
+  attachSwipe(shoeSlot,()=>shoes,()=>idxShoe,v=>idxShoe=v);
 
 }); 
 
