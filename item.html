@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,11 @@
 <meta id="metaDescription" name="description" content="View Supreme item images, category, size, and original retail price in Supreme Archive.">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <link id="canonicalUrl" rel="canonical" href="https://supremearchive.net/item.html">
+<meta id="ogTitle" property="og:title" content="Supreme Item Details | Supreme Archive">
+<meta id="ogDescription" property="og:description" content="View Supreme item images and original retail information.">
+<meta id="ogImage" property="og:image" content="">
+<meta property="og:type" content="product">
+<script id="productSchema" type="application/ld+json"></script>
 <link rel="icon" type="image/png" href="/favicon.png">
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -160,7 +165,7 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   const cols = foundRow;
   document.title = `${cols[1]} | Supreme Archive`;
   document.getElementById("metaDescription").content =
-    `View images, category, size, and original retail price for ${cols[1]} in Supreme Archive.`;
+    `Explore ${cols[1]} in the Supreme Archive. View product images, category, sizing, and original retail prices in CAD and USD.`;
   const canonicalUrl = new URL("https://supremearchive.net/item.html");
   if(id) canonicalUrl.searchParams.set("id", id);
   else if(name) canonicalUrl.searchParams.set("name", name);
@@ -170,6 +175,26 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
     .split("|")
     .map(s => s.trim())
     .filter(Boolean);
+
+  const itemDescription = `Explore ${cols[1]} in the Supreme Archive. View product images, category, sizing, and original retail prices in CAD and USD.`;
+  document.getElementById("ogTitle").content = `${cols[1]} | Supreme Archive`;
+  document.getElementById("ogDescription").content = itemDescription;
+  document.getElementById("ogImage").content = images[0] || "";
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: cols[1],
+    description: itemDescription,
+    image: images,
+    category: cols[2] || "Supreme item",
+    brand: { "@type": "Brand", name: "Supreme" },
+    url: canonicalUrl.toString()
+  };
+  schema.additionalProperty = [
+    cols[10] && { "@type": "PropertyValue", name: "Original retail price CAD", value: cols[10] },
+    cols[11] && { "@type": "PropertyValue", name: "Original retail price USD", value: cols[11] }
+  ].filter(Boolean);
+  document.getElementById("productSchema").textContent = JSON.stringify(schema);
 
   const priceCad = cols[10];
   const priceUsd = cols[11];
@@ -197,7 +222,7 @@ else if(cols[3]){
 }
 
   document.getElementById("content").innerHTML = `
-    <h2>${cols[1]}</h2>
+    <h1>${cols[1]}</h1>
 
     <div class="carousel">
       <div class="track" id="track"></div>
@@ -219,7 +244,7 @@ else if(cols[3]){
     <p>${t("size")}: ${displaySize}</p>
   `;
 
-  buildCarousel(images);
+  buildCarousel(images, cols[1]);
 
   let currency = getCurrency();
   if(!currencies.includes(currency)) currency = "CAD";
@@ -306,7 +331,7 @@ else if(cols[3]){
 
 });
 
-function buildCarousel(images){
+function buildCarousel(images, itemName){
   const track = document.getElementById("track");
   const dots = document.getElementById("dots");
 
@@ -324,7 +349,11 @@ function buildCarousel(images){
 
     const slide = document.createElement("div");
     slide.className = "slide";
-    slide.innerHTML = `<img src="${src}">`;
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = `${itemName} - image ${i + 1}`;
+    if(i > 0) img.loading = "lazy";
+    slide.appendChild(img);
     track.appendChild(slide);
 
     if (images.length > 1) {

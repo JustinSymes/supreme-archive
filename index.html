@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Supreme Archive — Explore Supreme Items and Build Outfits</title>
-<meta name="description" content="Explore a visual archive of Supreme clothing, accessories, skate decks, bags, and hats. Track your collection and build outfits with Supreme Archive.">
+<meta id="metaDescription" name="description" content="Browse the Supreme Archive for clothing, box logos, hats, bags, accessories, shoes, skate decks, release details, and original retail prices. Track your collection and build Supreme outfits.">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
-<link rel="canonical" href="https://supremearchive.net/">
+<link id="canonicalUrl" rel="canonical" href="https://supremearchive.net/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Supreme Archive">
-<meta property="og:title" content="Supreme Archive — Explore Supreme Items and Build Outfits">
-<meta property="og:description" content="Browse Supreme pieces, track your collection, and build outfits in a visual archive.">
+<meta id="ogTitle" property="og:title" content="Supreme Archive — Explore Supreme Items and Build Outfits">
+<meta id="ogDescription" property="og:description" content="Browse Supreme pieces, track your collection, and build outfits in a visual archive.">
 <meta property="og:url" content="https://supremearchive.net/">
 <meta name="twitter:card" content="summary">
 <script type="application/ld+json">
@@ -58,6 +58,7 @@ body{
   font-family:'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-weight:800;
   font-style:italic;
+  margin:0;
 }
 
 .menu-btn{
@@ -119,7 +120,12 @@ body{
   color:#e10600;
   cursor:pointer;
   white-space:nowrap;
+  text-decoration:none;
 }
+
+.seo-intro{ padding:16px 20px 2px; color:#333; line-height:1.45; }
+.seo-intro h2{ margin:0 0 6px; font-size:20px; color:#111; }
+.seo-intro p{ margin:0; }
 
 .grid{
   display:grid;
@@ -371,7 +377,7 @@ img{
 
   <button id="menuBtn" class="menu-btn">☰</button>
 
-  <div class="header">Supreme Archive</div>
+  <h1 class="header">Supreme Archive</h1>
 
   <div class="dropdown" id="dropdownMenu">
     <button id="requestText" onclick="window.location.href='request.html'">Request Items</button>
@@ -390,15 +396,20 @@ img{
 </div>
 
 <div class="category-bar">
-  <div class="category" id="catAll" onclick="filterCategory('All')">All</div>
-  <div class="category" id="catTops" onclick="filterCategory('Tops')">Tops</div>
-  <div class="category" id="catBottoms" onclick="filterCategory('Bottoms')">Bottoms</div>
-  <div class="category" id="catHats" onclick="filterCategory('Hats')">Hats</div>
-  <div class="category" id="catBags" onclick="filterCategory('Bags')">Bags</div>
-  <div class="category" id="catAccessories" onclick="filterCategory('Accessories')">Accessories</div>
-  <div class="category" id="catShoes" onclick="filterCategory('Shoes')">Shoes</div>
-  <div class="category" id="catSkate" onclick="filterCategory('Skate')">Skate</div>
+  <a class="category" id="catAll" href="index.html" onclick="filterCategory('All'); return false">All</a>
+  <a class="category" id="catTops" href="?category=Tops" onclick="filterCategory('Tops'); return false">Tops</a>
+  <a class="category" id="catBottoms" href="?category=Bottoms" onclick="filterCategory('Bottoms'); return false">Bottoms</a>
+  <a class="category" id="catHats" href="?category=Hats" onclick="filterCategory('Hats'); return false">Hats</a>
+  <a class="category" id="catBags" href="?category=Bags" onclick="filterCategory('Bags'); return false">Bags</a>
+  <a class="category" id="catAccessories" href="?category=Accessories" onclick="filterCategory('Accessories'); return false">Accessories</a>
+  <a class="category" id="catShoes" href="?category=Shoes" onclick="filterCategory('Shoes'); return false">Shoes</a>
+  <a class="category" id="catSkate" href="?category=Skate" onclick="filterCategory('Skate'); return false">Skate</a>
 </div>
+
+<section class="seo-intro" aria-labelledby="archiveIntroTitle">
+  <h2 id="archiveIntroTitle">Explore the Supreme item archive</h2>
+  <p>Browse Supreme clothing, Box Logo releases, hats, bags, accessories, shoes, and skate decks. View item images and original retail prices, track your personal collection, and combine pieces with the Supreme outfit builder.</p>
+</section>
 
 <div class="grid" id="grid"></div>
 
@@ -628,7 +639,8 @@ fetch(sheetURL)
 
   applyLanguage();
 
-  displayItems(allItems);
+  const requestedCategory = new URLSearchParams(location.search).get("category");
+  filterCategory(requestedCategory || "All", false);
 
 })
 .catch(err=>{
@@ -738,12 +750,13 @@ function displayItems(list){
 
     div.innerHTML = `
       <div class="thumb">
-        <img src="${photos[0] || ""}">
+        <img src="${photos[0] || ""}" loading="lazy">
       </div>
       <div class="name">${item.name}</div>
     `;
 
     const imgEl = div.querySelector("img");
+    imgEl.alt = item.name;
     enablePhotoSwipe(div, imgEl, photos);
 
     div.onclick = () => {
@@ -768,10 +781,37 @@ function displayItems(list){
 
 }
 
-function filterCategory(cat){
-  if(cat==="All") return displayItems(allItems);
-  displayItems(allItems.filter(i=>i.category===cat));
+function filterCategory(cat, updateUrl=true){
+  const validCategories = ["All", "Tops", "Bottoms", "Hats", "Bags", "Accessories", "Shoes", "Skate"];
+  if(!validCategories.includes(cat)) cat = "All";
+
+  const categoryName = cat === "All" ? "Supreme Archive" : `Supreme ${cat} Archive`;
+  const description = cat === "All"
+    ? "Browse the Supreme Archive for clothing, box logos, hats, bags, accessories, shoes, skate decks, release details, and original retail prices. Track your collection and build Supreme outfits."
+    : `Browse Supreme ${cat.toLowerCase()} with item images, release information, and original retail prices in the Supreme Archive.`;
+  document.title = cat === "All"
+    ? "Supreme Archive — Explore Supreme Items and Build Outfits"
+    : `${categoryName} | Supreme Archive`;
+  document.getElementById("metaDescription").content = description;
+  document.getElementById("ogTitle").content = document.title;
+  document.getElementById("ogDescription").content = description;
+  document.getElementById("archiveIntroTitle").textContent = cat === "All"
+    ? "Explore the Supreme item archive"
+    : `Explore the ${categoryName}`;
+
+  if(updateUrl){
+    history.pushState({}, "", cat === "All" ? "index.html" : `?category=${encodeURIComponent(cat)}`);
+  }
+  document.getElementById("canonicalUrl").href = cat === "All"
+    ? "https://supremearchive.net/"
+    : `https://supremearchive.net/?category=${encodeURIComponent(cat)}`;
+
+  displayItems(cat === "All" ? allItems : allItems.filter(i=>i.category===cat));
 }
+
+window.addEventListener("popstate", () => {
+  filterCategory(new URLSearchParams(location.search).get("category") || "All", false);
+});
 
 let holdTimer = null;
 let dragGhost = null;
