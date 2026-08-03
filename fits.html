@@ -230,6 +230,7 @@ function openViewer(index){
   topbar.style.justifyContent = "space-between";
   topbar.style.alignItems = "center";
   topbar.style.padding = "16px";
+  topbar.style.flex = "0 0 auto";
 
   const back = document.createElement("div");
   back.textContent = t("back");
@@ -274,12 +275,25 @@ function openViewer(index){
 
   const img = document.createElement("img");
   img.src = fits[index].img;
-  img.style.width = "100%";
-  img.style.flex = "1";
+  img.style.width = "auto";
+  img.style.height = "auto";
+  img.style.maxWidth = "100%";
+  img.style.maxHeight = "100%";
   img.style.objectFit = "contain";
+  img.style.display = "block";
+  img.style.margin = "auto";
+
+  const imageArea = document.createElement("div");
+  imageArea.style.flex = "1 1 auto";
+  imageArea.style.minHeight = "0";
+  imageArea.style.overflow = "auto";
+  imageArea.style.display = "flex";
+  imageArea.style.alignItems = "center";
+  imageArea.style.justifyContent = "center";
+  imageArea.appendChild(img);
 
   viewer.appendChild(topbar);
-  viewer.appendChild(img);
+  viewer.appendChild(imageArea);
 
   document.body.appendChild(viewer);
 }

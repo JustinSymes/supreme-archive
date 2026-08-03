@@ -252,6 +252,7 @@ body{
   }
 
   .slot.shoes img{ max-height:90%; }
+  .slot.shoes.air-force-shoe img{ transform:scale(1.55); }
   .slot.bottom img{ max-height:100%; }
   .slot.top img{ max-height:84%; }
 
@@ -490,6 +491,9 @@ const shoeSlot=document.getElementById("shoeSlot");
 function setImg(img,slot,src){
 
   const s=(src||"").trim();
+  if(slot === shoeSlot){
+    slot.classList.toggle("air-force-shoe", /air[_-]?force[_-]?1[_-]?low/i.test(s));
+  }
 
   if(!s){
     img.removeAttribute("src");
