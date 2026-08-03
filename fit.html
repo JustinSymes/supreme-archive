@@ -251,7 +251,16 @@ body{
   }
 
   .slot.shoes img{ max-height:90%; }
+
+  .stage.no-shoes{
+    grid-template-rows:28% 38% 34%;
+    row-gap:10px;
+  }
+
+  .stage.no-shoes .row-bot{ transform:translateY(-50px); }
 }
+
+.stage.no-shoes .slot.shoes{ display:none; }
 
 .blankHint{
   position:absolute;
@@ -312,6 +321,10 @@ body{
     <div class="setting-row">
       <span>No sweatpants</span>
       <label class="switch"><input type="checkbox" id="fitNoSweatpantsToggle"><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <span>No shoes</span>
+      <label class="switch"><input type="checkbox" id="fitNoShoesToggle"><span class="slider"></span></label>
     </div>
     <button class="settings-close" id="fitSettingsClose" onclick="closeFitSettings()">Close</button>
   </div>
@@ -383,6 +396,7 @@ function openFitSettings(){
   document.getElementById("fitNoHeadbandsToggle").checked = localStorage.getItem("fitNoHeadbands") === "true";
   document.getElementById("fitBeltsOnlyToggle").checked = localStorage.getItem("fitBeltsOnly") === "true";
   document.getElementById("fitNoSweatpantsToggle").checked = localStorage.getItem("fitNoSweatpants") === "true";
+  document.getElementById("fitNoShoesToggle").checked = localStorage.getItem("fitNoShoes") === "true";
   fitSettingsChanged = false;
   document.getElementById("fitSettingsOverlay").classList.add("show");
 }
@@ -402,7 +416,8 @@ document.getElementById("fitEntireArchiveToggle").addEventListener("change", eve
 [
   ["fitNoHeadbandsToggle", "fitNoHeadbands"],
   ["fitBeltsOnlyToggle", "fitBeltsOnly"],
-  ["fitNoSweatpantsToggle", "fitNoSweatpants"]
+  ["fitNoSweatpantsToggle", "fitNoSweatpants"],
+  ["fitNoShoesToggle", "fitNoShoes"]
 ].forEach(([id, key]) => document.getElementById(id).addEventListener("change", event=>{
   localStorage.setItem(key, String(event.target.checked));
   fitSettingsChanged = true;
@@ -425,6 +440,8 @@ document.addEventListener("touchend", function(e){
 
 const STRICT_MODE =
   localStorage.getItem("fitArchiveMode") === "user";
+const NO_SHOES = localStorage.getItem("fitNoShoes") === "true";
+document.getElementById("capture").classList.toggle("no-shoes", NO_SHOES);
 // true = only added items
 // false = everything
 
@@ -606,7 +623,7 @@ function randomize(){
   if(bottoms.length && !lockBot) idxBot = rand(bottoms.length);
   if(hats.length && !lockHat) idxHat = rand(hats.length);
   if(accs.length && !lockAcc) idxAcc = rand(accs.length);
-  if(shoes.length && !lockShoe) idxShoe = rand(shoes.length);
+  if(!NO_SHOES && shoes.length && !lockShoe) idxShoe = rand(shoes.length);
 
   render();
 
@@ -651,7 +668,7 @@ function saveFitToGallery(canvas){
     bottom: botImg.src,
     hat: hatImg.src,
     acc: accImg.src,
-    shoe: shoeImg.src
+    shoe: NO_SHOES ? "" : shoeImg.src
   });
 
   if(fits.length === 10){
@@ -739,7 +756,7 @@ async function saveToGalleryOnly(){
     shoeSlotExport.style.bottom = "0";
     shoeSlotExport.style.width = "35%";
     bottomRow.appendChild(bottomSlot);
-    bottomRow.appendChild(shoeSlotExport);
+    if(!NO_SHOES) bottomRow.appendChild(shoeSlotExport);
     exportBox.appendChild(bottomRow);
 
     document.body.appendChild(exportBox);
@@ -831,7 +848,7 @@ async function saveFit(){
     shoeSlotExport.style.bottom = "0";
     shoeSlotExport.style.width = "35%";
     bottomRow.appendChild(bottomSlot);
-    bottomRow.appendChild(shoeSlotExport);
+    if(!NO_SHOES) bottomRow.appendChild(shoeSlotExport);
     exportBox.appendChild(bottomRow);
 
     document.body.appendChild(exportBox);
@@ -930,7 +947,7 @@ accs = [BLANK, ...(
     ? accessoryItems.filter(i => /\bbelts?\b/i.test(i.name || ""))
     : accessoryItems
 )];
-shoes = [BLANK, ...fitItems.filter(i=>i.category==="Shoes")];
+shoes = NO_SHOES ? [BLANK] : [BLANK, ...fitItems.filter(i=>i.category==="Shoes")];
 
 idxTop = Math.min(idxTop, Math.max(0, tops.length - 1));
 idxBot = Math.min(idxBot, Math.max(0, bottoms.length - 1));

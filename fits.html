@@ -130,6 +130,13 @@ function canLoadFitFromUserArchive(fit){
     .every(photo => userPhotos.includes(photo));
 }
 
+function fitHasShoes(fit){
+  const shoe = (fit.shoe || "").trim();
+  if(!shoe) return false;
+
+  return !photoKey(shoe).endsWith("/fit.html");
+}
+
 function renderFits(){
   grid.innerHTML = "";
 
@@ -239,6 +246,11 @@ function openViewer(index){
   edit.style.cursor = "pointer";
 
   edit.onclick = () => {
+    if(localStorage.getItem("fitNoShoes") === "true" && fitHasShoes(fits[index])){
+      alert("Turn off No shoes to load fit.");
+      return;
+    }
+
     if(!canLoadFitFromUserArchive(fits[index])){
       alert("Enable the Entire Archive to load fit.");
       return;
