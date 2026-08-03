@@ -79,6 +79,10 @@ button{
   font-family:'Special Elite', monospace;
   letter-spacing:0.4px;
 }
+
+@media (max-width:600px){
+  .request-duration{ white-space:nowrap; }
+}
 </style>
 </head>
 
@@ -99,7 +103,7 @@ button{
   <div id="status"></div>
 
   <div class="request-note">
-    Requested items are added within 10 minutes - 24 hours.
+    Requested items are added within <span class="request-duration">10 minutes - 24 hours.</span>
   </div>
 </div>
 
