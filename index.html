@@ -123,9 +123,50 @@ body{
   text-decoration:none;
 }
 
-.seo-intro{ padding:16px 20px 2px; color:#333; line-height:1.45; }
-.seo-intro h2{ margin:0 0 6px; font-size:20px; color:#111; }
-.seo-intro p{ margin:0; }
+.welcomeOverlay{
+  position:fixed;
+  inset:0;
+  z-index:8000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(0,0,0,.5);
+}
+
+.welcomeOverlay.show{ display:flex; }
+
+.welcomeModal{
+  position:relative;
+  width:min(460px, 100%);
+  box-sizing:border-box;
+  padding:28px 24px 24px;
+  border-radius:18px;
+  background:#fff;
+  color:#333;
+  line-height:1.45;
+  box-shadow:0 18px 50px rgba(0,0,0,.25);
+}
+
+.welcomeModal h2{ margin:0 38px 10px 0; font-size:22px; color:#111; }
+.welcomeModal p{ margin:0; }
+
+.welcomeClose{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:36px;
+  height:36px;
+  border:0;
+  border-radius:50%;
+  background:#f1f1f1;
+  color:#111;
+  font-size:24px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.welcomeClose:focus-visible{ outline:3px solid #e10600; outline-offset:2px; }
 
 .grid{
   display:grid;
@@ -406,10 +447,13 @@ img{
   <a class="category" id="catSkate" href="?category=Skate" onclick="filterCategory('Skate'); return false">Skate</a>
 </div>
 
-<section class="seo-intro" aria-labelledby="archiveIntroTitle">
-  <h2 id="archiveIntroTitle">Explore the Supreme item archive</h2>
-  <p>Browse Supreme clothing, Box Logo releases, hats, bags, accessories, shoes, and skate decks. View item images and original retail prices, track your personal collection, and combine pieces with the Supreme outfit builder.</p>
-</section>
+<div class="welcomeOverlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="archiveIntroTitle" aria-describedby="archiveIntroMessage">
+  <div class="welcomeModal">
+    <button class="welcomeClose" id="welcomeClose" type="button" aria-label="Close">&times;</button>
+    <h2 id="archiveIntroTitle">Explore the Supreme item archive</h2>
+    <p id="archiveIntroMessage">Browse Supreme clothing, Box Logo releases, hats, bags, accessories, shoes, and skate decks. View item images and original retail prices, track your personal collection, and combine pieces with the Supreme outfit builder.</p>
+  </div>
+</div>
 
 <div class="grid" id="grid"></div>
 
@@ -1297,6 +1341,30 @@ function saveAppSettings(){
     document.getElementById("entireArchiveToggle").checked ? "all" : "user"
   );
 }
+
+const welcomeStorageKey = "supremeArchiveWelcomeSeenV1";
+const welcomeOverlay = document.getElementById("welcomeOverlay");
+const welcomeClose = document.getElementById("welcomeClose");
+
+function closeWelcome(){
+  welcomeOverlay.classList.remove("show");
+}
+
+if(localStorage.getItem(welcomeStorageKey) !== "true"){
+  localStorage.setItem(welcomeStorageKey, "true");
+  welcomeOverlay.classList.add("show");
+  welcomeClose.focus();
+}
+
+welcomeClose.addEventListener("click", closeWelcome);
+welcomeOverlay.addEventListener("click", event=>{
+  if(event.target === welcomeOverlay) closeWelcome();
+});
+document.addEventListener("keydown", event=>{
+  if(event.key === "Escape" && welcomeOverlay.classList.contains("show")){
+    closeWelcome();
+  }
+});
 
 applyLanguage();
 </script>
