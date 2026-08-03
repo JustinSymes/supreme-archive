@@ -221,14 +221,23 @@ body{
 .slot.bottom img{ max-height:92%; }
 .slot.shoes{
   position:absolute;
-  right:var(--pad);
-  bottom:78px;
-  width:38%;
-  height:24%;
+  right:2%;
+  bottom:8px;
+  width:27%;
+  height:19%;
   z-index:2;
   align-items:flex-end;
 }
 .slot.shoes img{ max-width:100%; max-height:100%; }
+
+@media (max-width:600px){
+  .slot.shoes{
+    right:0;
+    bottom:12px;
+    width:29%;
+    height:17%;
+  }
+}
 
 .blankHint{
   position:absolute;
