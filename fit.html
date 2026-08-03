@@ -232,12 +232,25 @@ body{
 .slot.shoes img{ max-width:100%; max-height:100%; }
 
 @media (max-width:600px){
-  .slot.shoes{
-    right:0;
-    bottom:12px;
-    width:29%;
-    height:17%;
+  .stage{
+    grid-template-rows:27% 34% 25% 14%;
+    row-gap:0;
   }
+
+  .row-bot{ transform:translateY(-30px); }
+
+  .slot.shoes{
+    position:relative;
+    right:auto;
+    bottom:auto;
+    width:62%;
+    height:100%;
+    z-index:auto;
+    justify-self:center;
+    align-items:center;
+  }
+
+  .slot.shoes img{ max-height:90%; }
 }
 
 .blankHint{
