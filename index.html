@@ -140,7 +140,7 @@ body{
   position:relative;
   width:min(460px, 100%);
   box-sizing:border-box;
-  padding:28px 24px 24px;
+  padding:24px 24px 20px;
   border-radius:18px;
   background:#fff;
   color:#333;
@@ -148,25 +148,14 @@ body{
   box-shadow:0 18px 50px rgba(0,0,0,.25);
 }
 
-.welcomeModal h2{ margin:0 38px 10px 0; font-size:22px; color:#111; }
+.welcomeModal h2{ margin:0 0 10px; font-size:22px; color:#111; }
 .welcomeModal p{ margin:0; }
 
-.welcomeClose{
-  position:absolute;
-  top:12px;
-  right:12px;
-  width:36px;
-  height:36px;
-  border:0;
-  border-radius:50%;
-  background:#f1f1f1;
-  color:#111;
-  font-size:24px;
-  line-height:1;
-  cursor:pointer;
+.welcomeActions{
+  display:flex;
+  justify-content:flex-start;
+  margin-top:20px;
 }
-
-.welcomeClose:focus-visible{ outline:3px solid #e10600; outline-offset:2px; }
 
 .grid{
   display:grid;
@@ -449,9 +438,11 @@ img{
 
 <div class="welcomeOverlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="archiveIntroTitle" aria-describedby="archiveIntroMessage">
   <div class="welcomeModal">
-    <button class="welcomeClose" id="welcomeClose" type="button" aria-label="Close">&times;</button>
     <h2 id="archiveIntroTitle">Explore the Supreme item archive</h2>
     <p id="archiveIntroMessage">Browse Supreme clothing, Box Logo releases, hats, bags, accessories, shoes, and skate decks. View item images and original retail prices, track your personal collection, and combine pieces with the Supreme outfit builder.</p>
+    <div class="welcomeActions">
+      <button class="cancelBtn" id="welcomeClose" type="button">Close</button>
+    </div>
   </div>
 </div>
 
@@ -578,6 +569,7 @@ function applyLanguage(){
   document.getElementById("captchaAssistText").textContent = t("captchaAssist");
   document.getElementById("entireArchiveText").textContent = t("entireArchive");
   document.getElementById("appSettingsCloseText").textContent = t("close");
+  document.getElementById("welcomeClose").textContent = t("close");
 
   document.getElementById("settingsTitle").textContent = t("settingsTitle");
   document.getElementById("settingsSub").textContent = t("settingsSub");
