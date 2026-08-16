@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('FetchText', 'BgStatus', 'DiscoverSanity', 'BrowserText', 'Download', 'RemoveBackground', 'CopyTsv', 'Publish', 'Cleanup')]
+    [ValidateSet('FetchText', 'BgStatus', 'DiscoverSanity', 'BrowserText', 'InspectItem', 'VerifyFiles', 'Download', 'RemoveBackground', 'CopyTsv', 'Publish', 'Cleanup')]
     [string]$Action,
     [string]$Url,
     [string]$OutputPath,
@@ -28,6 +28,36 @@ function Resolve-AllowedPath([string]$Path) {
 }
 
 switch ($Action) {
+    'InspectItem' {
+        if (-not $InputPath) { throw 'InputPath is required.' }
+        $source = Resolve-AllowedPath $InputPath
+        $html = Get-Content -LiteralPath $source -Raw -Encoding utf8
+        $gallery = [regex]::Match($html, '<div class="style-thumbnails">([\s\S]*?)</div>', 'IgnoreCase').Groups[1].Value
+        $thumbs = [regex]::Matches($gallery, 'data-zoom-src="([^"]+)"', 'IgnoreCase') | ForEach-Object { $_.Groups[1].Value }
+        $titles = [regex]::Matches($html, '<h1[^>]*>(.*?)</h1>', 'IgnoreCase') | ForEach-Object {
+            [Net.WebUtility]::HtmlDecode(($_.Groups[1].Value -replace '<[^>]+>', '').Trim())
+        } | Sort-Object -Unique
+        $prices = [regex]::Matches($html, '\$[0-9]+(?:\.[0-9]{2})?') | ForEach-Object { $_.Value } |
+            Group-Object | Sort-Object Count -Descending | Select-Object -First 5 Name, Count
+        'TITLE:'
+        $titles
+        'IMAGES:'
+        for ($index = 0; $index -lt $thumbs.Count; $index++) {
+            "{0}`t{1}" -f ($index + 1), $thumbs[$index]
+        }
+        'PRICES:'
+        $prices | Format-Table -AutoSize | Out-String
+    }
+    'VerifyFiles' {
+        if (-not $Files) { throw 'Files is required.' }
+        foreach ($file in ($Files -split ',')) {
+            $resolved = Resolve-AllowedPath $file
+            if (-not (Test-Path -LiteralPath $resolved -PathType Leaf)) {
+                throw "Missing file: $resolved"
+            }
+            Get-Item -LiteralPath $resolved | Select-Object FullName, Length
+        }
+    }
     'BgStatus' {
         if (-not $Url) { throw 'Pass the task ID in Url.' }
         $statusBody = @{ type = 4; codes = @($Url) } | ConvertTo-Json -Compress
