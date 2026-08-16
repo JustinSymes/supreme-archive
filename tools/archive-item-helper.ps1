@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('FetchText', 'BgStatus', 'DiscoverSanity', 'BrowserText', 'InspectItem', 'VerifyFiles', 'RenameFiles', 'Download', 'RemoveBackground', 'CopyTsv', 'Publish', 'Cleanup')]
+    [ValidateSet('FetchText', 'BgStatus', 'DiscoverSanity', 'BrowserText', 'InspectItem', 'VerifyFiles', 'RenameFiles', 'Download', 'RemoveBackground', 'RemoveBackgroundBatch', 'CopyTsv', 'Publish', 'Cleanup')]
     [string]$Action,
     [string]$Url,
     [string]$OutputPath,
@@ -182,6 +182,68 @@ switch ($Action) {
             if ($result.status -eq 'failed') { throw "BG Eraser failed task $taskId." }
         }
         throw "Timed out waiting for BG Eraser task $taskId."
+    }
+    'RemoveBackgroundBatch' {
+        if (-not $InputPath -or -not $OutputPath) { throw 'InputPath and OutputPath are required.' }
+        $sources = @($InputPath -split ',' | ForEach-Object { Resolve-AllowedPath $_ })
+        $targets = @($OutputPath -split ',' | ForEach-Object { Resolve-AllowedPath $_ })
+        if ($sources.Count -ne $targets.Count) { throw 'InputPath and OutputPath must contain the same number of comma-separated paths.' }
+
+        $jobs = @()
+        for ($index = 0; $index -lt $sources.Count; $index++) {
+            $uploadJson = & curl.exe -sS -X POST 'https://bgeraser.com/api/bgeraser/legacy/upload' `
+                -H 'Origin: https://bgeraser.com' -H 'Referer: https://bgeraser.com/' `
+                -H "User-Agent: $($browserHeaders['User-Agent'])" `
+                -F "file=@$($sources[$index])" -F 'type=4' -F 'mattValue=0'
+            if ($LASTEXITCODE -ne 0) { throw "BG Eraser upload failed: $($sources[$index])" }
+            $upload = $uploadJson | ConvertFrom-Json
+            if (-not $upload.taskId) { throw "BG Eraser did not return a task ID: $($sources[$index])" }
+            $jobs += [pscustomobject]@{ TaskId = [string]$upload.taskId; Target = $targets[$index]; Complete = $false }
+        }
+
+        for ($attempt = 0; $attempt -lt 90; $attempt++) {
+            $pending = @($jobs | Where-Object { -not $_.Complete })
+            if ($pending.Count -eq 0) {
+                $jobs | ForEach-Object { Get-Item -LiteralPath $_.Target | Select-Object FullName, Length }
+                return
+            }
+            $statusBody = @{ type = 4; codes = @($pending.TaskId) } | ConvertTo-Json -Compress
+            try {
+                $status = Invoke-RestMethod -Method Post -Uri 'https://bgeraser.com/api/bgeraser/legacy/status' `
+                    -ContentType 'application/json' -Headers @{
+                        Origin = 'https://bgeraser.com'; Referer = 'https://bgeraser.com/'; 'User-Agent' = $browserHeaders['User-Agent']
+                    } -Body $statusBody
+            } catch {
+                $responseCode = [int]$_.Exception.Response.StatusCode
+                if ($responseCode -in @(429, 500, 502, 503, 504)) {
+                    Start-Sleep -Seconds ([Math]::Min(10, 2 + $attempt))
+                    continue
+                }
+                throw
+            }
+
+            $containers = if ($status.data) { @($status.data) } else { @($status) }
+            foreach ($job in $pending) {
+                $downloadUrl = $null
+                foreach ($container in $containers) {
+                    if ($container.downloadUrls -is [string] -and $pending.Count -eq 1) {
+                        $downloadUrl = $container.downloadUrls
+                    } elseif ($container.downloadUrls -and $container.downloadUrls.PSObject.Properties[$job.TaskId]) {
+                        $downloadUrl = $container.downloadUrls.PSObject.Properties[$job.TaskId].Value
+                    } elseif (($container.code -eq $job.TaskId -or $container.taskId -eq $job.TaskId) -and $container.downloadUrl) {
+                        $downloadUrl = $container.downloadUrl
+                    }
+                    if ($downloadUrl) { break }
+                }
+                if ($downloadUrl) {
+                    Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -Headers $browserHeaders -OutFile $job.Target
+                    $job.Complete = $true
+                }
+            }
+            Start-Sleep -Seconds 2
+        }
+        $unfinished = ($jobs | Where-Object { -not $_.Complete } | ForEach-Object { $_.TaskId }) -join ', '
+        throw "Timed out waiting for BG Eraser tasks: $unfinished"
     }
     'CopyTsv' {
         if (-not $RowFile) { throw 'RowFile is required.' }
