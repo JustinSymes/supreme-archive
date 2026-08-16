@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('FetchText', 'BgStatus', 'DiscoverSanity', 'BrowserText', 'InspectItem', 'VerifyFiles', 'Download', 'RemoveBackground', 'CopyTsv', 'Publish', 'Cleanup')]
+    [ValidateSet('FetchText', 'BgStatus', 'DiscoverSanity', 'BrowserText', 'InspectItem', 'VerifyFiles', 'RenameFiles', 'Download', 'RemoveBackground', 'CopyTsv', 'Publish', 'Cleanup')]
     [string]$Action,
     [string]$Url,
     [string]$OutputPath,
@@ -56,6 +56,20 @@ switch ($Action) {
                 throw "Missing file: $resolved"
             }
             Get-Item -LiteralPath $resolved | Select-Object FullName, Length
+        }
+    }
+    'RenameFiles' {
+        if (-not $InputPath -or -not $OutputPath) { throw 'InputPath and OutputPath are required.' }
+        $sources = $InputPath -split ','
+        $targets = $OutputPath -split ','
+        if ($sources.Count -ne $targets.Count) { throw 'InputPath and OutputPath must contain the same number of comma-separated paths.' }
+        for ($index = 0; $index -lt $sources.Count; $index++) {
+            $source = Resolve-AllowedPath $sources[$index]
+            $target = Resolve-AllowedPath $targets[$index]
+            if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "Missing source file: $source" }
+            if (Test-Path -LiteralPath $target) { throw "Target already exists: $target" }
+            Move-Item -LiteralPath $source -Destination $target
+            Get-Item -LiteralPath $target | Select-Object FullName, Length
         }
     }
     'BgStatus' {
