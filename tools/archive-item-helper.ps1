@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('FetchText', 'BgStatus', 'DiscoverSanity', 'BrowserText', 'InspectItem', 'VerifyFiles', 'RenameFiles', 'Download', 'RemoveBackground', 'RemoveBackgroundBatch', 'CopyTsv', 'Publish', 'Cleanup')]
+    [ValidateSet('FetchText', 'BgStatus', 'DiscoverSanity', 'BrowserText', 'InspectItem', 'VerifyFiles', 'RenameFiles', 'Download', 'RemoveBackground', 'RemoveBackgroundBatch', 'CopyTsv', 'CopyText', 'Publish', 'Cleanup')]
     [string]$Action,
     [string]$Url,
     [string]$OutputPath,
@@ -251,6 +251,12 @@ switch ($Action) {
         $rows = Get-Content -LiteralPath $source -Raw -Encoding utf8
         Set-Clipboard -Value $rows.TrimEnd("`r", "`n")
         'TSV copied to clipboard.'
+    }
+    'CopyText' {
+        if (-not $Message) { throw 'Pass Base64-encoded UTF-8 text in Message.' }
+        $decoded = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($Message))
+        Set-Clipboard -Value $decoded.TrimEnd("`r", "`n")
+        'Text copied to clipboard.'
     }
     'Publish' {
         if (-not $Files -or -not $Message) { throw 'Files and Message are required.' }
