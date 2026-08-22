@@ -206,12 +206,19 @@ function setSizeOptions(item){
 
   let sizes = [];
   const name = (item.name || "").toLowerCase();
+  const deckSizes = {
+    "supreme box logo tee skateboard": ['8.5" x 32"'],
+    "money logo skateboard": ['8.25" x 32"'],
+    "michael jackson® dangerous skateboard": ['8.25" x 32"'],
+    "alice skateboard": ['8.375" x 32.125"'],
+    "evolution skateboard": ['8.25" x 32"'],
+    "prayer card skateboard": ['8.25" x 32"'],
+    "black sith skateboard": ['8.25" x 32"'],
+    "silver sith skateboard": ['8.375" x 32.125"']
+  };
 
-  if(name === "black sith skateboard"){
-    sizes = ['8.25" x 32"'];
-  }
-  else if(name === "silver sith skateboard"){
-    sizes = ['8.375" x 32.125"'];
+  if(deckSizes[name]){
+    sizes = deckSizes[name];
   }
   else if(name.includes("jean")){
     sizes = ["30", "32", "34", "36", "38"];
