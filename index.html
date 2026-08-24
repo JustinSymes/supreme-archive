@@ -441,6 +441,7 @@ img{
   <a class="category" id="catAccessories" href="?category=Accessories" onclick="filterCategory('Accessories'); return false">Accessories</a>
   <a class="category" id="catShoes" href="?category=Shoes" onclick="filterCategory('Shoes'); return false">Shoes</a>
   <a class="category" id="catSkate" href="?category=Skate" onclick="filterCategory('Skate'); return false">Skate</a>
+  <a class="category" id="catStickers" href="?category=Stickers" onclick="filterCategory('Stickers'); return false">Stickers</a>
 </div>
 
 <div class="welcomeOverlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="archiveIntroTitle" aria-describedby="archiveIntroMessage">
@@ -593,6 +594,7 @@ function applyLanguage(){
   document.getElementById("catAccessories").textContent = t("accessories");
   document.getElementById("catShoes").textContent = t("shoes");
   document.getElementById("catSkate").textContent = t("skate");
+  document.getElementById("catStickers").textContent = t("stickers");
 
   if(allItems.length){
     document.getElementById("counter").innerText =
@@ -626,7 +628,8 @@ function sortArchiveItems(list){
     "Bags":3,
     "Accessories":4,
     "Shoes":5,
-    "Skate":6
+    "Skate":6,
+    "Stickers":7
   };
 
   const getNumericId = (item)=>{
@@ -825,7 +828,7 @@ function displayItems(list){
 }
 
 function filterCategory(cat, updateUrl=true){
-  const validCategories = ["All", "Tops", "Bottoms", "Hats", "Bags", "Accessories", "Shoes", "Skate"];
+  const validCategories = ["All", "Tops", "Bottoms", "Hats", "Bags", "Accessories", "Shoes", "Skate", "Stickers"];
   if(!validCategories.includes(cat)) cat = "All";
 
   const categoryName = cat === "All" ? "Supreme Archive" : `Supreme ${cat} Archive`;

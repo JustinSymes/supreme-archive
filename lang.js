@@ -30,6 +30,7 @@ const translations = {
     accessories: "Accessories",
     shoes: "Shoes",
     skate: "Skate",
+    stickers: "Stickers",
 
     back: "← Back",
     backArchive: "← Back to Archive",
@@ -92,6 +93,7 @@ const translations = {
     accessories: "Accessoires",
     shoes: "Chaussures",
     skate: "Skate",
+    stickers: "Autocollants",
 
     back: "← Retour",
     backArchive: "← Retour à l’archive",
@@ -154,6 +156,7 @@ const translations = {
     accessories: "Accesorios",
     shoes: "Zapatos",
     skate: "Skate",
+    stickers: "Pegatinas",
 
     back: "← Volver",
     backArchive: "← Volver al archivo",
@@ -216,6 +219,7 @@ const translations = {
     accessories: "アクセサリー",
     shoes: "シューズ",
     skate: "スケート",
+    stickers: "ステッカー",
 
     back: "← 戻る",
     backArchive: "← アーカイブへ戻る",
@@ -278,6 +282,7 @@ const translations = {
     accessories: "액세서리",
     shoes: "신발",
     skate: "스케이트",
+    stickers: "스티커",
 
     back: "← 뒤로",
     backArchive: "← 아카이브로",
@@ -340,6 +345,7 @@ const translations = {
     accessories: "配件",
     shoes: "鞋履",
     skate: "滑板",
+    stickers: "贴纸",
 
     back: "← 返回",
     backArchive: "← 返回档案",
@@ -402,6 +408,7 @@ German: {
   accessories: "Accessoires",
   shoes: "Schuhe",
   skate: "Skate",
+  stickers: "Aufkleber",
 
   back: "← Zurück",
   backArchive: "← Zurück zum Archiv",
@@ -464,6 +471,7 @@ Italian: {
   accessories: "Accessori",
   shoes: "Scarpe",
   skate: "Skate",
+  stickers: "Adesivi",
 
   back: "← Indietro",
   backArchive: "← Torna all’archivio",
@@ -526,6 +534,7 @@ Portuguese: {
   accessories: "Acessórios",
   shoes: "Calçados",
   skate: "Skate",
+  stickers: "Adesivos",
 
   back: "← Voltar",
   backArchive: "← Voltar ao arquivo",
