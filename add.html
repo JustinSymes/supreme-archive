@@ -384,10 +384,10 @@ document.getElementById("addBtn").onclick = () => {
 
   if(document.getElementById("keepAdding").checked){
     selectedItem = null;
-    document.getElementById("search").value = "";
     document.getElementById("size").innerHTML =
       `<option value="">${t("selectSize")}</option>`;
-    showLoaded();
+    document.querySelectorAll(".result-item")
+      .forEach(el => el.classList.remove("selected"));
     document.getElementById("search").focus();
     return;
   }
