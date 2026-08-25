@@ -84,6 +84,23 @@ button{
   font-weight:700;
 }
 
+.keep-adding{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin-top:-4px;
+  color:#666;
+  font-size:14px;
+}
+
+.keep-adding input{
+  width:auto;
+  min-height:0;
+  margin:0;
+  padding:0;
+}
+
 .result{
   margin-top:20px;
   text-align:left;
@@ -127,6 +144,11 @@ button{
 </select>
 
 <button id="addBtn">Add Item</button>
+
+<label class="keep-adding">
+  <input type="checkbox" id="keepAdding">
+  <span>Keep page open to add more</span>
+</label>
 
 </div>
 
@@ -359,6 +381,16 @@ document.getElementById("addBtn").onclick = () => {
   );
 
   alert("Added ✓");
+
+  if(document.getElementById("keepAdding").checked){
+    selectedItem = null;
+    document.getElementById("search").value = "";
+    document.getElementById("size").innerHTML =
+      `<option value="">${t("selectSize")}</option>`;
+    showLoaded();
+    document.getElementById("search").focus();
+    return;
+  }
 
   window.location.href = "index.html";
 
