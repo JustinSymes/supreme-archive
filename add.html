@@ -246,6 +246,10 @@ else if(item.category === "Bottoms"){
       `<option value="${s}">${s}</option>`
     ).join("");
 
+  if(sizes.length === 1){
+    sizeSelect.value = sizes[0];
+  }
+
 }
 
 
