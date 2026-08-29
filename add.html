@@ -268,12 +268,8 @@ else if(item.category === "Bottoms"){
   sizeSelect.innerHTML =
     `<option value="">${t("selectSize")}</option>` +
     sizes.map(s =>
-      `<option value="${s}">${s}</option>`
+      `<option value="${s}"${sizes.length === 1 ? " selected" : ""}>${s}</option>`
     ).join("");
-
-  if(sizes.length === 1){
-    sizeSelect.value = sizes[0];
-  }
 
 }
 
