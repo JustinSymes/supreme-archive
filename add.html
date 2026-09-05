@@ -420,7 +420,13 @@ document.getElementById("addBtn").onclick = () => {
       `<option value="">${t("selectSize")}</option>`;
     document.querySelectorAll(".result-item")
       .forEach(el => el.classList.remove("selected"));
-    document.getElementById("search").focus();
+    const searchInput = document.getElementById("search");
+    const mobileInput = window.matchMedia("(max-width: 600px), (hover: none) and (pointer: coarse)").matches;
+    if(mobileInput){
+      searchInput.blur();
+    }else{
+      searchInput.focus();
+    }
     return;
   }
 
