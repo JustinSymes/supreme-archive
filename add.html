@@ -125,49 +125,26 @@ button{
   background:#f5f5f5;
 }
 
-#addConfirmation{
+#addToast{
   position:fixed;
-  inset:0;
+  left:50%;
+  bottom:32px;
   z-index:1000;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background:rgba(0,0,0,.3);
-  opacity:0;
-  visibility:hidden;
-  transition:opacity .15s ease, visibility .15s ease;
-}
-
-#addConfirmation.show{
-  opacity:1;
-  visibility:visible;
-}
-
-.add-confirmation-box{
-  width:min(320px, 100%);
-  padding:22px;
-  border-radius:14px;
-  background:#fff;
-  text-align:center;
-  box-shadow:0 12px 36px rgba(0,0,0,.24);
-}
-
-.add-confirmation-message{
-  margin:0 0 18px;
-  font-size:17px;
+  padding:11px 18px;
+  border-radius:999px;
+  background:#111;
+  color:#fff;
+  font-size:14px;
   font-weight:700;
+  opacity:0;
+  pointer-events:none;
+  transform:translate(-50%, 16px);
+  transition:opacity .2s ease, transform .2s ease;
 }
 
-.add-confirmation-box button{
-  margin:0;
-}
-
-.mobile-confirm-label{ display:none; }
-
-@media (max-width:600px){
-  .desktop-confirm-label{ display:none; }
-  .mobile-confirm-label{ display:inline; }
+#addToast.show{
+  opacity:1;
+  transform:translate(-50%, 0);
 }
 </style>
 </head>
@@ -198,15 +175,7 @@ button{
 </div>
 
 <div class="result" id="result"></div>
-<div id="addConfirmation" role="alertdialog" aria-modal="true" aria-labelledby="addConfirmationMessage">
-  <div class="add-confirmation-box">
-    <p class="add-confirmation-message" id="addConfirmationMessage">Added ✓</p>
-    <button type="button" id="addConfirmationClose">
-      <span class="desktop-confirm-label">OK</span>
-      <span class="mobile-confirm-label">Close</span>
-    </button>
-  </div>
-</div>
+<div id="addToast" role="status" aria-live="polite">Added ✓</div>
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="lang.js"></script>
@@ -237,26 +206,15 @@ function showLoaded(){
   document.getElementById("result").innerHTML = "";
 }
 
-let addConfirmationTimer;
-let addConfirmationCallback = null;
-
-function closeAddConfirmation(){
-  clearTimeout(addConfirmationTimer);
-  document.getElementById("addConfirmation").classList.remove("show");
-  const callback = addConfirmationCallback;
-  addConfirmationCallback = null;
-  if(callback) callback();
+let addToastTimer;
+function showAddToast(){
+  const toast = document.getElementById("addToast");
+  clearTimeout(addToastTimer);
+  toast.classList.add("show");
+  addToastTimer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2000);
 }
-
-function showAddConfirmation(callback){
-  clearTimeout(addConfirmationTimer);
-  addConfirmationCallback = callback || null;
-  document.getElementById("addConfirmation").classList.add("show");
-  document.getElementById("addConfirmationClose").focus();
-  addConfirmationTimer = setTimeout(closeAddConfirmation, 2000);
-}
-
-document.getElementById("addConfirmationClose").onclick = closeAddConfirmation;
 
 
 // 📦 LOAD DATA
@@ -454,6 +412,8 @@ document.getElementById("addBtn").onclick = () => {
     JSON.stringify(myItems)
   );
 
+  showAddToast();
+
   if(document.getElementById("keepAdding").checked){
     selectedItem = null;
     document.getElementById("size").innerHTML =
@@ -461,14 +421,13 @@ document.getElementById("addBtn").onclick = () => {
     document.querySelectorAll(".result-item")
       .forEach(el => el.classList.remove("selected"));
     document.getElementById("search").focus();
-    showAddConfirmation();
     return;
   }
 
   document.getElementById("addBtn").disabled = true;
-  showAddConfirmation(() => {
+  setTimeout(() => {
     window.location.href = "index.html";
-  });
+  }, 2000);
 
 };
 
