@@ -9,7 +9,7 @@
 ## Repeat releases and season prefixes
 
 - Before adding any item, check whether Supreme released the same item in an earlier season. Check reliable release sources as well as the existing archive; absence from the archive alone does not establish that an item is new.
-- If the item was released in a previous season, add the season prefix for the release being added, following the repository's existing naming convention. Keep the item entry, image filenames, and image references consistent.
+- If the item or a closely related name was released in a previous season, add the current season marker at the end of the item name, after the product name (for example, `Black Stripe Polo FW26`). Put the season marker at the end of the image filename before its extension (for example, `black_stripe_polo_fw26.png`). Keep the item entry and image references consistent.
 - Do not guess the release history; flag uncertainty if the available sources do not establish whether it is a repeat release.
 
 ## Shoe additions
