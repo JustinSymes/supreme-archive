@@ -41,17 +41,35 @@ body{
   white-space:nowrap;
 }
 
-.request-link{
+.top-actions{
   position:absolute;
   right:0;
   top:50%;
   transform:translateY(-50%);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  z-index:999;
+}
+.request-link{
   color:#e10600;
   font-weight:700;
   text-decoration:none;
   white-space:nowrap;
-  z-index:999;
 }
+.camera-button{width:34px;height:34px;margin:0;padding:3px;background:transparent;color:#e10600;cursor:pointer}
+.camera-button svg{display:block;width:100%;height:100%;fill:currentColor}
+.photo-panel{margin-top:18px;padding:16px;border:1px solid #ddd;border-radius:12px}
+.photo-panel[hidden],.photo-input[hidden],.photo-actions[hidden]{display:none}
+.photo-preview{display:block;max-width:180px;max-height:180px;object-fit:contain;margin:0 auto 12px}
+.photo-actions{display:flex;gap:10px}
+.photo-actions a,.photo-actions button{flex:1;text-align:center;box-sizing:border-box;margin:8px 0 0;padding:12px;border-radius:10px;font-weight:700;text-decoration:none}
+.photo-actions a{background:#e10600;color:#fff}
+.photo-actions .secondary{background:#eee;color:#222}
+.photo-status{margin:10px 0;color:#444}
+.photo-match{display:flex;align-items:center;gap:10px;width:100%;margin:6px 0;padding:8px;border:1px solid #eee;background:#fff;color:#111;text-align:left;cursor:pointer}
+.photo-match img{width:48px;height:48px;object-fit:contain}
+@media(max-width:600px){.top-actions{gap:5px}.camera-button{width:32px;height:32px}.request-link{font-size:14px}}
 
 .form{
   display:flex;
@@ -83,6 +101,9 @@ button{
   font-size:16px;
   font-weight:700;
 }
+
+#cameraButton{width:34px;height:34px;min-width:34px;margin:0;padding:3px;background:transparent;color:#e10600;border:0}
+@media(max-width:600px){#cameraButton{width:32px;height:32px;min-width:32px}}
 
 .keep-adding{
   display:flex;
@@ -154,7 +175,7 @@ button{
 <div class="topbar">
   <div class="back" id="backText" onclick="history.back()">← Back</div>
   <div class="title" id="titleText">Add Item</div>
-  <a class="request-link" id="requestLinkText" href="request.html">Request</a>
+  <div class="top-actions"><button type="button" class="camera-button" id="cameraButton" aria-label="Find item by photo" title="Find item by photo"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M94 90h29q11 0 14 17h18l25-42q8-14 26-14h137q18 0 26 14l25 42h28q89 0 89 86v179q0 91-94 91H95Q1 463 1 372V193q0-69 39-84 2-19 23-19h31zm-15 30a29 29 0 1 0 0 58 29 29 0 0 0 0-58zm197 9a138 138 0 1 0 0 276 138 138 0 0 0 0-276zm0 44a94 94 0 1 1 0 188 94 94 0 0 1 0-188z" fill-rule="evenodd"/></svg></button><a class="request-link" id="requestLinkText" href="request.html">Request</a></div>
 </div>
 
 <div class="form">
@@ -175,6 +196,8 @@ button{
 </div>
 
 <div class="result" id="result"></div>
+<input class="photo-input" id="photoInput" type="file" accept="image/*" hidden>
+<section class="photo-panel" id="photoPanel" hidden aria-live="polite"><img class="photo-preview" id="photoPreview" alt="Your selected photo"><div class="photo-status" id="photoStatus"></div><div id="photoMatches"></div><div class="photo-actions" id="photoActions" hidden><a href="request.html">Request Item</a><button type="button" class="secondary" id="photoBack">Back</button></div></section>
 <div id="addToast" role="status" aria-live="polite">Added ✓</div>
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -438,6 +461,8 @@ document.getElementById("addBtn").onclick = () => {
 };
 
 </script>
+
+<script src="photo-search.js"></script>
 
 <!-- Cloudflare Web Analytics -->
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"454d1d7a380d47d8a1a77c2b5b1d3dd6"}'></script>
