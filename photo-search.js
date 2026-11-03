@@ -128,7 +128,7 @@ photoInput.onchange = async () => {
     const grouped=family ? ranked.filter(result=>photoFamily(result.item.name)===family&&(!blackGarment||/^Black\b/i.test(result.item.name))) : [];
     const confidentGroup=grouped.length>0 && grouped[0].distance<3;
     const exactMatch=ranked[0]?.distance===-1;
-    const results=exactMatch ? ranked.slice(0,1) : confidentGroup ? grouped : ranked.slice(0,6);
+    const results=exactMatch ? ranked.slice(0,1) : confidentGroup ? grouped.slice(0,6) : ranked.slice(0,6);
     if (!ranked.length || (ranked[0].distance > 2.5 && !confidentGroup)) {
       photoStatus.textContent = "No close visual match found. You can request this item or go back.";
     } else {
