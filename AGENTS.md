@@ -6,6 +6,7 @@
 - Stage only files belonging to the completed task and requested workflow updates. Preserve unrelated local changes and helper files.
 - Report the commit and push result, and clearly identify any separate spreadsheet update still required.
 - When adding or renaming an item's main image, refresh `photo-index.json` so photo search can find it. The index is built from the Google Sheet's main image references.
+- Also refresh `photo-embeddings.json` after adding or changing main/gallery images: run `node tools/photo-recognition/build.mjs` (install dependencies in `tools/photo-recognition` with `npm ci` first). Let the builder finish and review missing-image warnings before publishing. See `tools/photo-recognition/README.md`.
 
 ## Repeat releases and season prefixes
 
