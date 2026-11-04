@@ -273,8 +273,20 @@ photoInput.onchange=async()=>{
         const label=document.createElement('span');label.textContent=item.name;
         button.append(img,label);
         button.onclick=()=>{
-          selectedItem=item;document.getElementById('search').value=item.name;setSizeOptions(item);
-          photoPanel.hidden=true;document.getElementById('result').replaceChildren();document.getElementById('size').focus();
+          selectedItem=item;
+          document.getElementById('search').value=item.name;
+          setSizeOptions(item);
+          photoPanel.hidden=true;
+          const selectedResult=document.createElement('div');
+          selectedResult.className='result-item selected';
+          const selectedImage=document.createElement('img');
+          selectedImage.src=item.image.split('|')[0].trim();
+          selectedImage.alt='';
+          const selectedName=document.createElement('div');
+          selectedName.textContent=item.name;
+          selectedResult.append(selectedImage,selectedName);
+          document.getElementById('result').replaceChildren(selectedResult);
+          window.scrollTo({top:0,behavior:'smooth'});
         };
         photoMatches.appendChild(button);
       }
