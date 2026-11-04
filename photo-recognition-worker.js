@@ -4,6 +4,13 @@ async function initialize(progress) {
   const {AutoModel, Tensor, env} = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js');
   env.allowLocalModels = false;
   env.backends.onnx.wasm.numThreads = 1;
+  // Use the plain WASM build matching Transformers.js's pinned ONNX runtime.
+  // The default JSEP build can exhaust iPhone memory during WebAssembly compilation.
+  const runtime='https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0-dev.20250409-89f8206ba4/dist/';
+  env.backends.onnx.wasm.wasmPaths={
+    mjs:runtime+'ort-wasm-simd-threaded.mjs',
+    wasm:runtime+'ort-wasm-simd-threaded.wasm'
+  };
   const response = await fetch('photo-embeddings.json');
   if (!response.ok) throw new Error('Could not load the archive photo index.');
   const index = await response.json();
@@ -30,6 +37,8 @@ self.onmessage = ({data}) => {
         const input = new Tensor('float32',new Float32Array(view),[1,3,224,224]);
         const output = await model({pixel_values:input});
         const vector = output.last_hidden_state.data.slice(0,384);
+        for(const tensor of Object.values(output)) tensor.dispose?.();
+        input.dispose();
         const norm = Math.hypot(...vector);
         vectors.push(Array.from(vector,x=>x/norm));
       }
@@ -44,6 +53,6 @@ self.onmessage = ({data}) => {
         if(score>(scores.get(entry.main)??-1)) scores.set(entry.main,score);
       }
       self.postMessage({id,results:[...scores].map(([file,score])=>({file,score})).sort((a,b)=>b.score-a.score).slice(0,30)});
-    } catch(error) { self.postMessage({id,error:error.message}); }
+    } catch(error) { self.postMessage({id,error:String(error?.message||error)}); }
   });
 };

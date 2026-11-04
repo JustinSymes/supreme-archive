@@ -83,7 +83,7 @@ function recognitionViews(image) {
 }
 function recognizePhoto(id, views) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261104-mobile');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261104-memory');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.progress!==undefined) photoStatus.textContent='Loading photo recognition ('+data.progress+'%). First use may take a moment.';
@@ -93,6 +93,11 @@ function recognizePhoto(id, views) {
       if(pending && (data.results || data.error)) {
         pendingPhotos.delete(data.id);
         data.error ? pending.reject(new Error(data.error)) : pending.resolve(data.results);
+        if(data.error) {
+          // A failed WASM initialization cannot be reused. Release it before retrying.
+          for(const other of pendingPhotos.values()) other.reject(new Error(data.error));
+          pendingPhotos.clear();photoWorker.terminate();photoWorker=null;
+        }
       }
     };
     photoWorker.onerror=()=>{
@@ -143,8 +148,24 @@ photoInput.onchange=async()=>{
     let matches;
     if(exact) matches=[{file:exact.main,score:1}];
     else {
+      const views=recognitionViews(preview);
+      // Release the full-resolution camera image before allocating the model.
+      const scale=Math.min(1,1024/Math.max(preview.naturalWidth,preview.naturalHeight));
+      if(scale<1) {
+        const thumbnail=document.createElement('canvas');
+        thumbnail.width=Math.round(preview.naturalWidth*scale);
+        thumbnail.height=Math.round(preview.naturalHeight*scale);
+        const ctx=thumbnail.getContext('2d');
+        ctx.fillStyle='white';ctx.fillRect(0,0,thumbnail.width,thumbnail.height);
+        ctx.drawImage(preview,0,0,thumbnail.width,thumbnail.height);
+        preview.src=thumbnail.toDataURL('image/jpeg',.85);
+        thumbnail.width=thumbnail.height=1;
+        URL.revokeObjectURL(objectUrl);
+        await preview.decode();
+      }
+      if(id!==photoSearchId) return;
       photoStatus.textContent='Loading photo recognition. First use may take a moment.';
-      matches=await recognizePhoto(id,recognitionViews(preview));
+      matches=await recognizePhoto(id,views);
     }
     if(id!==photoSearchId) return;
     matches=matches.filter(match=>catalog.has(match.file));
