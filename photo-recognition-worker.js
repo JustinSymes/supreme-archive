@@ -1,13 +1,13 @@
 // Run recognition off the UI thread. Photos stay in the browser.
 let ready;
 async function initialize(progress) {
-  const {pipeline, RawImage, env} = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js');
+  const {AutoModel, Tensor, env} = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/transformers.min.js');
   env.allowLocalModels = false;
   env.backends.onnx.wasm.numThreads = 1;
   const response = await fetch('photo-embeddings.json');
   if (!response.ok) throw new Error('Could not load the archive photo index.');
   const index = await response.json();
-  const extractor = await pipeline('image-feature-extraction', index.model, {
+  const model = await AutoModel.from_pretrained(index.model, {
     revision:index.revision, dtype:index.dtype, device:'wasm',
     progress_callback:event => { if(event.status==='progress') progress(event.progress); }
   });
@@ -15,7 +15,7 @@ async function initialize(progress) {
     const vector = Int8Array.from(atob(entry.v), c=>c.charCodeAt(0));
     return {...entry, vector, norm:Math.hypot(...vector)};
   });
-  return {extractor, RawImage, entries};
+  return {model, Tensor, entries};
 }
 let queue = Promise.resolve();
 self.onmessage = ({data}) => {
@@ -23,12 +23,13 @@ self.onmessage = ({data}) => {
     const {id, views} = data;
     try {
       ready ||= initialize(percent=>self.postMessage({id,progress:Math.round(percent)})).catch(error=>{ready=null;throw error;});
-      const {extractor, RawImage, entries} = await ready;
+      const {model, Tensor, entries} = await ready;
       self.postMessage({id,comparing:true});
       const vectors=[];
       for(const view of views) {
-        const tensor = await extractor(new RawImage(new Uint8Array(view),224,224,3));
-        const vector = tensor.data.slice(0,384);
+        const input = new Tensor('float32',new Float32Array(view),[1,3,224,224]);
+        const output = await model({pixel_values:input});
+        const vector = output.last_hidden_state.data.slice(0,384);
         const norm = Math.hypot(...vector);
         vectors.push(Array.from(vector,x=>x/norm));
       }

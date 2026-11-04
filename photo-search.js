@@ -64,13 +64,26 @@ function recognitionViews(image) {
     const {x,y,width,height}=bounds||{x:0,y:0,width:image.naturalWidth,height:image.naturalHeight};
     const scale=Math.min(224/width,224/height);
     ctx.drawImage(image,x,y,width,height,(224-width*scale)/2,(224-height*scale)/2,width*scale,height*scale);
-    const rgba=ctx.getImageData(0,0,224,224).data;
-    return Uint8Array.from(rgba.filter((_,i)=>i%4!==3)).buffer;
+    // Match the pinned DINOv2 processor: resize 224 -> 256, center crop
+    // to 224, rescale, then normalize RGB in channel-first order.
+    // DOM canvas works on iPhone even when worker OffscreenCanvas does not.
+    const resized=document.createElement('canvas');
+    resized.width=resized.height=256;
+    const resizeContext=resized.getContext('2d',{willReadFrequently:true});
+    resizeContext.drawImage(canvas,0,0,256,256);
+    const rgba=resizeContext.getImageData(16,16,224,224).data;
+    const pixels=224*224;
+    const values=new Float32Array(3*pixels);
+    const mean=[.485,.456,.406],std=[.229,.224,.225];
+    for(let i=0;i<pixels;i++) for(let channel=0;channel<3;channel++) {
+      values[channel*pixels+i]=(Math.fround(rgba[i*4+channel]/255)-mean[channel])/std[channel];
+    }
+    return values.buffer;
   });
 }
 function recognizePhoto(id, views) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261104-mobile');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.progress!==undefined) photoStatus.textContent='Loading photo recognition ('+data.progress+'%). First use may take a moment.';
@@ -155,7 +168,10 @@ photoInput.onchange=async()=>{
       }
     }
   } catch(error) {
-    if(id===photoSearchId) photoStatus.textContent='Could not complete photo recognition. Please try again or search by name.';
+    if(id===photoSearchId) {
+      const reason=error.name==='EncodingError' ? 'This photo format could not be opened. Try a JPEG or PNG photo.' : String(error.message||'Please try again or search by name.').slice(0,180);
+      photoStatus.textContent='Could not complete photo recognition. '+reason;
+    }
     console.error('Photo recognition:',error);
   } finally {
     URL.revokeObjectURL(objectUrl);
