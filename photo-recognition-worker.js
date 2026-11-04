@@ -16,6 +16,7 @@ async function initialize(progress) {
   const index = await response.json();
   const model = await AutoModel.from_pretrained(index.model, {
     revision:index.revision, dtype:index.dtype, device:'wasm',
+    session_options:{enableCpuMemArena:false,enableMemPattern:false},
     progress_callback:event => { if(event.status==='progress') progress(event.progress); }
   });
   const entries = index.entries.map(entry => {
