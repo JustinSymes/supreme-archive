@@ -52,82 +52,7 @@ function garmentCrop(image){
 let photoSearchId = 0;
 let photoWorker;
 let photoIndex;
-let lightPhotoIndex;
-let useLightPhotoSearch=false;
 const pendingPhotos = new Map();
-
-function photoFamily(name){
-  return name.replace(/^(?:black|white|navy|grey|gray|red|blue|pink|brown|green|camo)\s+/i,'').replace(/\s+(?:FW|SS)\d{2}$/i,'').toLowerCase();
-}
-
-function lightPhotoFeatures(image){
-  const crop=garmentCrop(image);
-  const side=crop?crop.width*.03:0;
-  const above=crop?crop.height*.30:0;
-  const below=crop?crop.height*.05:0;
-  const expanded=crop?{
-    x:Math.max(0,crop.x-side),y:Math.max(0,crop.y-above),
-    width:Math.min(image.naturalWidth-crop.x+side,crop.width+side*2),
-    height:Math.min(image.naturalHeight-crop.y+above,crop.height+above+below)
-  }:null;
-  const queries=[crop,expanded].filter(Boolean).map(bounds=>{
-    const canvas=document.createElement('canvas');canvas.width=canvas.height=24;
-    const ctx=canvas.getContext('2d',{willReadFrequently:true});
-    ctx.fillStyle='white';ctx.fillRect(0,0,24,24);
-    ctx.drawImage(image,bounds.x,bounds.y,bounds.width,bounds.height,0,0,24,24);
-    const data=ctx.getImageData(0,0,24,24);
-    for(let i=0;i<data.data.length;i+=4){
-      const r=data.data[i],g=data.data[i+1],b=data.data[i+2];
-      if((r+g+b)/3>115&&Math.max(r,g,b)-Math.min(r,g,b)<28) data.data[i]=data.data[i+1]=data.data[i+2]=255;
-    }
-    const query=[];
-    for(let i=0;i<data.data.length;i+=4) query.push(data.data[i]>>4,data.data[i+1]>>4,data.data[i+2]>>4);
-    return query;
-  });
-  if(!queries.length){
-    const canvas=document.createElement('canvas');canvas.width=canvas.height=24;
-    const ctx=canvas.getContext('2d',{willReadFrequently:true});
-    ctx.fillStyle='white';ctx.fillRect(0,0,24,24);ctx.drawImage(image,0,0,24,24);
-    const data=ctx.getImageData(0,0,24,24).data,query=[];
-    for(let i=0;i<data.length;i+=4) query.push(data[i]>>4,data[i+1]>>4,data[i+2]>>4);
-    queries.push(query);
-  }
-  const blackGarment=Boolean(crop)&&Array.from({length:576},(_,i)=>queries[0].slice(i*3,i*3+3)).filter(rgb=>Math.max(...rgb)<7&&Math.max(...rgb)-Math.min(...rgb)<3).length>80;
-  return {queries,crop,blackGarment};
-}
-
-async function lightPhotoMatches({queries,crop,blackGarment},catalog){
-  lightPhotoIndex ||= fetch('photo-index.json').then(response=>{
-    if(!response.ok) throw new Error('The lighter photo index could not load.');
-    return response.json();
-  }).catch(error=>{lightPhotoIndex=null;throw error;});
-  const index=await lightPhotoIndex;
-  const ranked=index.map(entry=>{
-    const item=catalog.get(entry.file);
-    if(!item) return null;
-    let distance=Infinity;
-    for(const query of queries){
-      let sum=0;
-      for(let i=0;i<1728;i++) sum+=Math.abs(query[i]-parseInt(entry.v[i],16));
-      distance=Math.min(distance,sum/1728);
-    }
-    if(crop&&crop.width/crop.height>.7&&crop.width/crop.height<1.8&&item.category!=='Tops') distance+=.7;
-    if(blackGarment&&!/^Black\b/i.test(item.name)) distance+=.18;
-    return {item,distance};
-  }).filter(Boolean).sort((a,b)=>a.distance-b.distance);
-  const votes=new Map();
-  ranked.slice(0,20).forEach((result,i)=>{
-    const family=photoFamily(result.item.name);
-    const vote=votes.get(family)||{count:0,weight:0};
-    vote.count++;vote.weight+=1/(i+1);votes.set(family,vote);
-  });
-  const family=[...votes].filter(([,vote])=>vote.count>=3).sort((a,b)=>b[1].weight-a[1].weight)[0]?.[0];
-  const grouped=family?ranked.filter(result=>photoFamily(result.item.name)===family&&(!blackGarment||/^Black\b/i.test(result.item.name))):[];
-  const cutoff=blackGarment?3.5:3;
-  const candidates=grouped.length&&grouped[0].distance<cutoff?grouped:ranked;
-  if(!candidates.length||candidates[0].distance>=cutoff) return [];
-  return candidates.slice(0,6).map(result=>({file:result.item.image.split('|')[0].trim(),score:1-result.distance/8}));
-}
 
 function recognitionViews(image) {
   const crop = garmentCrop(image);
@@ -158,10 +83,9 @@ function recognitionViews(image) {
 }
 function recognizePhoto(id, views) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261104-light');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261104-unified');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
-        if(data.progress!==undefined) photoStatus.textContent='Loading photo recognition ('+data.progress+'%). First use may take a moment.';
         if(data.comparing) photoStatus.textContent='Comparing your photo with the archive...';
       }
       const pending=pendingPhotos.get(data.id);
@@ -186,9 +110,24 @@ function recognizePhoto(id, views) {
   });
 }
 
+function releasePhotoWorker(){
+  if(!photoWorker) return;
+  photoWorker.terminate();
+  photoWorker=null;
+  for(const pending of pendingPhotos.values()) pending.reject(new Error('Photo search closed.'));
+  pendingPhotos.clear();
+}
+// Do not retain model memory after photo search is closed or left in the background.
+// Reopening photo search uses the same model through the browser's download cache.
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden && !pendingPhotos.size) releasePhotoWorker();
+});
+window.addEventListener('pagehide',releasePhotoWorker);
+
 document.getElementById('cameraButton').onclick=()=>photoInput.click();
 document.getElementById('photoBack').onclick=()=>{
   photoSearchId++;
+  releasePhotoWorker();
   photoPanel.hidden=true;
   photoInput.value='';
 };
@@ -221,11 +160,9 @@ photoInput.onchange=async()=>{
     }
     if(id!==photoSearchId) return;
     let matches;
-    let lighterMode=false;
     if(exact) matches=[{file:exact.main,score:1}];
     else {
       const views=recognitionViews(preview);
-      const lightFeatures=lightPhotoFeatures(preview);
       // Release the full-resolution camera image before allocating the model.
       const scale=Math.min(1,1024/Math.max(preview.naturalWidth,preview.naturalHeight));
       if(scale<1) {
@@ -241,20 +178,8 @@ photoInput.onchange=async()=>{
         await preview.decode();
       }
       if(id!==photoSearchId) return;
-      if(!useLightPhotoSearch){
-        photoStatus.textContent='Loading photo recognition. First use may take a moment.';
-        try { matches=await recognizePhoto(id,views); }
-        catch(error){
-          console.warn('Using lighter photo search:',error);
-          useLightPhotoSearch=true;
-        }
-      }
-      if(useLightPhotoSearch){
-        if(id!==photoSearchId) return;
-        photoStatus.textContent='Checking with the lighter photo search...';
-        matches=await lightPhotoMatches(lightFeatures,catalog);
-        lighterMode=true;
-      }
+      photoStatus.textContent='Loading photo recognition. First use may take a moment.';
+      matches=await recognizePhoto(id,views);
     }
     if(id!==photoSearchId) return;
     matches=matches.filter(match=>catalog.has(match.file));
@@ -262,9 +187,7 @@ photoInput.onchange=async()=>{
     const results=matches.filter(match=>match.score>=.55&&match.score>=best-.1).slice(0,6);
     if(!results.length) photoStatus.textContent='No confident match found. Try a closer photo, search by name, or request this item.';
     else {
-      photoStatus.textContent=lighterMode
-        ? 'Using lighter photo search on this phone. Check the item carefully before adding it.'
-        : 'Closest matches: select the exact item, then choose its size.';
+      photoStatus.textContent='Closest matches: select the exact item, then choose its size.';
       for(const match of results) {
         const original=catalog.get(match.file);
         const item={...original,image:original.image.split('|').map(file=>index.aliases?.[file.trim()]||file.trim()).join('|')};
@@ -276,6 +199,7 @@ photoInput.onchange=async()=>{
           selectedItem=item;
           document.getElementById('search').value=item.name;
           setSizeOptions(item);
+          releasePhotoWorker();
           photoPanel.hidden=true;
           const selectedResult=document.createElement('div');
           selectedResult.className='result-item selected';
