@@ -446,8 +446,8 @@ img{
 
 <div class="welcomeOverlay" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="archiveIntroTitle" aria-describedby="archiveIntroMessage">
   <div class="welcomeModal">
-    <h2 id="archiveIntroTitle">Explore the Supreme item archive</h2>
-    <p id="archiveIntroMessage">Browse Supreme clothing, Box Logo releases, hats, bags, accessories, shoes, and skate decks. View item images and original retail prices, track your personal collection, and combine pieces with the Supreme outfit builder.</p>
+    <h2 id="archiveIntroTitle">Explore the Supreme Archive</h2>
+    <p id="archiveIntroMessage">Track and showcase your Supreme collection. Browse Supreme Clothing, Accessories, Shoes, Bags, Skate, Stickers and more. Combine pieces together with the Supreme outfit builder or practice for the drops with Captcha training.</p>
     <div class="welcomeActions">
       <button class="cancelBtn" id="welcomeClose" type="button">Close</button>
     </div>
@@ -841,9 +841,6 @@ function filterCategory(cat, updateUrl=true){
   document.getElementById("metaDescription").content = description;
   document.getElementById("ogTitle").content = document.title;
   document.getElementById("ogDescription").content = description;
-  document.getElementById("archiveIntroTitle").textContent = cat === "All"
-    ? "Explore the Supreme item archive"
-    : `Explore the ${categoryName}`;
 
   if(updateUrl){
     history.pushState({}, "", cat === "All" ? "index.html" : `?category=${encodeURIComponent(cat)}`);
