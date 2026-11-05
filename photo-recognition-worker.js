@@ -18,14 +18,14 @@ async function initialize() {
   );
   const entries = index.entries.map(entry => {
     const vector = Int8Array.from(atob(entry.v), c=>c.charCodeAt(0));
-    return {main:entry.main, vector, norm:Math.hypot(...vector)};
+    return {main:entry.main, color:entry.c, vector, norm:Math.hypot(...vector)};
   });
   return {model, Tensor:ort.Tensor, entries};
 }
 let queue = Promise.resolve();
 self.onmessage = ({data}) => {
   queue = queue.catch(()=>{}).then(async () => {
-    const {id, views} = data;
+    const {id, views, signals} = data;
     try {
       ready ||= initialize().catch(error=>{ready=null;throw error;});
       const {model, Tensor, entries} = await ready;
@@ -40,7 +40,7 @@ self.onmessage = ({data}) => {
         const norm = Math.hypot(...vector);
         vectors.push(Array.from(vector,x=>x/norm));
       }
-      const scores = new Map();
+      const visualScores = new Map();
       for(const entry of entries) {
         let score = -1;
         for(const vector of vectors) {
@@ -48,6 +48,19 @@ self.onmessage = ({data}) => {
           for(let i=0;i<384;i++) dot += vector[i]*entry.vector[i];
           score=Math.max(score,dot/entry.norm);
         }
+        if(score>(visualScores.get(entry.main)??-1)) visualScores.set(entry.main,score);
+      }
+      const likelyHoodie=[...visualScores].sort((a,b)=>b[1]-a[1]).slice(0,10)
+        .filter(([file])=>/hoodie|hooded/i.test(file)).length>=5;
+      const scores = new Map();
+      for(const entry of entries) {
+        let score=visualScores.get(entry.main);
+        if(signals?.color && entry.color) {
+          const distance=Math.hypot(...entry.color.map((value,i)=>value-signals.color[i]));
+          score+=.3*Math.exp(-distance/35);
+        }
+        if(likelyHoodie && signals?.logo==='large' && /box.logo.hoodie/i.test(entry.main)) score+=.2;
+        if(likelyHoodie && signals?.logo==='small' && /small.box.*(?:zip.up.hooded|hoodie)/i.test(entry.main)) score+=.2;
         if(score>(scores.get(entry.main)??-1)) scores.set(entry.main,score);
       }
       self.postMessage({id,results:[...scores].map(([file,score])=>({file,score})).sort((a,b)=>b.score-a.score).slice(0,30)});

@@ -2,7 +2,7 @@
 
 The Add page compares uploaded images with DINOv2 image embeddings. Recognition runs in a Web Worker on the visitor's device. The first search downloads approximately 24 MB of model weights plus the inference runtime from Hugging Face/jsDelivr; subsequent searches can use the browser cache. Uploaded photos are not sent to those services.
 
-Main and gallery images are indexed and grouped by their main image so alternate views never create duplicate results. The browser compares both the full image and, when available, a focused crop. Exact file hashes bypass model loading. Results are suggestions, limited to six; similar releases and colours can still be difficult to distinguish.
+Main and gallery images are indexed and grouped by their main image so alternate views never create duplicate results. The browser compares the full image and a central crop, then uses the fabric color sampled from the garment's center to rank visually similar results. A clear blue box logo or small red chest logo helps distinguish similar hoodies. Exact file hashes bypass model loading. Results are suggestions, limited to six; similar releases and colours can still be difficult to distinguish.
 
 When a spreadsheet filename is missing, the builder checks for the exact season suffix present in the item name. Verified replacements are recorded in the index and used for the photo result and saved item. Other missing files are reported for correction in the source archive.
 

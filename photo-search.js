@@ -5,47 +5,44 @@ const photoMatches = document.getElementById("photoMatches");
 const photoActions = document.getElementById("photoActions");
 
 function garmentCrop(image){
-  const scale = Math.min(256 / image.naturalWidth, 256 / image.naturalHeight);
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-  const ctx = canvas.getContext("2d", {willReadFrequently:true});
-  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-  const {data} = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const width = canvas.width, height = canvas.height;
-  const seen = new Uint8Array(width * height);
-  let best = null;
-  for(let start=0;start<seen.length;start++){
-    if(seen[start]) continue;
-    seen[start]=1;
-    const k=start*4;
-    if((data[k]+data[k+1]+data[k+2])/3 > 105) continue;
-    const queue=[start];
-    let left=width, right=0, top=height, bottom=0, touchesEdge=false;
-    for(let head=0;head<queue.length;head++){
-      const pos=queue[head], x=pos%width, y=Math.floor(pos/width);
-      left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);
-      if(x===0||y===0||x===width-1||y===height-1) touchesEdge=true;
-      for(const neighbor of [pos-1,pos+1,pos-width,pos+width]){
-        if(neighbor<0||neighbor>=seen.length||seen[neighbor]) continue;
-        const nx=neighbor%width;
-        if(Math.abs(nx-x)>1) continue;
-        seen[neighbor]=1;
-        const j=neighbor*4;
-        if((data[j]+data[j+1]+data[j+2])/3<=105) queue.push(neighbor);
-      }
-    }
-    const aspect=(right-left+1)/(bottom-top+1);
-    if(!touchesEdge && aspect<2.2 && aspect>.4 && bottom-top>height*.07 && (!best||queue.length>best.area)) best={left,right,top,bottom,area:queue.length};
-  }
-  if(!best||best.area<80) return null;
-  const padding=Math.max(best.right-best.left,best.bottom-best.top)*.07;
   return {
-    x:Math.max(0,(best.left-padding)/scale),
-    y:Math.max(0,(best.top-padding)/scale),
-    width:Math.min(image.naturalWidth,(best.right-best.left+1+padding*2)/scale),
-    height:Math.min(image.naturalHeight,(best.bottom-best.top+1+padding*2)/scale)
+    x:image.naturalWidth*.12,
+    y:image.naturalHeight*.10,
+    width:image.naturalWidth*.76,
+    height:image.naturalHeight*.80
   };
+}
+
+function photoSignals(image){
+  const canvas=document.createElement('canvas');
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  const draw=size=>{
+    canvas.width=canvas.height=size;
+    ctx.fillStyle='white';ctx.fillRect(0,0,size,size);
+    const scale=Math.min(size/image.naturalWidth,size/image.naturalHeight);
+    ctx.drawImage(image,(size-image.naturalWidth*scale)/2,(size-image.naturalHeight*scale)/2,image.naturalWidth*scale,image.naturalHeight*scale);
+    return ctx.getImageData(0,0,size,size).data;
+  };
+  const pixels=draw(96),samples=[[],[],[]];
+  for(let y=38;y<68;y++) for(const start of [35,52]) for(let x=start;x<start+10;x++) {
+    const offset=(y*96+x)*4;
+    for(let channel=0;channel<3;channel++) samples[channel].push(pixels[offset+channel]);
+  }
+  const color=samples.map(values=>values.sort((a,b)=>a-b)[values.length>>1]);
+  const rgb=draw(224),sum=color[0]+color[1]+color[2];
+  let cyan=0,red=0,redLeft=224,redRight=0,redTop=224,redBottom=0;
+  for(let y=65;y<125;y++) for(let x=72;x<152;x++) {
+    const offset=(y*224+x)*4,r=rgb[offset],g=rgb[offset+1],b=rgb[offset+2],total=r+g+b;
+    if(!total || Math.hypot(r/total-color[0]/sum,g/total-color[1]/sum,b/total-color[2]/sum)<=.14) continue;
+    if(b>r*1.12 && g>r*1.15 && g>60) cyan++;
+    if(r>g*1.4 && r>b*1.35 && r>75) {
+      red++;redLeft=Math.min(redLeft,x);redRight=Math.max(redRight,x);
+      redTop=Math.min(redTop,y);redBottom=Math.max(redBottom,y);
+    }
+  }
+  canvas.width=canvas.height=1;
+  const logo=cyan>=80 ? 'large' : red>=5 && red<=150 && redRight-redLeft<20 && redBottom-redTop<15 ? 'small' : null;
+  return {color,logo};
 }
 
 
@@ -81,9 +78,9 @@ function recognitionViews(image) {
     return values.buffer;
   });
 }
-function recognizePhoto(id, views) {
+function recognizePhoto(id, views, signals) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261104-unified');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261105-color');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.comparing) photoStatus.textContent='Comparing your photo with the archive...';
@@ -106,7 +103,7 @@ function recognizePhoto(id, views) {
   }
   return new Promise((resolve,reject)=>{
     pendingPhotos.set(id,{resolve,reject});
-    photoWorker.postMessage({id,views},views);
+    photoWorker.postMessage({id,views,signals},views);
   });
 }
 
@@ -163,6 +160,7 @@ photoInput.onchange=async()=>{
     if(exact) matches=[{file:exact.main,score:1}];
     else {
       const views=recognitionViews(preview);
+      const signals=photoSignals(preview);
       // Release the full-resolution camera image before allocating the model.
       const scale=Math.min(1,1024/Math.max(preview.naturalWidth,preview.naturalHeight));
       if(scale<1) {
@@ -179,7 +177,7 @@ photoInput.onchange=async()=>{
       }
       if(id!==photoSearchId) return;
       photoStatus.textContent='Loading photo recognition. First use may take a moment.';
-      matches=await recognizePhoto(id,views);
+      matches=await recognizePhoto(id,views,signals);
     }
     if(id!==photoSearchId) return;
     matches=matches.filter(match=>catalog.has(match.file));
