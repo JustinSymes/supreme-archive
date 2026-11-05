@@ -20,7 +20,7 @@ async function initialize() {
     const vector = Int8Array.from(atob(entry.v), c=>c.charCodeAt(0));
     return {main:entry.main, color:entry.c, vector, norm:Math.hypot(...vector)};
   });
-  return {model, Tensor:ort.Tensor, entries};
+  return {model, Tensor:ort.Tensor, entries, families:index.families||{}};
 }
 let queue = Promise.resolve();
 self.onmessage = ({data}) => {
@@ -28,7 +28,7 @@ self.onmessage = ({data}) => {
     const {id, views, signals} = data;
     try {
       ready ||= initialize().catch(error=>{ready=null;throw error;});
-      const {model, Tensor, entries} = await ready;
+      const {model, Tensor, entries, families} = await ready;
       self.postMessage({id,comparing:true});
       const vectors=[];
       for(const view of views) {
@@ -63,7 +63,21 @@ self.onmessage = ({data}) => {
         if(likelyHoodie && signals?.logo==='small' && /small.box.*(?:zip.up.hooded|hoodie)/i.test(entry.main)) score+=.2;
         if(score>(scores.get(entry.main)??-1)) scores.set(entry.main,score);
       }
-      self.postMessage({id,results:[...scores].map(([file,score])=>({file,score})).sort((a,b)=>b.score-a.score).slice(0,30)});
+      const ranked=[...scores].map(([file,score])=>({file,score})).sort((a,b)=>b.score-a.score);
+      const top=ranked[0], family=families[top?.file];
+      let related;
+      if(family && visualScores.get(top.file)>=.75) {
+        related=ranked.slice(1).filter(match=>families[match.file]===family &&
+          visualScores.get(match.file)>=visualScores.get(top.file)-.08 && match.score>=top.score-.2)
+          .sort((a,b)=>visualScores.get(b.file)-visualScores.get(a.file))[0];
+      }
+      const results=ranked.slice(0,30);
+      if(related && visualScores.get(related.file)>=visualScores.get(ranked[5]?.file)-.02) {
+        const match=results.find(item=>item.file===related.file);
+        if(match) match.related=true;
+        else results.push({...related,related:true});
+      }
+      self.postMessage({id,results});
     } catch(error) { self.postMessage({id,error:String(error?.message||error)}); }
   });
 };

@@ -4,6 +4,8 @@ The Add page compares uploaded images with DINOv2 image embeddings. Recognition 
 
 Main and gallery images are indexed and grouped by their main image so alternate views never create duplicate results. The browser compares the full image and a central crop, then uses the fabric color sampled from the garment's center to rank visually similar results. A clear blue box logo or small red chest logo helps distinguish similar hoodies. Exact file hashes bypass model loading. Results are suggestions, limited to six; similar releases and colours can still be difficult to distinguish.
 
+When the top result belongs to a colorway family in the spreadsheet, the results can reserve one slot for another color of that same design. The alternate must still have a close visual embedding and overall score; this keeps related colorways visible when camera lighting changes the apparent fabric color.
+
 When a spreadsheet filename is missing, the builder checks for the exact season suffix present in the item name. Verified replacements are recorded in the index and used for the photo result and saved item. Other missing files are reported for correction in the source archive.
 
 ## Refresh after adding or changing archive images

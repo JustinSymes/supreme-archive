@@ -14,11 +14,17 @@ const output = path.join(root, 'photo-embeddings.json');
 const csv = process.argv[2] ? await fs.readFile(process.argv[2], 'utf8') : await (await fetch('https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0')).text();
 const rows = parse(csv, {columns:true, relax_column_count:true, skip_empty_lines:true});
 const files = new Map();
+const families = {};
 const available = new Set(await fs.readdir(root));
 const aliases = {};
 for (const row of rows) {
   const main = row.image_main?.split('|')[0].trim();
   if (!main || !row.name) continue;
+  const color = row.color?.trim();
+  const name = row.name.trim();
+  if (color && name.toLowerCase().startsWith(color.toLowerCase()+' ')) {
+    families[main] = name.slice(color.length).trim().toLowerCase();
+  }
   for (const file of [row.image_main, row.image_gallery].filter(Boolean).flatMap(s => s.split('|')).map(s=>s.trim())) {
     if (file && !/^(https?:|\/)|\.\./.test(file)) {
       const season = row.name.match(/\b(SS|FW)\d{2}$/i)?.[0].toLowerCase();
@@ -62,8 +68,8 @@ for (const [file, main] of files) {
   } catch (error) { skipped.push({file,error:error.message}); console.error('Skipped', file, error.message); }
   if ((entries.length+skipped.length)%50===0) {
     console.log(`${entries.length} indexed / ${files.size} images`);
-    await fs.writeFile(output, JSON.stringify({version:1,model,revision,dtype:'q8',size:224,aliases,entries}));
+    await fs.writeFile(output, JSON.stringify({version:1,model,revision,dtype:'q8',size:224,aliases,families,entries}));
   }
 }
-await fs.writeFile(output, JSON.stringify({version:1,model,revision,dtype:'q8',size:224,aliases,entries}));
+await fs.writeFile(output, JSON.stringify({version:1,model,revision,dtype:'q8',size:224,aliases,families,entries}));
 console.log(JSON.stringify({indexed:entries.length,skipped},null,2));

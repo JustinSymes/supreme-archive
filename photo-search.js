@@ -80,7 +80,7 @@ function recognitionViews(image) {
 }
 function recognizePhoto(id, views, signals) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261105-color');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261105-family');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.comparing) photoStatus.textContent='Comparing your photo with the archive...';
@@ -183,6 +183,11 @@ photoInput.onchange=async()=>{
     matches=matches.filter(match=>catalog.has(match.file));
     const best=matches[0]?.score??0;
     const results=matches.filter(match=>match.score>=.55&&match.score>=best-.1).slice(0,6);
+    const related=matches.find(match=>match.related && catalog.has(match.file));
+    if(results.length && related && !results.some(match=>match.file===related.file)) {
+      results.splice(1,0,related);
+      results.length=Math.min(results.length,6);
+    }
     if(!results.length) photoStatus.textContent='No confident match found. Try a closer photo, search by name, or request this item.';
     else {
       photoStatus.textContent='Closest matches: select the exact item, then choose its size.';
