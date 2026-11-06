@@ -462,8 +462,8 @@ body {
 
   <div class="box" id="captchaBox">
     <div class="header">
-      Select all images with
-      <span>stairs</span>
+      Select all images containing
+      <span id="challengeSubject">stairs</span>
     </div>
 
     <div class="info">Select all matching images, then continue.</div>
@@ -553,6 +553,20 @@ const nonStairImages = [
   "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?w=400"
 ];
 
+const captchaChallenges = [
+  { subject: "stairs", correct: stairImages, incorrect: nonStairImages },
+  ...[
+    ["traffic signs", "traffic-signs"],
+    ["food", "food"],
+    ["objects made of wood", "wooden-objects"],
+    ["airplanes", "airplanes"]
+  ].map(([subject, folder]) => ({
+    subject,
+    correct: Array.from({ length: 6 }, (_, i) => `captcha-images/${folder}/correct_${String(i + 1).padStart(2, "0")}.png`),
+    incorrect: Array.from({ length: 6 }, (_, i) => `captcha-images/${folder}/incorrect_${String(i + 1).padStart(2, "0")}.png`)
+  }))
+];
+
 const humanCheck = document.getElementById("humanCheck");
 const captchaBox = document.getElementById("captchaBox");
 const grid = document.getElementById("grid");
@@ -567,9 +581,24 @@ let tiles = [];
 let solved = false;
 let lastCorrectClickTime = 0;
 let pageResults = [false, false, false];
+let activeChallenge = null;
 
 function randomFrom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function shuffle(items) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function chooseChallenge() {
+  activeChallenge = randomFrom(captchaChallenges);
+  document.getElementById("challengeSubject").textContent = activeChallenge.subject;
 }
 
 humanCheck.onclick = () => {
@@ -582,6 +611,7 @@ humanCheck.onclick = () => {
     captchaBox.classList.add("show");
     page = 0;
     pageResults = [false, false, false];
+    chooseChallenge();
     generateGrid();
     updateDots();
   }, 900);
@@ -592,18 +622,12 @@ function generateGrid() {
   tiles = [];
   verifyBtn.innerText = page === 2 ? "VERIFY" : "NEXT";
 
-  let stairCount = 3 + Math.floor(Math.random() * 2);
-  let pool = [];
-
-  for (let i = 0; i < stairCount; i++) {
-    pool.push({ src: randomFrom(stairImages), correct: true, selected: false });
-  }
-
-  while (pool.length < 9) {
-    pool.push({ src: randomFrom(nonStairImages), correct: false, selected: false });
-  }
-
-  pool.sort(() => Math.random() - 0.5);
+  const minimumCorrect = Math.max(3, 9 - activeChallenge.incorrect.length);
+  const correctCount = minimumCorrect + Math.floor(Math.random() * (5 - minimumCorrect));
+  const pool = shuffle([
+    ...shuffle(activeChallenge.correct).slice(0, correctCount).map(src => ({ src, correct: true, selected: false })),
+    ...shuffle(activeChallenge.incorrect).slice(0, 9 - correctCount).map(src => ({ src, correct: false, selected: false }))
+  ]);
 
   pool.forEach(data => {
     const div = document.createElement("div");
@@ -687,6 +711,7 @@ function failCaptcha() {
     page = 0;
     tiles = [];
     pageResults = [false, false, false];
+    activeChallenge = null;
     updateDots();
   }, 1000);
 }
@@ -713,6 +738,7 @@ function resetAll() {
   page = 0;
   tiles = [];
   pageResults = [false, false, false];
+  activeChallenge = null;
   submitBtn.disabled = true;
 
   humanCheck.className = "checkbox";
