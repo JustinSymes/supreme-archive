@@ -8,7 +8,7 @@ async function initialize() {
   importScripts(runtime+'ort.wasm.min.js');
   ort.env.wasm.numThreads=1;
   ort.env.wasm.wasmPaths=runtime;
-  const response = await fetch('photo-embeddings.json');
+  const response = await fetch('photo-embeddings.json?v=20261106-fabric');
   if (!response.ok) throw new Error('Could not load the archive photo index.');
   const index = await response.json();
   const model = await ort.InferenceSession.create(
@@ -18,7 +18,7 @@ async function initialize() {
   );
   const entries = index.entries.map(entry => {
     const vector = Int8Array.from(atob(entry.v), c=>c.charCodeAt(0));
-    return {main:entry.main, color:entry.c, vector, norm:Math.hypot(...vector)};
+    return {main:entry.main, color:entry.c, fabricColor:entry.f, vector, norm:Math.hypot(...vector)};
   });
   return {model, Tensor:ort.Tensor, entries, families:index.families||{}};
 }
@@ -48,16 +48,27 @@ self.onmessage = ({data}) => {
           for(let i=0;i<384;i++) dot += vector[i]*entry.vector[i];
           score=Math.max(score,dot/entry.norm);
         }
+        entry.visual=score;
         if(score>(visualScores.get(entry.main)??-1)) visualScores.set(entry.main,score);
       }
       const likelyHoodie=[...visualScores].sort((a,b)=>b[1]-a[1]).slice(0,10)
         .filter(([file])=>/hoodie|hooded/i.test(file)).length>=5;
       const scores = new Map();
+      const bestVisual=Math.max(...visualScores.values());
       for(const entry of entries) {
-        let score=visualScores.get(entry.main);
-        if(signals?.color && entry.color) {
-          const distance=Math.hypot(...entry.color.map((value,i)=>value-signals.color[i]));
-          score+=.3*Math.exp(-distance/35);
+        // Keep each view's appearance and color together. A matching front
+        // must not borrow the color of an unrelated reverse or detail view.
+        if(entry.visual<Math.max(.55,bestVisual-.18)) continue;
+        let score=entry.visual;
+        const queryColor=likelyHoodie?signals?.color:(signals?.fabricColor||signals?.color);
+        const archiveColor=likelyHoodie?entry.color:(entry.fabricColor||entry.color);
+        if(queryColor && archiveColor) {
+          // Compare hue/saturation more strongly than brightness: a grey
+          // garment in shade should not become a blue colorway.
+          const brightness=archiveColor.reduce((sum,value,i)=>sum+value-queryColor[i],0)/3;
+          const distance=likelyHoodie?Math.hypot(...archiveColor.map((value,i)=>value-queryColor[i])):
+            Math.hypot(...archiveColor.map((value,i)=>value-queryColor[i]-brightness),brightness*.35);
+          score+=(likelyHoodie ? .3 : .16)*Math.exp(-distance/(likelyHoodie ? 35 : 50));
         }
         if(likelyHoodie && signals?.logo==='large' && /box.logo.hoodie/i.test(entry.main)) score+=.2;
         if(likelyHoodie && signals?.logo==='small' && /small.box.*(?:zip.up.hooded|hoodie)/i.test(entry.main)) score+=.2;

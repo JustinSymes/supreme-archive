@@ -23,12 +23,7 @@ function photoSignals(image){
     ctx.drawImage(image,(size-image.naturalWidth*scale)/2,(size-image.naturalHeight*scale)/2,image.naturalWidth*scale,image.naturalHeight*scale);
     return ctx.getImageData(0,0,size,size).data;
   };
-  const pixels=draw(96),samples=[[],[],[]];
-  for(let y=38;y<68;y++) for(const start of [35,52]) for(let x=start;x<start+10;x++) {
-    const offset=(y*96+x)*4;
-    for(let channel=0;channel<3;channel++) samples[channel].push(pixels[offset+channel]);
-  }
-  const color=samples.map(values=>values.sort((a,b)=>a-b)[values.length>>1]);
+  const pixels=draw(96),fabricColor=photoFabricColor(pixels),color=photoCenterColor(pixels);
   const rgb=draw(224),sum=color[0]+color[1]+color[2];
   let cyan=0,red=0,redLeft=224,redRight=0,redTop=224,redBottom=0;
   for(let y=65;y<125;y++) for(let x=72;x<152;x++) {
@@ -42,7 +37,7 @@ function photoSignals(image){
   }
   canvas.width=canvas.height=1;
   const logo=cyan>=80 ? 'large' : red>=5 && red<=150 && redRight-redLeft<20 && redBottom-redTop<15 ? 'small' : null;
-  return {color,logo};
+  return {color,fabricColor,logo};
 }
 
 
@@ -80,7 +75,7 @@ function recognitionViews(image) {
 }
 function recognizePhoto(id, views, signals) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261105-family');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261106-fabric');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.comparing) photoStatus.textContent='Comparing your photo with the archive...';
@@ -142,7 +137,7 @@ photoInput.onchange=async()=>{
     await preview.decode();
     if(id!==photoSearchId) return;
     if(!items.length) throw new Error('Archive items are still loading. Please try again.');
-    photoIndex ||= fetch('photo-embeddings.json').then(response=>{
+    photoIndex ||= fetch('photo-embeddings.json?v=20261106-fabric').then(response=>{
       if(!response.ok) throw new Error('Could not load the archive photo index.');
       return response.json();
     }).catch(error=>{photoIndex=null;throw error;});

@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { parse } from 'csv-parse/sync';
 import sharp from 'sharp';
 import { pipeline, RawImage, env } from '@huggingface/transformers';
+import photoFabricColor from '../../photo-color.js';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 env.cacheDir = fileURLToPath(new URL('.cache/', import.meta.url));
@@ -38,15 +39,10 @@ for (const row of rows) {
 }
 let old = {entries:[]};
 try { old = JSON.parse(await fs.readFile(output, 'utf8')); } catch {}
-const cache = new Map(old.entries.map(e => [e.hash, {v:e.v,c:e.c}]));
+const cache = new Map(old.entries.map(e => [e.hash, {v:e.v,c:old.colorVersion===3?e.c:null,f:old.colorVersion===3?e.f:null}]));
 async function garmentColor(bytes) {
   const {data,info} = await sharp(bytes).rotate().resize(96,96,{fit:'contain',background:'#fff'}).flatten({background:'#fff'}).raw().toBuffer({resolveWithObject:true});
-  const samples=[[],[],[]];
-  for(let y=38;y<68;y++) for(const start of [35,52]) for(let x=start;x<start+10;x++) {
-    const offset=(y*96+x)*info.channels;
-    for(let channel=0;channel<3;channel++) samples[channel].push(data[offset+channel]);
-  }
-  return samples.map(values=>values.sort((a,b)=>a-b)[values.length>>1]);
+  return {c:photoFabricColor.center(data,info.channels),f:photoFabricColor(data,info.channels)};
 }
 const extractor = await pipeline('image-feature-extraction', model, {revision,dtype:'q8', session_options:{intraOpNumThreads:4}});
 const entries = [], skipped = [];
@@ -54,7 +50,7 @@ for (const [file, main] of files) {
   try {
     const bytes = await fs.readFile(path.join(root, file));
     const hash = createHash('sha256').update(bytes).digest('hex');
-    let {v,c} = cache.get(hash) || {};
+    let {v,c,f} = cache.get(hash) || {};
     if (!v) {
       const {data, info} = await sharp(bytes).rotate().flatten({background:'#fff'}).resize(224,224,{fit:'contain',background:'#fff'}).removeAlpha().raw().toBuffer({resolveWithObject:true});
       const embedding = await extractor(new RawImage(new Uint8Array(data), info.width, info.height, info.channels));
@@ -62,14 +58,14 @@ for (const [file, main] of files) {
       const norm = Math.hypot(...values);
       v = Buffer.from(Int8Array.from(values, x=>Math.round(x/norm*127)).buffer).toString('base64');
     }
-    c ||= await garmentColor(bytes);
-    cache.set(hash,{v,c});
-    entries.push({file,main,hash,v,c});
+    if(!c || !f) ({c,f}=await garmentColor(bytes));
+    cache.set(hash,{v,c,f});
+    entries.push({file,main,hash,v,c,f});
   } catch (error) { skipped.push({file,error:error.message}); console.error('Skipped', file, error.message); }
   if ((entries.length+skipped.length)%50===0) {
     console.log(`${entries.length} indexed / ${files.size} images`);
-    await fs.writeFile(output, JSON.stringify({version:1,model,revision,dtype:'q8',size:224,aliases,families,entries}));
+    await fs.writeFile(output, JSON.stringify({version:1,colorVersion:3,model,revision,dtype:'q8',size:224,aliases,families,entries}));
   }
 }
-await fs.writeFile(output, JSON.stringify({version:1,model,revision,dtype:'q8',size:224,aliases,families,entries}));
+await fs.writeFile(output, JSON.stringify({version:1,colorVersion:3,model,revision,dtype:'q8',size:224,aliases,families,entries}));
 console.log(JSON.stringify({indexed:entries.length,skipped},null,2));
