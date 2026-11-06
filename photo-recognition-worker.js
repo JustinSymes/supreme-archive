@@ -53,6 +53,8 @@ self.onmessage = ({data}) => {
       }
       const likelyHoodie=[...visualScores].sort((a,b)=>b[1]-a[1]).slice(0,10)
         .filter(([file])=>/hoodie|hooded/i.test(file)).length>=5;
+      const neutralHoodie=likelyHoodie && signals?.fabricColor &&
+        Math.max(...signals.fabricColor)-Math.min(...signals.fabricColor)<=22;
       const scores = new Map();
       const bestVisual=Math.max(...visualScores.values());
       for(const entry of entries) {
@@ -60,18 +62,19 @@ self.onmessage = ({data}) => {
         // must not borrow the color of an unrelated reverse or detail view.
         if(entry.visual<Math.max(.55,bestVisual-.18)) continue;
         let score=entry.visual;
-        const queryColor=likelyHoodie?signals?.color:(signals?.fabricColor||signals?.color);
-        const archiveColor=likelyHoodie?entry.color:(entry.fabricColor||entry.color);
+        const useFabricColor=!likelyHoodie || neutralHoodie;
+        const queryColor=useFabricColor?(signals?.fabricColor||signals?.color):signals?.color;
+        const archiveColor=useFabricColor?(entry.fabricColor||entry.color):entry.color;
         if(queryColor && archiveColor) {
           // Compare hue/saturation more strongly than brightness: a grey
           // garment in shade should not become a blue colorway.
           const brightness=archiveColor.reduce((sum,value,i)=>sum+value-queryColor[i],0)/3;
-          const distance=likelyHoodie?Math.hypot(...archiveColor.map((value,i)=>value-queryColor[i])):
+          const distance=!useFabricColor?Math.hypot(...archiveColor.map((value,i)=>value-queryColor[i])):
             Math.hypot(...archiveColor.map((value,i)=>value-queryColor[i]-brightness),brightness*.35);
-          score+=(likelyHoodie ? .3 : .16)*Math.exp(-distance/(likelyHoodie ? 35 : 50));
+          score+=(useFabricColor ? .16 : .3)*Math.exp(-distance/(useFabricColor ? 50 : 35));
         }
         if(likelyHoodie && signals?.logo==='large' && /box.logo.hoodie/i.test(entry.main)) score+=.2;
-        if(likelyHoodie && signals?.logo==='small' && /small.box.*(?:zip.up.hooded|hoodie)/i.test(entry.main)) score+=.2;
+        if(likelyHoodie && !neutralHoodie && signals?.logo==='small' && /small.box.*(?:zip.up.hooded|hoodie)/i.test(entry.main)) score+=.2;
         if(score>(scores.get(entry.main)??-1)) scores.set(entry.main,score);
       }
       const ranked=[...scores].map(([file,score])=>({file,score})).sort((a,b)=>b.score-a.score);

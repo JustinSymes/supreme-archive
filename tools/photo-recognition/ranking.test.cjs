@@ -4,15 +4,15 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const photoFabricColor=require('../../photo-color.js');
 
-async function rank(entries,color=[0,0,0]) {
+async function rank(entries,color=[0,0,0],extraSignals={}) {
   const results=[];
   const context=vm.createContext({self:{postMessage:data=>results.push(data)},Float32Array,Map,Math,Array,Promise});
   vm.runInContext(fs.readFileSync(require.resolve('../../photo-recognition-worker.js'),'utf8'),context);
-  context.fixture={entries:entries.map(([main,similarity,c])=>{
+  context.fixture={entries:entries.map(([main,similarity,c,f])=>{
     const vector=new Float32Array(384);vector[0]=similarity;vector[1]=Math.sqrt(1-similarity**2);
-    return {main,vector,norm:1,color:c};
+    return {main,vector,norm:1,color:c,fabricColor:f};
   }),families:{},Tensor:class{},model:{run:async()=>({last_hidden_state:{data:Float32Array.from({length:384},(_,i)=>i===0?1:0)}})}};
-  vm.runInContext('ready=Promise.resolve(fixture);self.onmessage({data:{id:1,views:[new ArrayBuffer(0)],signals:{color:'+JSON.stringify(color)+'}}});',context);
+  vm.runInContext('ready=Promise.resolve(fixture);self.onmessage({data:{id:1,views:[new ArrayBuffer(0)],signals:'+JSON.stringify({color,...extraSignals})+'}});',context);
   await vm.runInContext('queue',context);
   assert(!results.at(-1).error,results.at(-1).error);
   return results.at(-1).results;
@@ -35,4 +35,15 @@ test('central printed artwork does not become the fabric color',()=>{
   for(let y=20;y<86;y++)for(let x=30;x<66;x++)for(let c=0;c<3;c++)pixels[(y*96+x)*4+c]=90;
   for(let y=30;y<70;y++)for(let x=43;x<53;x++){pixels[(y*96+x)*4]=220;pixels[(y*96+x)*4+1]=30;pixels[(y*96+x)*4+2]=20;}
   assert.deepEqual(photoFabricColor(pixels),[90,90,90]);
+});
+test('neutral hoodie photo does not receive a false small-logo bonus',async()=>{
+  const entries=[
+    ['Grey_Cross_Box_Logo_Hoodie.png',.84,[210,211,213],[208,208,210]],
+    ['Olive_Cross_Box_Logo_Hoodie.png',.82,[124,123,116],[110,110,108]],
+    ['Grey_Small_Box_Zip_Up_Hooded_Sweatshirt.png',.83,[135,135,135],[142,142,142]],
+    ...Array.from({length:7},(_,i)=>['Other_Hoodie_'+i,.81,[145,145,145],[145,145,145]])
+  ];
+  const withFalseLogo=await rank(entries,[128,125,120],{fabricColor:[143,141,139],logo:'small'});
+  const withoutLogo=await rank(entries,[128,125,120],{fabricColor:[143,141,139],logo:null});
+  assert.equal(JSON.stringify(withFalseLogo.map(x=>x.file)),JSON.stringify(withoutLogo.map(x=>x.file)));
 });

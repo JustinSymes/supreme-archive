@@ -75,7 +75,7 @@ function recognitionViews(image) {
 }
 function recognizePhoto(id, views, signals) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261106-fabric');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261106-neutral');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.comparing) photoStatus.textContent='Comparing your photo with the archive...';
