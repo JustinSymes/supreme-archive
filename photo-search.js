@@ -48,7 +48,10 @@ const pendingPhotos = new Map();
 
 function recognitionViews(image) {
   const crop = garmentCrop(image);
-  return [null, ...(crop ? [crop] : [])].map(bounds => {
+  const lowerShoe=image.naturalHeight>image.naturalWidth*1.15 ? {
+    x:0,y:image.naturalHeight*.42,width:image.naturalWidth,height:image.naturalHeight*.58
+  } : null;
+  return [null, crop, ...(lowerShoe ? [lowerShoe] : [])].map(bounds => {
     const canvas=document.createElement('canvas');
     canvas.width=canvas.height=224;
     const ctx=canvas.getContext('2d',{willReadFrequently:true});
@@ -75,7 +78,7 @@ function recognitionViews(image) {
 }
 function recognizePhoto(id, views, signals) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261106-neutral');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261110-shoes');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.comparing) photoStatus.textContent='Comparing your photo with the archive...';
@@ -137,7 +140,7 @@ photoInput.onchange=async()=>{
     await preview.decode();
     if(id!==photoSearchId) return;
     if(!items.length) throw new Error('Archive items are still loading. Please try again.');
-    photoIndex ||= fetch('photo-embeddings.json?v=20261106-fabric').then(response=>{
+    photoIndex ||= fetch('photo-embeddings.json?v=20261110-shoes').then(response=>{
       if(!response.ok) throw new Error('Could not load the archive photo index.');
       return response.json();
     }).catch(error=>{photoIndex=null;throw error;});

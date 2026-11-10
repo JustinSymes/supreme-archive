@@ -16,11 +16,13 @@ const csv = process.argv[2] ? await fs.readFile(process.argv[2], 'utf8') : await
 const rows = parse(csv, {columns:true, relax_column_count:true, skip_empty_lines:true});
 const files = new Map();
 const families = {};
+const categories = {};
 const available = new Set(await fs.readdir(root));
 const aliases = {};
 for (const row of rows) {
   const main = row.image_main?.split('|')[0].trim();
   if (!main || !row.name) continue;
+  categories[main] = row.category?.trim() || '';
   const color = row.color?.trim();
   const name = row.name.trim();
   if (color && name.toLowerCase().startsWith(color.toLowerCase()+' ')) {
@@ -64,8 +66,8 @@ for (const [file, main] of files) {
   } catch (error) { skipped.push({file,error:error.message}); console.error('Skipped', file, error.message); }
   if ((entries.length+skipped.length)%50===0) {
     console.log(`${entries.length} indexed / ${files.size} images`);
-    await fs.writeFile(output, JSON.stringify({version:1,colorVersion:3,model,revision,dtype:'q8',size:224,aliases,families,entries}));
+    await fs.writeFile(output, JSON.stringify({version:1,colorVersion:3,model,revision,dtype:'q8',size:224,aliases,families,categories,entries}));
   }
 }
-await fs.writeFile(output, JSON.stringify({version:1,colorVersion:3,model,revision,dtype:'q8',size:224,aliases,families,entries}));
+await fs.writeFile(output, JSON.stringify({version:1,colorVersion:3,model,revision,dtype:'q8',size:224,aliases,families,categories,entries}));
 console.log(JSON.stringify({indexed:entries.length,skipped},null,2));

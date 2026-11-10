@@ -21,3 +21,17 @@ The runtime, model, number of inference passes, and worker disposal behavior wer
 The [seller's grey Cross Box Logo Hoodie](https://www.grailed.com/listings/34744456-supreme-supreme-cross-box-logo-heather-grey-hoodie) and a crop of the user's screenshot were tested in Chromium and WebKit at mobile width. Before the change, the seller photo omitted the exact item from six suggestions in Chromium, and the screenshot crop ranked an olive hoodie first. After the change, the seller photo includes the exact item fourth in both browsers; the screenshot crop ranks it first in Chromium and fifth in WebKit. Grey Kate Moss photos stay first; rust and purple hoodie photos retain their prior results; the unrelated red camera remains rejected; an exact archive PNG still returns only its own item. The screenshot crop is small and compressed, so its rankings do not measure performance on the original full-resolution photo.
 
 Neutral hoodie photos now use the lower fabric sample with brightness-tolerant color matching. Saturated hoodie photos keep the previous center sample and weighting. The small chest logo bonus is disabled for neutral hoodie photos because the cross design produced a false small-logo signal in the screenshot crop. The model and inference passes are unchanged, so this adjustment adds no model memory use. Four automated ranking tests pass.
+
+## Shoe photo check (2026-11-10)
+
+Added category labels to the photo index and compared seller photos through the Add page in Chromium and WebKit at a 390px viewport. Portrait shoe photos with a close first and second visual match now compare the lower part of the photo as a third view; other photos keep two model passes. A weak shoe match can pass the existing display threshold when its leading archive view also agrees with the photo's center color. The DINOv2 model and weights are unchanged.
+
+| Photo | Previous Chromium | Updated Chromium | Updated WebKit |
+| --- | --- | --- | --- |
+| [White CDG Air Force 1 seller pair](https://www.grailed.com/listings/36618416-comme-des-garcons-x-nike-x-supreme-supreme-cdg-air-force-1-low-eyes-white-low-2017-cdg-eyes) | Correct item second | First | Second |
+| [Brown Air Force 1 seller pair](https://www.grailed.com/listings/95555039-nike-x-supreme-supreme-x-nike-air-force-1-low) | No match | Correct item only | Correct item only |
+| [Snow Camo Air Force 1 seller pair](https://www.grailed.com/listings/110556364-nike-x-supreme-supreme-air-force-1-low-snow-camo-size-us-9-5) | Correct item only | Correct item only | Correct item only |
+| [Wheat Air Force 1 seller shoe](https://www.grailed.com/listings/76569423-nike-x-supreme-nike-air-force-1-low-supreme-wheat) | Correct item first | First | First |
+| [Black CDG Air Force 1 seller pair](https://www.grailed.com/listings/64091530-comme-des-garcons-x-nike-x-supreme-split-air-force-1-low-black-2018-cdg-x-supreme) | Correct item fifth | Fifth | Fifth |
+
+Both grey Kate Moss photos and the rust hoodie still rank first. The purple hoodie stays in the suggestions, an unrelated red camera is rejected, and an exact archive image still resolves to one item. The [Adidas Samba seller photo](https://www.grailed.com/listings/105460452-adidas-adidas-samba-og-white-black-gum-men-s-us-5-5-women-s-us-7) and a plain Nike Air Force 1 photo still produce false shoe suggestions, as they did before this update. These are a limited regression set; desktop WebKit does not reproduce an iPhone's memory limits. Five ranking tests pass.
