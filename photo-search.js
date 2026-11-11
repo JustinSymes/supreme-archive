@@ -13,6 +13,43 @@ function garmentCrop(image){
   };
 }
 
+function hasRedCrossLogo(pixels){
+  const side=224, mask=new Uint8Array(side*side), seen=new Uint8Array(side*side);
+  // Look for a connected red cross near the chest. Red text, skin, and a
+  // horizontal box logo have different proportions and row widths.
+  for(let y=50;y<185;y++) for(let x=60;x<165;x++) {
+    const offset=(y*side+x)*4,r=pixels[offset],g=pixels[offset+1],b=pixels[offset+2];
+    if(r>75 && r>g*1.4 && r>b*1.35) mask[y*side+x]=1;
+  }
+  for(let y=50;y<185;y++) for(let x=60;x<165;x++) {
+    const start=y*side+x;
+    if(!mask[start] || seen[start]) continue;
+    const stack=[start], component=[];
+    seen[start]=1;
+    let left=x,right=x,top=y,bottom=y;
+    while(stack.length) {
+      const point=stack.pop(),px=point%side,py=(point/side)|0;
+      component.push(point);
+      left=Math.min(left,px);right=Math.max(right,px);
+      top=Math.min(top,py);bottom=Math.max(bottom,py);
+      for(const next of [point-1,point+1,point-side,point+side]) {
+        if(mask[next] && !seen[next]) {seen[next]=1;stack.push(next);}
+      }
+    }
+    const width=right-left+1,height=bottom-top+1;
+    if(component.length<80 || component.length>1000 || width<12 || width>60 ||
+       height<12 || height>65 || width/height<.65 || width/height>1.5) continue;
+    const bands=[0,0,0,0,0];
+    for(const point of component) {
+      const row=(point/side)|0;
+      bands[Math.min(4,Math.floor(5*(row-top)/height))]++;
+    }
+    if(bands[1]>bands[0]*1.7 && bands[2]>bands[4]*1.7 &&
+       bands[0]>bands[4]*.55 && bands[4]>bands[0]*.55) return true;
+  }
+  return false;
+}
+
 function photoSignals(image){
   const canvas=document.createElement('canvas');
   const ctx=canvas.getContext('2d',{willReadFrequently:true});
@@ -36,7 +73,12 @@ function photoSignals(image){
     }
   }
   canvas.width=canvas.height=1;
-  const logo=cyan>=80 ? 'large' : red>=5 && red<=150 && redRight-redLeft<20 && redBottom-redTop<15 ? 'small' : null;
+  const neutralTone=Math.max(...color)-Math.min(...color)<=22 &&
+    Math.max(...fabricColor)-Math.min(...fabricColor)<=22 &&
+    Math.min(...color,...fabricColor)>=115 &&
+    Math.hypot(...color.map((value,i)=>value-fabricColor[i]))<50;
+  const logo=neutralTone && hasRedCrossLogo(rgb) ? 'cross' : cyan>=80 ? 'large' :
+    red>=5 && red<=150 && redRight-redLeft<20 && redBottom-redTop<15 ? 'small' : null;
   return {color,fabricColor,logo};
 }
 
@@ -78,7 +120,7 @@ function recognitionViews(image) {
 }
 function recognizePhoto(id, views, signals) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261110-shoes');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261111-cross');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.comparing) photoStatus.textContent='Comparing your photo with the archive...';

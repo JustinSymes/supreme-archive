@@ -102,6 +102,10 @@ self.onmessage = ({data}) => {
           }
         }
         if(likelyHoodie && signals?.logo==='large' && /box.logo.hoodie/i.test(entry.main)) score+=.2;
+        const referenceColor=entry.fabricColor||entry.color;
+        if(likelyHoodie && signals?.logo==='cross' && /cross.box.logo.hoodie/i.test(entry.main) &&
+           referenceColor && Math.max(...referenceColor)-Math.min(...referenceColor)<=15 &&
+           Math.min(...referenceColor)>=120) score+=.1;
         if(likelyHoodie && !neutralHoodie && signals?.logo==='small' && /small.box.*(?:zip.up.hooded|hoodie)/i.test(entry.main)) score+=.2;
         if(score>(scores.get(entry.main)??-1)) scores.set(entry.main,score);
       }
