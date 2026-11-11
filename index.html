@@ -173,6 +173,7 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
+  position:relative;
 }
 
 .thumb img{
@@ -182,6 +183,24 @@ body{
   height:auto;
   object-fit:contain;
   -webkit-user-drag:none;
+}
+
+.thumb .carousel-layer{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  opacity:0;
+  transition:opacity .45s ease;
+  pointer-events:none;
+}
+
+.thumb .carousel-layer.show{ opacity:1; }
+
+@media (prefers-reduced-motion:reduce){
+  .thumb .carousel-layer{ transition:none; }
 }
 
 @media (hover:hover) and (pointer:fine){
@@ -547,6 +566,14 @@ img{
         </label>
       </div>
 
+      <div class="setting-row" onclick="toggleSwitch('imageCarouselToggle')">
+        <span id="imageCarouselText">Image Carousel</span>
+        <label class="switch" onclick="event.stopPropagation()">
+          <input type="checkbox" id="imageCarouselToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
     </div>
 
     <div class="settingsActions">
@@ -557,7 +584,7 @@ img{
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<script src="lang.js"></script>
+<script src="lang.js?v=20261110-carousel"></script>
   
 <script>
 const sheetURL = "https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0";
@@ -580,6 +607,7 @@ function applyLanguage(){
   document.getElementById("appSettingsSub").textContent = t("appSettingsSub");
   document.getElementById("captchaAssistText").textContent = t("captchaAssist");
   document.getElementById("entireArchiveText").textContent = t("entireArchive");
+  document.getElementById("imageCarouselText").textContent = t("imageCarousel");
   document.getElementById("appSettingsCloseText").textContent = t("close");
   document.getElementById("welcomeClose").textContent = t("close");
 
@@ -699,7 +727,125 @@ fetch(sheetURL)
 });
 
 const desktopPointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const carouselInterval = 10000;
+const carouselCards = new Set();
+const visibleCarouselCards = new Set();
+const carouselByCard = new WeakMap();
+let carouselEnabled = localStorage.getItem("imageCarousel") === "on";
+let carouselTimer = null;
 let hoveredPhotoControl = null;
+
+function cancelCarouselTransition(entry){
+  entry.version++;
+  entry.pending = false;
+  entry.overlay?.remove();
+  entry.overlay = null;
+}
+
+function rescheduleVisibleCarousel(){
+  const now = Date.now();
+  for(const entry of visibleCarouselCards){
+    entry.nextAt = now + 5000 + (entry.order % 10) * 1000;
+  }
+}
+
+const carouselObserver = new IntersectionObserver(changes=>{
+  for(const change of changes){
+    const entry = carouselByCard.get(change.target);
+    if(!entry || !carouselCards.has(entry)) continue;
+    entry.visible = change.isIntersecting && change.intersectionRatio >= .25;
+    if(entry.visible){
+      entry.nextAt = Date.now() + 5000 + (entry.order % 10) * 1000;
+      visibleCarouselCards.add(entry);
+    } else {
+      visibleCarouselCards.delete(entry);
+    }
+  }
+},{threshold:[0,.25]});
+
+function advanceCarousel(entry){
+  if(entry.pending) return;
+  const nextIndex = (entry.index + 1) % entry.photos.length;
+  const nextPhoto = entry.photos[nextIndex];
+  const overlay = new Image();
+  const version = ++entry.version;
+  entry.pending = true;
+  overlay.alt = "";
+  overlay.onload = ()=>{
+    if(version !== entry.version || !carouselEnabled || !entry.visible ||
+       !entry.card.isConnected || document.hidden){
+      if(version === entry.version) entry.pending = false;
+      return;
+    }
+    if(reducedMotion.matches){
+      entry.img.src = nextPhoto;
+      entry.index = nextIndex;
+      entry.pending = false;
+      entry.nextAt = Date.now() + carouselInterval;
+      return;
+    }
+    const layer = document.createElement("div");
+    layer.className = "carousel-layer";
+    layer.setAttribute("aria-hidden", "true");
+    layer.appendChild(overlay);
+    entry.overlay = layer;
+    entry.thumb.appendChild(layer);
+    requestAnimationFrame(()=>{
+      if(version === entry.version) layer.classList.add("show");
+    });
+    setTimeout(async()=>{
+      if(version !== entry.version) return;
+      entry.img.src = nextPhoto;
+      try { await entry.img.decode?.(); } catch {}
+      if(version !== entry.version) return;
+      entry.index = nextIndex;
+      layer.remove();
+      entry.overlay = null;
+      entry.pending = false;
+      entry.nextAt = Date.now() + carouselInterval;
+    },500);
+  };
+  overlay.onerror = ()=>{
+    if(version !== entry.version) return;
+    entry.pending = false;
+    entry.nextAt = Date.now() + carouselInterval;
+  };
+  overlay.src = nextPhoto;
+}
+
+function carouselTick(){
+  if(!carouselEnabled || document.hidden ||
+     document.querySelector(".settingsOverlay.show, .welcomeOverlay.show")) return;
+  const now = Date.now();
+  for(const entry of visibleCarouselCards){
+    if(!entry.hovered && !entry.pointerActive && !entry.pending && now >= entry.nextAt){
+      advanceCarousel(entry);
+    }
+  }
+}
+
+function updateCarouselTimer(){
+  if(carouselEnabled){
+    if(!carouselTimer) carouselTimer = setInterval(carouselTick,500);
+    rescheduleVisibleCarousel();
+  } else {
+    clearInterval(carouselTimer);
+    carouselTimer = null;
+    for(const entry of carouselCards) cancelCarouselTransition(entry);
+  }
+}
+
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden) rescheduleVisibleCarousel();
+});
+window.addEventListener("storage",event=>{
+  if(event.key !== "imageCarousel") return;
+  carouselEnabled = event.newValue === "on";
+  document.getElementById("imageCarouselToggle").checked = carouselEnabled;
+  updateCarouselTimer();
+});
+updateCarouselTimer();
 
 window.addEventListener("keydown", e=>{
   if(!desktopPointer.matches || !hoveredPhotoControl) return;
@@ -713,25 +859,33 @@ window.addEventListener("keydown", e=>{
   }
 });
 
-function enablePhotoSwipe(card, imgEl, photos){
-  if(!photos || photos.length <= 1) return;
+function enablePhotoSwipe(card, entry){
+  if(!entry) return;
 
-  let photoIndex = 0;
+  const {img:imgEl, photos} = entry;
   let startX = 0;
   let startY = 0;
   let swiping = false;
   let lastWheelChange = 0;
 
   const changePhoto = direction=>{
-    photoIndex = (photoIndex + direction + photos.length) % photos.length;
-    imgEl.src = photos[photoIndex];
+    cancelCarouselTransition(entry);
+    entry.index = (entry.index + direction + photos.length) % photos.length;
+    imgEl.src = photos[entry.index];
+    entry.nextAt = Date.now() + carouselInterval;
   };
 
   card.addEventListener("mouseenter", ()=>{
-    if(desktopPointer.matches) hoveredPhotoControl = changePhoto;
+    if(!desktopPointer.matches) return;
+    entry.hovered = true;
+    cancelCarouselTransition(entry);
+    hoveredPhotoControl = changePhoto;
   });
 
   card.addEventListener("mouseleave", ()=>{
+    if(!desktopPointer.matches) return;
+    entry.hovered = false;
+    entry.nextAt = Date.now() + carouselInterval;
     if(hoveredPhotoControl === changePhoto) hoveredPhotoControl = null;
   });
 
@@ -747,6 +901,9 @@ function enablePhotoSwipe(card, imgEl, photos){
 
   card.addEventListener("pointerdown", e=>{
     if(e.pointerType === "mouse") return;
+
+    entry.pointerActive = true;
+    cancelCarouselTransition(entry);
 
     startX = e.clientX;
     startY = e.clientY;
@@ -767,6 +924,8 @@ function enablePhotoSwipe(card, imgEl, photos){
 
   card.addEventListener("pointerup", e=>{
     if(e.pointerType === "mouse") return;
+    entry.pointerActive = false;
+    entry.nextAt = Date.now() + carouselInterval;
     if(!swiping) return;
 
     const dx = e.clientX - startX;
@@ -781,15 +940,23 @@ function enablePhotoSwipe(card, imgEl, photos){
       card.dataset.swiped = "false";
     },300);
   });
+  card.addEventListener("pointercancel", ()=>{
+    entry.pointerActive = false;
+    entry.nextAt = Date.now() + carouselInterval;
+  });
 }
 
 function displayItems(list){
 
   const grid = document.getElementById("grid");
   hoveredPhotoControl = null;
+  carouselObserver.disconnect();
+  for(const entry of carouselCards) cancelCarouselTransition(entry);
+  carouselCards.clear();
+  visibleCarouselCards.clear();
   grid.innerHTML = "";
 
-  list.forEach(item=>{
+  list.forEach((item,order)=>{
 
     const imgSrc = item.image || item.src;
     const photos = getPhotos(imgSrc);
@@ -807,7 +974,16 @@ function displayItems(list){
 
     const imgEl = div.querySelector("img");
     imgEl.alt = item.name;
-    enablePhotoSwipe(div, imgEl, photos);
+    if(photos.length > 1){
+      const entry = {
+        card:div, thumb:div.querySelector(".thumb"), img:imgEl, photos,
+        index:0, order, nextAt:0, version:0, pending:false,
+        visible:false, hovered:false, pointerActive:false, overlay:null
+      };
+      carouselCards.add(entry);
+      carouselByCard.set(div,entry);
+      enablePhotoSwipe(div,entry);
+    }
 
     div.onclick = () => {
       if(div.dataset.swiped === "true") return;
@@ -826,6 +1002,7 @@ function displayItems(list){
     enableDragDelete(div,item);
 
     grid.appendChild(div);
+    if(photos.length > 1) carouselObserver.observe(div);
 
   });
 
@@ -1317,11 +1494,14 @@ function openAppSettings(){
   document.getElementById("entireArchiveToggle").checked =
     localStorage.getItem("fitArchiveMode") !== "user";
 
+  document.getElementById("imageCarouselToggle").checked = carouselEnabled;
+
   document.getElementById("appSettingsOverlay").classList.add("show");
 }
 
 function closeAppSettings(){
   document.getElementById("appSettingsOverlay").classList.remove("show");
+  rescheduleVisibleCarousel();
 }
 
 function toggleSwitch(id){
@@ -1332,6 +1512,7 @@ function toggleSwitch(id){
 
 document.getElementById("captchaAssistToggle").addEventListener("change", saveAppSettings);
 document.getElementById("entireArchiveToggle").addEventListener("change", saveAppSettings);
+document.getElementById("imageCarouselToggle").addEventListener("change", saveAppSettings);
 
 function saveAppSettings(){
   localStorage.setItem(
@@ -1343,6 +1524,13 @@ function saveAppSettings(){
     "fitArchiveMode",
     document.getElementById("entireArchiveToggle").checked ? "all" : "user"
   );
+
+  const nextCarouselEnabled = document.getElementById("imageCarouselToggle").checked;
+  localStorage.setItem("imageCarousel", nextCarouselEnabled ? "on" : "off");
+  if(carouselEnabled !== nextCarouselEnabled){
+    carouselEnabled = nextCarouselEnabled;
+    updateCarouselTimer();
+  }
 }
 
 const welcomeStorageKey = "supremeArchiveWelcomeSeenV1";
