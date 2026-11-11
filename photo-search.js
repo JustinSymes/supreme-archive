@@ -182,9 +182,16 @@ photoInput.onchange=async()=>{
     const best=matches[0]?.score??0;
     const results=matches.filter(match=>match.score>=.55&&match.score>=best-.1).slice(0,6);
     const related=matches.find(match=>match.related && catalog.has(match.file));
-    if(results.length && related && !results.some(match=>match.file===related.file)) {
-      results.splice(1,0,related);
-      results.length=Math.min(results.length,6);
+    if(results.length && related) {
+      const position=results.findIndex(match=>match.file===related.file);
+      // For tops, keep one visually related colorway near the leading design
+      // when lighting makes its color harder to place. Shoes with the same
+      // name can be different releases, so preserve their existing order.
+      if(position<0 || catalog.get(results[0].file)?.category==='Tops') {
+        if(position>=0) results.splice(position,1);
+        results.splice(1,0,related);
+        results.length=Math.min(results.length,6);
+      }
     }
     if(!results.length) photoStatus.textContent='No confident match found. Try a closer photo, search by name, or request this item.';
     else {
