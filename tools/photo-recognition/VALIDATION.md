@@ -47,3 +47,17 @@ In a Chromium check with the user's grey Kate Moss tee photo, Grey Kate Moss sta
 The [grey Cross Box Logo Hoodie seller photo](https://www.grailed.com/listings/34744456-supreme-supreme-cross-box-logo-heather-grey-hoodie) ranked the exact hoodie fourth in both Chromium and desktop WebKit at 390px before this change; it ranks first in both after. A small crop of the user's earlier screenshot remained first in Chromium and moved from fifth to first in WebKit. The change detects a connected red cross on light neutral fabric and gives the matching light neutral archive hoodie a bounded bonus after the usual visual filter. This avoids boosting other Cross Box Logo colors that have different colored logos.
 
 The grey Kate Moss photos, black CDG Air Force 1 photo, rust and purple hoodie photos, unrelated red camera, and exact archive image kept their prior suggestion order in both browsers. An archive scan of 342 hoodie and hooded main images found nine red cross-shaped regions; the added neutral-fabric checks isolate the grey Cross Box Logo Hoodie among those images. This is a targeted ranking improvement, not an overall recognition accuracy estimate. The model and inference passes are unchanged; desktop WebKit does not reproduce an iPhone's memory limit.
+
+## Plain-margin foreground crop (2026-11-12)
+
+Placed existing real item photos at the edges of a 1400px white test canvas to simulate uploads with large plain margins. The full image remains the first model view. A focused second view replaces the fixed center crop only when four small corner samples agree on a uniform background and the foreground occupies a smaller or displaced region. Color samples come from that same focused area. The model and number of inference passes are unchanged.
+
+| Framed photo | Before | After in Chromium and desktop WebKit |
+| --- | --- | --- |
+| User's grey Kate Moss tee at upper left | White tees first | Grey Kate Moss first |
+| Seller's grey Kate Moss tee at lower right | White tees first | Grey Kate Moss first |
+| Grey Cross Box Logo Hoodie seller photo at lower right | Other hoodies first | Grey Cross Box Logo Hoodie first |
+| Brown Air Force 1 seller photo at lower right | No match | No match in Chromium; Brown Air Force 1 in WebKit |
+| Snow Camo Air Force 1 seller photo at upper left | No match | No match |
+
+The original unframed Kate Moss, Cross Box Logo, Snow Camo, Brown Air Force 1, Adidas Samba, and red camera photos kept their result order in both browsers. A framed red camera icon still gives false sticker suggestions, as it did before. These altered photos test framing robustness, not general recognition accuracy or iPhone memory behavior.

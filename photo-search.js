@@ -13,6 +13,51 @@ function garmentCrop(image){
   };
 }
 
+function photoFocusCrop(image){
+  // A small item surrounded by a plain margin is easy to lose at 224px.
+  // Detect that framing only when all four corners agree on the background.
+  const side=128,canvas=document.createElement('canvas');
+  canvas.width=canvas.height=side;
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  ctx.fillStyle='white';ctx.fillRect(0,0,side,side);
+  ctx.drawImage(image,0,0,side,side);
+  const pixels=ctx.getImageData(0,0,side,side).data;
+  canvas.width=canvas.height=1;
+  const corners=[];
+  for(const startY of [0,side-4]) for(const startX of [0,side-4]) {
+    const sum=[0,0,0],squares=[0,0,0];
+    for(let y=startY;y<startY+4;y++) for(let x=startX;x<startX+4;x++) {
+      const offset=(y*side+x)*4;
+      for(let channel=0;channel<3;channel++) {
+        const value=pixels[offset+channel];
+        sum[channel]+=value;squares[channel]+=value*value;
+      }
+    }
+    const mean=sum.map(value=>value/16);
+    if(mean.some((value,i)=>Math.sqrt(Math.max(0,squares[i]/16-value*value))>9)) return null;
+    corners.push(mean);
+  }
+  const background=[0,1,2].map(i=>corners.reduce((sum,color)=>sum+color[i],0)/4);
+  if(corners.some(color=>Math.hypot(...color.map((value,i)=>value-background[i]))>20)) return null;
+  let left=side,right=0,top=side,bottom=0,count=0;
+  for(let y=0;y<side;y++) for(let x=0;x<side;x++) {
+    const offset=(y*side+x)*4;
+    const distance=Math.hypot(...background.map((value,i)=>pixels[offset+i]-value));
+    if(distance<=45) continue;
+    count++;left=Math.min(left,x);right=Math.max(right,x);
+    top=Math.min(top,y);bottom=Math.max(bottom,y);
+  }
+  const width=right-left+1,height=bottom-top+1;
+  if(count<side*side*.02 || width<24 || height<24 || width*height>side*side*.72) return null;
+  const displacement=Math.hypot((left+right+1)/2-side/2,(top+bottom+1)/2-side/2)/side;
+  if(displacement<.09 && Math.max(width,height)>side*.65) return null;
+  const padding=Math.max(3,Math.round(Math.max(width,height)*.06));
+  const x=Math.max(0,left-padding),y=Math.max(0,top-padding);
+  const endX=Math.min(side,right+padding+1),endY=Math.min(side,bottom+padding+1);
+  return {x:x/side*image.naturalWidth,y:y/side*image.naturalHeight,
+    width:(endX-x)/side*image.naturalWidth,height:(endY-y)/side*image.naturalHeight};
+}
+
 function hasRedCrossLogo(pixels){
   const side=224, mask=new Uint8Array(side*side), seen=new Uint8Array(side*side);
   // Look for a connected red cross near the chest. Red text, skin, and a
@@ -50,14 +95,15 @@ function hasRedCrossLogo(pixels){
   return false;
 }
 
-function photoSignals(image){
+function photoSignals(image,bounds){
   const canvas=document.createElement('canvas');
   const ctx=canvas.getContext('2d',{willReadFrequently:true});
   const draw=size=>{
     canvas.width=canvas.height=size;
     ctx.fillStyle='white';ctx.fillRect(0,0,size,size);
-    const scale=Math.min(size/image.naturalWidth,size/image.naturalHeight);
-    ctx.drawImage(image,(size-image.naturalWidth*scale)/2,(size-image.naturalHeight*scale)/2,image.naturalWidth*scale,image.naturalHeight*scale);
+    const {x,y,width,height}=bounds||{x:0,y:0,width:image.naturalWidth,height:image.naturalHeight};
+    const scale=Math.min(size/width,size/height);
+    ctx.drawImage(image,x,y,width,height,(size-width*scale)/2,(size-height*scale)/2,width*scale,height*scale);
     return ctx.getImageData(0,0,size,size).data;
   };
   const pixels=draw(96),fabricColor=photoFabricColor(pixels),color=photoCenterColor(pixels);
@@ -88,8 +134,8 @@ let photoWorker;
 let photoIndex;
 const pendingPhotos = new Map();
 
-function recognitionViews(image) {
-  const crop = garmentCrop(image);
+function recognitionViews(image,focusCrop) {
+  const crop = focusCrop||garmentCrop(image);
   const lowerShoe=image.naturalHeight>image.naturalWidth*1.15 ? {
     x:0,y:image.naturalHeight*.42,width:image.naturalWidth,height:image.naturalHeight*.58
   } : null;
@@ -120,7 +166,7 @@ function recognitionViews(image) {
 }
 function recognizePhoto(id, views, signals) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261111-cross');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261112-mophie');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.comparing) photoStatus.textContent='Comparing your photo with the archive...';
@@ -182,7 +228,7 @@ photoInput.onchange=async()=>{
     await preview.decode();
     if(id!==photoSearchId) return;
     if(!items.length) throw new Error('Archive items are still loading. Please try again.');
-    photoIndex ||= fetch('photo-embeddings.json?v=20261110-shoes').then(response=>{
+    photoIndex ||= fetch('photo-embeddings.json?v=20261112-mophie').then(response=>{
       if(!response.ok) throw new Error('Could not load the archive photo index.');
       return response.json();
     }).catch(error=>{photoIndex=null;throw error;});
@@ -199,8 +245,9 @@ photoInput.onchange=async()=>{
     let matches;
     if(exact) matches=[{file:exact.main,score:1}];
     else {
-      const views=recognitionViews(preview);
-      const signals=photoSignals(preview);
+      const focusCrop=photoFocusCrop(preview);
+      const views=recognitionViews(preview,focusCrop);
+      const signals=photoSignals(preview,focusCrop);
       // Release the full-resolution camera image before allocating the model.
       const scale=Math.min(1,1024/Math.max(preview.naturalWidth,preview.naturalHeight));
       if(scale<1) {

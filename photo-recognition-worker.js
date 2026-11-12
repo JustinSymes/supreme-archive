@@ -8,7 +8,7 @@ async function initialize() {
   importScripts(runtime+'ort.wasm.min.js');
   ort.env.wasm.numThreads=1;
   ort.env.wasm.wasmPaths=runtime;
-  const response = await fetch('photo-embeddings.json?v=20261110-shoes');
+  const response = await fetch('photo-embeddings.json?v=20261112-mophie');
   if (!response.ok) throw new Error('Could not load the archive photo index.');
   const index = await response.json();
   const model = await ort.InferenceSession.create(
