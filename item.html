@@ -32,6 +32,7 @@ img {
   cursor:pointer;
   margin-bottom:15px;
   display:inline-block;
+  text-decoration:none;
 }
 
 .carousel {
@@ -113,7 +114,7 @@ img {
 
 <body>
 
-<div class="back" id="backText" onclick="history.back()">← Back to Archive</div>
+<a class="back" id="backText" href="index.html">← Back to Archive</a>
 
 <div id="content"></div>
 
@@ -126,6 +127,30 @@ setText("backText", "backArchive");
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 const name = params.get("name");
+const photo = params.get("photo");
+const fit = params.get("fit");
+const fromFit = fit !== null && /^\d+$/.test(fit);
+const backLink = document.getElementById("backText");
+if(fromFit){
+  setText("backText", "backFit");
+  backLink.href = "fits.html?" + new URLSearchParams({fit});
+}else{
+  backLink.onclick = event => {
+    if(history.length > 1){
+      event.preventDefault();
+      history.back();
+    }
+  };
+}
+
+function photoKey(src){
+  if(!src) return "";
+  try{
+    return decodeURIComponent(new URL(src, window.location.href).pathname).toLowerCase();
+  }catch{
+    return src.toLowerCase();
+  }
+}
 
 fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5xbCwAHh15w/export?format=csv&gid=0")
 .then(res=>res.text())
@@ -142,6 +167,11 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   rows.forEach(cols => {
 
   if(id && cols[0] === id){
+    foundRow = cols;
+  }
+
+  if(!foundRow && photo && (cols[8] || "").split("|")
+    .some(src => photoKey(src.trim()) === photoKey(photo))){
     foundRow = cols;
   }
 
@@ -167,8 +197,8 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   document.getElementById("metaDescription").content =
     `Explore ${cols[1]} in the Supreme Archive. View product images, category, sizing, and original retail prices in CAD and USD.`;
   const canonicalUrl = new URL("https://supremearchive.net/item.html");
-  if(id) canonicalUrl.searchParams.set("id", id);
-  else if(name) canonicalUrl.searchParams.set("name", name);
+  if(cols[0]) canonicalUrl.searchParams.set("id", cols[0]);
+  else canonicalUrl.searchParams.set("name", cols[1]);
   document.getElementById("canonicalUrl").href = canonicalUrl.toString();
 
   const images = (cols[8] || "")
@@ -203,21 +233,16 @@ fetch("https://docs.google.com/spreadsheets/d/1AP4KwfrGxdReQIcCQHcTtoMfMyYs_6Rd5
   let displaySize = "";
 
 const owned = myItems.find(i =>
-  (id && (i.id === id || i.sheetId === id)) ||
-  (name && i.name && i.name.toLowerCase() === name.toLowerCase())
+  (cols[0] && (i.id === cols[0] || i.sheetId === cols[0])) ||
+  (i.name && i.name.toLowerCase() === cols[1].toLowerCase()) ||
+  (photo && (i.src || i.image || "").split("|")
+    .some(src => photoKey(src.trim()) === photoKey(photo)))
 );
 
 if(owned && owned.size){
   displaySize = owned.size;
 }
-else if(cols[3]){
-  displaySize = cols[3];
-}
-
-if(owned && owned.size){
-  displaySize = owned.size;
-}
-else if(cols[3]){
+else if(!fromFit && cols[3]){
   displaySize = cols[3];
 }
 
@@ -241,7 +266,7 @@ else if(cols[3]){
       </div>
     </div>
 
-    <p>${t("size")}: ${displaySize}</p>
+    ${displaySize ? `<p>${t("size")}: ${displaySize}</p>` : ""}
   `;
 
   buildCarousel(images, cols[1]);

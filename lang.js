@@ -35,6 +35,7 @@ const translations = {
 
     back: "← Back",
     backArchive: "← Back to Archive",
+    backFit: "← Back to Fit",
     addItem: "Add Item",
     searchItem: "Search item name...",
     selectSize: "Select size",
@@ -99,6 +100,7 @@ const translations = {
 
     back: "← Retour",
     backArchive: "← Retour à l’archive",
+    backFit: "← Retour au Fit",
     addItem: "Ajouter un item",
     searchItem: "Rechercher un item...",
     selectSize: "Choisir une taille",
@@ -163,6 +165,7 @@ const translations = {
 
     back: "← Volver",
     backArchive: "← Volver al archivo",
+    backFit: "← Volver al Fit",
     addItem: "Agregar artículo",
     searchItem: "Buscar artículo...",
     selectSize: "Seleccionar talla",
@@ -227,6 +230,7 @@ const translations = {
 
     back: "← 戻る",
     backArchive: "← アーカイブへ戻る",
+    backFit: "← コーデに戻る",
     addItem: "アイテム追加",
     searchItem: "アイテムを検索...",
     selectSize: "サイズ選択",
@@ -291,6 +295,7 @@ const translations = {
 
     back: "← 뒤로",
     backArchive: "← 아카이브로",
+    backFit: "← 코디로 돌아가기",
     addItem: "아이템 추가",
     searchItem: "아이템 검색...",
     selectSize: "사이즈 선택",
@@ -355,6 +360,7 @@ const translations = {
 
     back: "← 返回",
     backArchive: "← 返回档案",
+    backFit: "← 返回穿搭",
     addItem: "添加单品",
     searchItem: "搜索单品...",
     selectSize: "选择尺码",
@@ -419,6 +425,7 @@ German: {
 
   back: "← Zurück",
   backArchive: "← Zurück zum Archiv",
+  backFit: "← Zurück zum Fit",
   addItem: "Item hinzufügen",
   searchItem: "Item suchen...",
   selectSize: "Größe wählen",
@@ -483,6 +490,7 @@ Italian: {
 
   back: "← Indietro",
   backArchive: "← Torna all’archivio",
+  backFit: "← Torna al Fit",
   addItem: "Aggiungi articolo",
   searchItem: "Cerca articolo...",
   selectSize: "Seleziona taglia",
@@ -547,6 +555,7 @@ Portuguese: {
 
   back: "← Voltar",
   backArchive: "← Voltar ao arquivo",
+  backFit: "← Voltar ao Fit",
   addItem: "Adicionar item",
   searchItem: "Pesquisar item...",
   selectSize: "Selecionar tamanho",

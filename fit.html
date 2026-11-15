@@ -667,7 +667,7 @@ function toggleLock(slotName){
   }
 }
 
-function saveFitToGallery(canvas){
+function saveFitToGallery(canvas, itemBounds){
 
   let fits = JSON.parse(localStorage.getItem("savedFits") || "[]");
 
@@ -676,6 +676,7 @@ function saveFitToGallery(canvas){
   fits.unshift({
     img: image,
     date: Date.now(),
+    itemBounds,
     top: topImg.src,
     bottom: botImg.src,
     hat: hatImg.src,
@@ -781,7 +782,19 @@ async function saveToGalleryOnly(){
       useCORS:true
     });
 
-    saveFitToGallery(canvas);
+    const exportBounds = exportBox.getBoundingClientRect();
+    const itemBounds = {};
+    for(const [slot, image] of Object.entries({hat, acc, top, bottom:bot, shoe})){
+      if(slot === "shoe" && NO_SHOES) continue;
+      const bounds = image.getBoundingClientRect();
+      itemBounds[slot] = {
+        x: (bounds.left - exportBounds.left) / exportBounds.width,
+        y: (bounds.top - exportBounds.top) / exportBounds.height,
+        width: bounds.width / exportBounds.width,
+        height: bounds.height / exportBounds.height
+      };
+    }
+    saveFitToGallery(canvas, itemBounds);
 
     document.body.removeChild(exportBox);
 

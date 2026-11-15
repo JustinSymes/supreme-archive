@@ -1,8 +1,8 @@
 # Supreme Archive workflow rules
 
-## Completing item additions
+## Completing changes
 
-- After each requested item addition is finished and the relevant checks pass, commit the task's files and push to `origin main` automatically. The user has authorized this as the default workflow; do not ask for confirmation again unless they change this instruction.
+- After each requested change is finished and the relevant checks pass, commit the task's files and push to `origin main` automatically. This applies to all changes, including features, fixes, and item additions. The user has authorized this as the default workflow; do not ask for confirmation again unless they change this instruction.
 - Stage only files belonging to the completed task and requested workflow updates. Preserve unrelated local changes and helper files.
 - Report the commit and push result, and clearly identify any separate spreadsheet update still required.
 - When adding or renaming an item's main image, refresh `photo-index.json` so photo search can find it. The index is built from the Google Sheet's main image references.
