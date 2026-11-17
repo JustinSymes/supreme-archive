@@ -58,6 +58,24 @@ test('neutral hoodie photo does not receive a false small-logo bonus',async()=>{
   const withoutLogo=await rank(entries,[128,125,120],{fabricColor:[143,141,139],logo:null});
   assert.equal(JSON.stringify(withFalseLogo.map(x=>x.file)),JSON.stringify(withoutLogo.map(x=>x.file)));
 });
+test('a saturated garment photo favors its color over a similar neutral garment',async()=>{
+  const entries=[
+    ['black-small-box-hoodie',.74,[84,84,84],[79,79,79]],
+    ['purple-small-box-hoodie',.717,[70,39,118],[65,35,110]],
+    ...Array.from({length:6},(_,i)=>['other-hoodie-'+i,.69,[100,100,100],[100,100,100]])
+  ];
+  const result=await rank(entries,[86,49,91],{fabricColor:[86,49,90],logo:'small'});
+  assert.equal(result[0].file,'purple-small-box-hoodie');
+});
+test('colorful chest artwork does not make neutral fabric appear colored',async()=>{
+  const entries=[
+    ['grey-small-box-hoodie',.74,[84,84,84],[79,79,79]],
+    ['purple-small-box-hoodie',.717,[70,39,118],[65,35,110]],
+    ...Array.from({length:6},(_,i)=>['other-hoodie-'+i,.69,[100,100,100],[100,100,100]])
+  ];
+  const result=await rank(entries,[86,49,91],{fabricColor:[85,85,85],logo:'small'});
+  assert.equal(result[0].file,'grey-small-box-hoodie');
+});
 test('a weak shoe photo can pass when its center color agrees with the strongest visual match',async()=>{
   const entries=[
     ['brown-shoe',.496,[84,64,58],[255,255,255]],

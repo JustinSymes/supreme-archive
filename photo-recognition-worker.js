@@ -103,6 +103,15 @@ self.onmessage = ({data}) => {
               Math.hypot(...archiveColor.map((value,i)=>value-queryColor[i]-brightness),brightness*.35);
             const weight=likelyShoes ? .04 : (useFabricColor ? .16 : .3);
             score+=weight*Math.exp(-distance/(useFabricColor ? 50 : 35));
+            // Dim indoor light makes purple, red, and blue fabric darker, but
+            // it does not make a neutral grey or black item chromatic. Avoid
+            // letting a strong shape match override that visible distinction.
+            const fabric=signals?.fabricColor;
+            const lightShift=fabric && queryColor.reduce((sum,value,i)=>sum+value-fabric[i],0)/3;
+            const fabricAgreement=fabric && Math.hypot(...queryColor.map((value,i)=>value-fabric[i]-lightShift))<25;
+            if(!useFabricColor && fabricAgreement &&
+               Math.max(...queryColor)-Math.min(...queryColor)>=35 &&
+               Math.max(...archiveColor)-Math.min(...archiveColor)<15) score-=.05;
           }
         }
         if(likelyHoodie && signals?.logo==='large' && /box.logo.hoodie/i.test(entry.main)) score+=.2;

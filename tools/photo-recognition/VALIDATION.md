@@ -61,3 +61,7 @@ Placed existing real item photos at the edges of a 1400px white test canvas to s
 | Snow Camo Air Force 1 seller photo at upper left | No match | No match |
 
 The original unframed Kate Moss, Cross Box Logo, Snow Camo, Brown Air Force 1, Adidas Samba, and red camera photos kept their result order in both browsers. A framed red camera icon still gives false sticker suggestions, as it did before. These altered photos test framing robustness, not general recognition accuracy or iPhone memory behavior.
+
+## Colored hoodie photos (2026-11-16)
+
+Compared the previous worker with the updated worker using seven held out uploads through the Add page in Chromium and desktop WebKit at 390px. The user's purple Small Box Zip Up photo moved from second to first in both browsers; the black hoodie with a similar shape moved below it. Both grey Kate Moss tee photos and the rust Box Logo Hoodie stayed first. The black CDG Air Force 1 photo kept its target fifth, the unrelated red camera still returned no match, and the exact archive shoe image still returned only its own item. The worker now reduces neutral colorway scores slightly when a hoodie photo's center and lower fabric samples both show the same strong color. A unit test checks that colorful chest artwork does not trigger this adjustment. This small set does not measure overall recognition accuracy or iPhone memory behavior.

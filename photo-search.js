@@ -166,7 +166,7 @@ function recognitionViews(image,focusCrop) {
 }
 function recognizePhoto(id, views, signals, catalog) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261116-live-catalog');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261116-hoodie-chroma');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.comparing) photoStatus.textContent='Comparing your photo with the archive...';

@@ -8,6 +8,8 @@ The worker ranks only the main images present in the currently loaded spreadshee
 
 For a light neutral hoodie photo, the page also checks whether a connected red chest graphic has the proportions of a cross. A matching light neutral Cross Box Logo Hoodie receives a small ranking bonus only after it passes the normal visual threshold. This shape check runs on the existing 224px canvas and adds no model inference pass or model memory.
 
+For a visibly colored hoodie, the ranking slightly reduces neutral colorway scores when center and lower fabric samples agree in color. This helps a dark purple hoodie photo stay with the purple item instead of a black version with a slightly stronger shape match. It does not apply when chest artwork supplies the color or to shoes and other categories.
+
 The index records `colorVersion: 3`: `c` retains the center color used for hoodie/logo matching; `f` records the lower torso fabric color. The existing visual vote identifies likely hoodies and preserves their established color weighting. Other items use the fabric descriptor, a smaller bonus, and a color distance that tolerates lighting changes. Updating the color samplers requires invalidating cached colors in the builder and rebuilding the complete index; existing model embeddings can still be reused. Browser script and index query versions should change together when the sampling convention changes.
 
 Run `node --test ranking.test.cjs` here for the gallery-view, unrelated-item, and printed-fabric regression checks. Real-photo browser checks are documented in `VALIDATION.md`.
