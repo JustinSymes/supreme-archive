@@ -7,7 +7,7 @@ const photoFabricColor=require('../../photo-color.js');
 async function rank(entries,color=[0,0,0],extraSignals={},categories={},catalog) {
   const results=[];
   const context=vm.createContext({self:{postMessage:data=>results.push(data)},Float32Array,Map,Math,Array,Promise,
-    importScripts:()=>{}});
+    importScripts:()=>{},photoColorDistance:require('../../photo-color-distance.js')});
   vm.runInContext(fs.readFileSync(require.resolve('../../photo-recognition-worker.js'),'utf8'),context);
   context.fixture={entries:entries.map(([main,similarity,c,f])=>{
     const vector=new Float32Array(384);vector[0]=similarity;vector[1]=Math.sqrt(1-similarity**2);
@@ -30,6 +30,43 @@ test('matching color cannot rescue an unrelated visual match',async()=>{
   const results=await rank([['garment',.85,[255,255,255]],['unrelated',.54,[0,0,0]]]);
   assert(!results.some(x=>x.file==='unrelated'));
   assert.equal((await rank([['unrelated',.4,[0,0,0]]])).length,0);
+});
+test('exposure changes preserve a colored item across generic catalog candidates',async()=>{
+  const color=[40,130,160];
+  const entries=[['blue-item',.82,color,color],['warm-item',.83,[160,130,40],[160,130,40]],
+    ['neutral-item',.83,[80,80,80],[80,80,80]]];
+  for(const exposure of [.5,.8,1.2]) {
+    const query=color.map(value=>value*exposure);
+    const results=await rank(entries,query,{fabricColor:query,segmented:true,smallForeground:true});
+    assert.equal(results[0].file,'blue-item',`Exposure ${exposure}`);
+  }
+});
+test('a shaded neutral item stays neutral instead of becoming navy',async()=>{
+  const results=await rank([
+    ['grey-item',.82,[180,180,180],[180,180,180]],
+    ['navy-item',.83,[28,38,55],[28,38,55]]
+  ],[86,92,101],{fabricColor:[86,92,101],segmented:true,smallForeground:true});
+  assert.equal(results[0].file,'grey-item');
+});
+test('large foregrounds retain the original color ranking',async()=>{
+  const entries=[['grey-item',.82,[180,180,180],[180,180,180]],['navy-item',.83,[28,38,55],[28,38,55]]];
+  const color=[86,92,101];
+  const original=await rank(entries,color,{fabricColor:color});
+  const segmented=await rank(entries,color,{fabricColor:color,segmented:true,smallForeground:false});
+  assert.equal(JSON.stringify(segmented),JSON.stringify(original));
+});
+test('dark neutral crops keep brightness evidence for separating black and grey',async()=>{
+  const entries=[['black-item',.82,[35,35,35],[35,35,35]],['grey-item',.83,[160,160,160],[160,160,160]]];
+  const color=[76,76,70];
+  const original=await rank(entries,color,{fabricColor:color});
+  const segmented=await rank(entries,color,{fabricColor:color,segmented:true,smallForeground:true});
+  assert.equal(JSON.stringify(segmented),JSON.stringify(original));
+});
+test('exposure compensation still distinguishes very dark fabric from light fabric',async()=>{
+  const results=await rank([
+    ['black-item',.82,[8,8,8],[8,8,8]],['light-item',.83,[200,200,200],[200,200,200]]
+  ],[6,8,10],{fabricColor:[6,8,10],segmented:true,smallForeground:true});
+  assert.equal(results[0].file,'black-item');
 });
 test('photos absent from the live catalog cannot hide a valid match',async()=>{
   const entries=[

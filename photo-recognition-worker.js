@@ -1,5 +1,6 @@
 // Run recognition off the UI thread. Photos stay in the browser.
 importScripts('photo-foreground.js?v=20261117-segmentation');
+importScripts('photo-color-distance.js?v=20261117-exposure');
 let ready;
 async function initialize() {
   // 1.17.3 provides an actual non-threaded WASM binary. Newer releases use
@@ -130,8 +131,16 @@ self.onmessage = ({data}) => {
           if(queryColor && archiveColor) {
             // Compare hue/saturation more strongly than brightness: a grey
             // garment in shade should not become a blue colorway.
+            const light=queryColor.reduce((sum,value)=>sum+value,0)/3;
+            // Only compensate an adopted foreground crop with agreeing
+            // samples. Deep shadows amplify noise; bright samples already
+            // carry useful brightness information for separating colorways.
+            const colored=Math.max(...queryColor)-Math.min(...queryColor)>=20;
+            const reliableExposure=signals?.segmented && signals.smallForeground && light>=(colored?50:80) && light<=120 && signals.color && signals.fabricColor &&
+              Math.hypot(...signals.color.map((value,i)=>value-signals.fabricColor[i]))<25;
             const brightness=archiveColor.reduce((sum,value,i)=>sum+value-queryColor[i],0)/3;
-            const distance=!useFabricColor?Math.hypot(...archiveColor.map((value,i)=>value-queryColor[i])):
+            const distance=reliableExposure?photoColorDistance(queryColor,archiveColor):
+              !useFabricColor?Math.hypot(...archiveColor.map((value,i)=>value-queryColor[i])):
               Math.hypot(...archiveColor.map((value,i)=>value-queryColor[i]-brightness),brightness*.35);
             const weight=likelyShoes ? .04 : (useFabricColor ? .16 : .3);
             score+=weight*Math.exp(-distance/(useFabricColor ? 50 : 35));

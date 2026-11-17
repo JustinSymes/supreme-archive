@@ -178,12 +178,13 @@ async function prepareForegroundPhoto(image,{mask,bounds}) {
   const cropped=document.createElement('canvas');cropped.width=Math.max(1,Math.round(bounds.width*size));cropped.height=Math.max(1,Math.round(bounds.height*size));
   cropped.getContext('2d').drawImage(canvas,bounds.x*size,bounds.y*size,bounds.width*size,bounds.height*size,0,0,cropped.width,cropped.height);
   const focused=new Image();focused.src=cropped.toDataURL('image/png');await focused.decode();
-  const result={view:recognitionViews(focused,null)[0],signals:photoSignals(focused,null)};
+  const result={view:recognitionViews(focused,null)[0],signals:{...photoSignals(focused,null),segmented:true,
+    smallForeground:bounds.width<.75&&bounds.height<.75}};
   canvas.width=matte.width=cropped.width=1;return result;
 }
 function recognizePhoto(id, views, signals, catalog, preview) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261117-segmentation');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261117-exposure');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.segmenting) photoStatus.textContent='Separating the item from its background...';
