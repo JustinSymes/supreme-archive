@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const photoFabricColor=require('../../photo-color.js');
 
-async function rank(entries,color=[0,0,0],extraSignals={},categories={}) {
+async function rank(entries,color=[0,0,0],extraSignals={},categories={},catalog) {
   const results=[];
   const context=vm.createContext({self:{postMessage:data=>results.push(data)},Float32Array,Map,Math,Array,Promise});
   vm.runInContext(fs.readFileSync(require.resolve('../../photo-recognition-worker.js'),'utf8'),context);
@@ -12,7 +12,7 @@ async function rank(entries,color=[0,0,0],extraSignals={},categories={}) {
     const vector=new Float32Array(384);vector[0]=similarity;vector[1]=Math.sqrt(1-similarity**2);
     return {main,vector,norm:1,color:c,fabricColor:f};
   }),families:{},categories,Tensor:class{},model:{run:async()=>({last_hidden_state:{data:Float32Array.from({length:384},(_,i)=>i===0?1:0)}})}};
-  vm.runInContext('ready=Promise.resolve(fixture);self.onmessage({data:{id:1,views:[new ArrayBuffer(0)],signals:'+JSON.stringify({color,...extraSignals})+'}});',context);
+  vm.runInContext('ready=Promise.resolve(fixture);self.onmessage({data:{id:1,views:[new ArrayBuffer(0)],signals:'+JSON.stringify({color,...extraSignals})+',catalog:'+JSON.stringify(catalog)+'}});',context);
   await vm.runInContext('queue',context);
   assert(!results.at(-1).error,results.at(-1).error);
   return results.at(-1).results;
@@ -29,6 +29,17 @@ test('matching color cannot rescue an unrelated visual match',async()=>{
   const results=await rank([['garment',.85,[255,255,255]],['unrelated',.54,[0,0,0]]]);
   assert(!results.some(x=>x.file==='unrelated'));
   assert.equal((await rank([['unrelated',.4,[0,0,0]]])).length,0);
+});
+test('photos absent from the live catalog cannot hide a valid match',async()=>{
+  const entries=[
+    ['not-yet-in-sheet',.95,[100,100,100]],
+    ['live-item',.72,[100,100,100]]
+  ];
+  const unfiltered=await rank(entries,[100,100,100]);
+  assert(!unfiltered.some(result=>result.file==='live-item'));
+  const filtered=await rank(entries,[100,100,100],{}, {}, ['live-item']);
+  assert.equal(filtered[0].file,'live-item');
+  assert.equal(filtered.length,1);
 });
 test('central printed artwork does not become the fabric color',()=>{
   const pixels=new Uint8Array(96*96*4).fill(255);

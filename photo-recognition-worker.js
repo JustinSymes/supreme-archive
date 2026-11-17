@@ -25,10 +25,14 @@ async function initialize() {
 let queue = Promise.resolve();
 self.onmessage = ({data}) => {
   queue = queue.catch(()=>{}).then(async () => {
-    const {id, views, signals} = data;
+    const {id, views, signals, catalog} = data;
     try {
       ready ||= initialize().catch(error=>{ready=null;throw error;});
       const {model, Tensor, entries, families, categories} = await ready;
+      // The index may be rebuilt before new spreadsheet rows go live. Keep
+      // unavailable photos out of both the rankings and their thresholds.
+      const available = catalog && new Set(catalog);
+      const activeEntries = available ? entries.filter(entry=>available.has(entry.main)) : entries;
       self.postMessage({id,comparing:true});
       const vectors=[];
       async function embed(view) {
@@ -43,7 +47,7 @@ self.onmessage = ({data}) => {
       for(const view of views.slice(0,2)) await embed(view);
       function compareViews() {
         const visualScores = new Map();
-        for(const entry of entries) {
+        for(const entry of activeEntries) {
           let score = -1;
           for(const vector of vectors) {
             let dot = 0;
@@ -73,11 +77,11 @@ self.onmessage = ({data}) => {
       const scores = new Map();
       const bestVisual=Math.max(...visualScores.values());
       const leadingShoe=firstPass[0]?.[0];
-      const shoeColorAgrees=signals?.color && entries.some(entry=>
+      const shoeColorAgrees=signals?.color && activeEntries.some(entry=>
         entry.main===leadingShoe && entry.visual>=bestVisual-.005 && entry.color &&
         Math.hypot(...entry.color.map((value,i)=>value-signals.color[i]))<25);
       const uncertainShoes=likelyShoes && bestVisual>=.44 && bestVisual<.55 && shoeColorAgrees;
-      for(const entry of entries) {
+      for(const entry of activeEntries) {
         // Keep each view's appearance and color together. A matching front
         // must not borrow the color of an unrelated reverse or detail view.
         if(entry.visual<Math.max(uncertainShoes ? .42 : .55,bestVisual-.18)) continue;

@@ -164,9 +164,9 @@ function recognitionViews(image,focusCrop) {
     return values.buffer;
   });
 }
-function recognizePhoto(id, views, signals) {
+function recognizePhoto(id, views, signals, catalog) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261112-mophie');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261116-live-catalog');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.comparing) photoStatus.textContent='Comparing your photo with the archive...';
@@ -189,7 +189,7 @@ function recognizePhoto(id, views, signals) {
   }
   return new Promise((resolve,reject)=>{
     pendingPhotos.set(id,{resolve,reject});
-    photoWorker.postMessage({id,views,signals},views);
+    photoWorker.postMessage({id,views,signals,catalog:[...catalog.keys()]},views);
   });
 }
 
@@ -264,7 +264,7 @@ photoInput.onchange=async()=>{
       }
       if(id!==photoSearchId) return;
       photoStatus.textContent='Loading photo recognition. First use may take a moment.';
-      matches=await recognizePhoto(id,views,signals);
+      matches=await recognizePhoto(id,views,signals,catalog);
     }
     if(id!==photoSearchId) return;
     matches=matches.filter(match=>catalog.has(match.file));
