@@ -1,4 +1,5 @@
 // Run recognition off the UI thread. Photos stay in the browser.
+importScripts('photo-foreground.js?v=20261117-segmentation');
 let ready;
 async function initialize() {
   // 1.17.3 provides an actual non-threaded WASM binary. Newer releases use
@@ -23,9 +24,14 @@ async function initialize() {
   return {model, Tensor:ort.Tensor, entries, families:index.families||{}, categories:index.categories||{}};
 }
 let queue = Promise.resolve();
+const foregroundRequests=new Map();
 self.onmessage = ({data}) => {
+  if(data.foregroundPrepared) {
+    foregroundRequests.get(data.id)?.(data.result);foregroundRequests.delete(data.id);return;
+  }
   queue = queue.catch(()=>{}).then(async () => {
-    const {id, views, signals, catalog} = data;
+    const {id, views, catalog} = data;
+    let signals=data.signals;
     try {
       ready ||= initialize().catch(error=>{ready=null;throw error;});
       const {model, Tensor, entries, families, categories} = await ready;
@@ -60,12 +66,38 @@ self.onmessage = ({data}) => {
         return visualScores;
       }
       let visualScores=compareViews();
+      let usedForeground=false;
+      // Adopt segmentation only with stronger visual evidence. A failed model
+      // download or uncertain mask leaves the original search usable.
+      if(views[0].byteLength===3*224*224*4) {
+        const original=vectors.slice();
+        try {
+          self.postMessage({id,segmenting:true});
+          const foreground=await photoSegmentForeground(views[0]);
+          if(foreground) {
+            const prepared=await new Promise(resolve=>{
+              const timer=setTimeout(()=>{foregroundRequests.delete(id);resolve(null);},10000);
+              foregroundRequests.set(id,result=>{clearTimeout(timer);resolve(result);});
+              self.postMessage({id,foregroundMask:foreground},[foreground.mask.buffer]);
+            });
+            if(!prepared) throw new Error('Foreground view unavailable');
+            const previousBest=Math.max(...visualScores.values());
+            vectors.length=0;await embed(prepared.view);
+            const focused=compareViews();
+            const focusedBest=Math.max(...focused.values());
+            const removesMargin=foreground.bounds.width*foreground.bounds.height<.65;
+            if(focusedBest>previousBest+.04 || (removesMargin&&focusedBest>=previousBest-.01)) {visualScores=focused;signals=prepared.signals;usedForeground=true;}
+            else {vectors.splice(0,vectors.length,...original);visualScores=compareViews();}
+          }
+        } catch(error) { vectors.splice(0,vectors.length,...original);visualScores=compareViews();console.warn('Foreground processing unavailable:',error); }
+        self.postMessage({id,comparing:true});
+      }
       const firstPass=[...visualScores].sort((a,b)=>b[1]-a[1]);
       const likelyShoes=firstPass.slice(0,10).filter(([file])=>categories[file]==='Shoes').length>=6;
       // A second shoe near the top usually means the full photo is ambiguous.
       // In portrait photos, compare the lower half as one more view to isolate
       // a shoe in a pair. Other searches keep the original two model passes.
-      if(likelyShoes && views[2] && firstPass[0][1]>=.55 &&
+      if(!usedForeground && likelyShoes && views[2] && firstPass[0][1]>=.55 &&
          firstPass[0][1]-firstPass[1][1]<.05) {
         await embed(views[2]);
         visualScores=compareViews();

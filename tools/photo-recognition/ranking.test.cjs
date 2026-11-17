@@ -6,7 +6,8 @@ const photoFabricColor=require('../../photo-color.js');
 
 async function rank(entries,color=[0,0,0],extraSignals={},categories={},catalog) {
   const results=[];
-  const context=vm.createContext({self:{postMessage:data=>results.push(data)},Float32Array,Map,Math,Array,Promise});
+  const context=vm.createContext({self:{postMessage:data=>results.push(data)},Float32Array,Map,Math,Array,Promise,
+    importScripts:()=>{}});
   vm.runInContext(fs.readFileSync(require.resolve('../../photo-recognition-worker.js'),'utf8'),context);
   context.fixture={entries:entries.map(([main,similarity,c,f])=>{
     const vector=new Float32Array(384);vector[0]=similarity;vector[1]=Math.sqrt(1-similarity**2);

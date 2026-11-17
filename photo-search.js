@@ -164,14 +164,40 @@ function recognitionViews(image,focusCrop) {
     return values.buffer;
   });
 }
-function recognizePhoto(id, views, signals, catalog) {
+async function prepareForegroundPhoto(image,{mask,bounds}) {
+  const size=896,canvas=document.createElement('canvas'),matte=document.createElement('canvas');
+  canvas.width=canvas.height=size;matte.width=matte.height=320;
+  const context=canvas.getContext('2d'),maskContext=matte.getContext('2d');
+  // Reverse the DINO processor's 256px resize and 224px center crop.
+  const scale=Math.min(1024/image.naturalWidth,1024/image.naturalHeight);
+  context.drawImage(image,(1024-image.naturalWidth*scale)/2-64,(1024-image.naturalHeight*scale)/2-64,image.naturalWidth*scale,image.naturalHeight*scale);
+  const rgba=maskContext.createImageData(320,320);
+  for(let i=0;i<mask.length;i++){rgba.data[i*4]=rgba.data[i*4+1]=rgba.data[i*4+2]=255;rgba.data[i*4+3]=Math.round(Math.max(0,Math.min(1,mask[i]))*255);}
+  maskContext.putImageData(rgba,0,0);context.globalCompositeOperation='destination-in';context.drawImage(matte,0,0,size,size);
+  context.globalCompositeOperation='destination-over';context.fillStyle='white';context.fillRect(0,0,size,size);
+  const cropped=document.createElement('canvas');cropped.width=Math.max(1,Math.round(bounds.width*size));cropped.height=Math.max(1,Math.round(bounds.height*size));
+  cropped.getContext('2d').drawImage(canvas,bounds.x*size,bounds.y*size,bounds.width*size,bounds.height*size,0,0,cropped.width,cropped.height);
+  const focused=new Image();focused.src=cropped.toDataURL('image/png');await focused.decode();
+  const result={view:recognitionViews(focused,null)[0],signals:photoSignals(focused,null)};
+  canvas.width=matte.width=cropped.width=1;return result;
+}
+function recognizePhoto(id, views, signals, catalog, preview) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261116-hoodie-chroma');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261117-segmentation');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
+        if(data.segmenting) photoStatus.textContent='Separating the item from its background...';
         if(data.comparing) photoStatus.textContent='Comparing your photo with the archive...';
       }
       const pending=pendingPhotos.get(data.id);
+      if(data.foregroundMask) {
+        const worker=photoWorker;
+        Promise.resolve().then(()=>data.id===photoSearchId&&pending?prepareForegroundPhoto(pending.preview,data.foregroundMask):null)
+          .catch(()=>null).then(result=>{
+            if(worker===photoWorker) worker.postMessage({id:data.id,foregroundPrepared:true,result},result?[result.view]:[]);
+          });
+        return;
+      }
       if(pending && (data.results || data.error)) {
         pendingPhotos.delete(data.id);
         data.error ? pending.reject(new Error(data.error)) : pending.resolve(data.results);
@@ -188,7 +214,7 @@ function recognizePhoto(id, views, signals, catalog) {
     };
   }
   return new Promise((resolve,reject)=>{
-    pendingPhotos.set(id,{resolve,reject});
+    pendingPhotos.set(id,{resolve,reject,preview});
     photoWorker.postMessage({id,views,signals,catalog:[...catalog.keys()]},views);
   });
 }
@@ -264,7 +290,7 @@ photoInput.onchange=async()=>{
       }
       if(id!==photoSearchId) return;
       photoStatus.textContent='Loading photo recognition. First use may take a moment.';
-      matches=await recognizePhoto(id,views,signals,catalog);
+      matches=await recognizePhoto(id,views,signals,catalog,preview);
     }
     if(id!==photoSearchId) return;
     matches=matches.filter(match=>catalog.has(match.file));

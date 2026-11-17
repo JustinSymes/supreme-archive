@@ -65,3 +65,19 @@ The original unframed Kate Moss, Cross Box Logo, Snow Camo, Brown Air Force 1, A
 ## Colored hoodie photos (2026-11-16)
 
 Compared the previous worker with the updated worker using seven held out uploads through the Add page in Chromium and desktop WebKit at 390px. The user's purple Small Box Zip Up photo moved from second to first in both browsers; the black hoodie with a similar shape moved below it. Both grey Kate Moss tee photos and the rust Box Logo Hoodie stayed first. The black CDG Air Force 1 photo kept its target fifth, the unrelated red camera still returned no match, and the exact archive shoe image still returned only its own item. The worker now reduces neutral colorway scores slightly when a hoodie photo's center and lower fabric samples both show the same strong color. A unit test checks that colorful chest artwork does not trigger this adjustment. This small set does not measure overall recognition accuracy or iPhone memory behavior.
+
+## General foreground segmentation (2026-11-17)
+
+Added U2-NetP segmentation, exposure normalization for its input, background masking, and a crop made from the higher resolution photo preview. The segmentation stage has no item or category rules. Its view is selected using visual similarity before color ranking, with the original views retained when the mask fails or does not provide sufficient evidence.
+
+Created three stress fixtures from held out real photos: resized inside a 1000px textured brown canvas, placed off center, darkened to 70% brightness, and JPEG compressed. These are controlled alterations, not new natural photographs. No evaluation photo or alteration was added to the index.
+
+| Stress fixture | Previous Chromium | Updated Chromium | Updated desktop WebKit |
+| --- | --- | --- | --- |
+| Grey Kate Moss tee | Exact item absent | Exact item second | Exact item second |
+| Purple Small Box Zip Up | Exact item absent | Exact item fifth | Exact item sixth |
+| Snow Camo Air Force 1 | No match | No match | No match |
+
+The seven original uploads were also checked in both browsers at 390px: both grey tees, rust hoodie and purple hoodie still lead their results; the CDG shoe remains within six suggestions; the unrelated red camera remains rejected; and the exact archive image returns only itself. Similar-looking shoe results and color under dark lighting remain limitations. These checks are a small regression set, not a general accuracy estimate.
+
+Measured full searches after the first load took approximately 3.6–4.4 seconds in Chromium and 4.5–6.2 seconds in desktop WebKit while both suites ran on the same machine. First searches took 7.4–9.6 seconds. Exact-file shortcuts took under 100ms. The model adds about 4.6 MB and its inference session is released after each segmentation attempt. Desktop WebKit does not establish iPhone memory or speed limits. Automated tests cover mask bounds, rejection of uniform masks, release after inference failure, and the existing ranking regressions.
