@@ -1,5 +1,5 @@
 // Run recognition off the UI thread. Photos stay in the browser.
-importScripts('photo-foreground.js?v=20261117-segmentation');
+importScripts('photo-foreground.js?v=20261118-full-frame');
 importScripts('photo-color-distance.js?v=20261117-exposure');
 let ready;
 async function initialize() {
@@ -44,12 +44,16 @@ self.onmessage = ({data}) => {
       const vectors=[];
       async function embed(view) {
         const input = new Tensor('float32',new Float32Array(view),[1,3,224,224]);
-        const output = await model.run({pixel_values:input});
-        const vector = output.last_hidden_state.data.slice(0,384);
-        for(const tensor of Object.values(output)) tensor.dispose?.();
-        input.dispose?.();
-        const norm = Math.hypot(...vector);
-        vectors.push(Array.from(vector,x=>x/norm));
+        let output;
+        try {
+          output = await model.run({pixel_values:input});
+          const vector = output.last_hidden_state.data.slice(0,384);
+          const norm = Math.hypot(...vector);
+          vectors.push(Array.from(vector,x=>x/norm));
+        } finally {
+          for(const tensor of Object.values(output||{})) tensor.dispose?.();
+          input.dispose?.();
+        }
       }
       for(const view of views.slice(0,2)) await embed(view);
       function compareViews() {
@@ -70,12 +74,20 @@ self.onmessage = ({data}) => {
       let usedForeground=false;
       // Adopt segmentation only with stronger visual evidence. A failed model
       // download or uncertain mask leaves the original search usable.
-      if(views[0].byteLength===3*224*224*4) {
+      let clippedForeground=false;
+      for(const fullFrame of [false,true]) {
+        const source=fullFrame?data.segmentation:views[0];
+        if(source?.byteLength!==3*(fullFrame?320*320:224*224)*4) continue;
+        // Retry at the full frame only when the first crop may have clipped
+        // the object, or when its visual evidence remains weak.
+        if(fullFrame && !clippedForeground && Math.max(...visualScores.values())>=.8) continue;
         const original=vectors.slice();
         try {
           self.postMessage({id,segmenting:true});
-          const foreground=await photoSegmentForeground(views[0]);
+          const foreground=await photoSegmentForeground(source);
           if(foreground) {
+            const bounds=foreground.bounds;
+            if(!fullFrame) clippedForeground=bounds.x<.04 || bounds.y<.04 || bounds.x+bounds.width>.96 || bounds.y+bounds.height>.96;
             const prepared=await new Promise(resolve=>{
               const timer=setTimeout(()=>{foregroundRequests.delete(id);resolve(null);},10000);
               foregroundRequests.set(id,result=>{clearTimeout(timer);resolve(result);});
@@ -87,7 +99,9 @@ self.onmessage = ({data}) => {
             const focused=compareViews();
             const focusedBest=Math.max(...focused.values());
             const removesMargin=foreground.bounds.width*foreground.bounds.height<.65;
-            if(focusedBest>previousBest+.04 || (removesMargin&&focusedBest>=previousBest-.01)) {visualScores=focused;signals=prepared.signals;usedForeground=true;}
+            const adopt=fullFrame?focusedBest>previousBest+.04:
+              focusedBest>previousBest+.04 || (removesMargin&&focusedBest>=previousBest-.01);
+            if(adopt) {visualScores=focused;signals=prepared.signals;usedForeground=true;}
             else {vectors.splice(0,vectors.length,...original);visualScores=compareViews();}
           }
         } catch(error) { vectors.splice(0,vectors.length,...original);visualScores=compareViews();console.warn('Foreground processing unavailable:',error); }

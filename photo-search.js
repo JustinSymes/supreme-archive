@@ -164,13 +164,28 @@ function recognitionViews(image,focusCrop) {
     return values.buffer;
   });
 }
-async function prepareForegroundPhoto(image,{mask,bounds}) {
+function segmentationView(image) {
+  // Segmentation needs the complete frame, including objects near an edge.
+  // Keep its coordinates independent of DINO's enlarged center crop.
+  const size=320,canvas=document.createElement('canvas');
+  canvas.width=canvas.height=size;
+  const context=canvas.getContext('2d',{willReadFrequently:true});
+  context.fillStyle='white';context.fillRect(0,0,size,size);
+  const scale=Math.min(size/image.naturalWidth,size/image.naturalHeight);
+  context.drawImage(image,(size-image.naturalWidth*scale)/2,(size-image.naturalHeight*scale)/2,image.naturalWidth*scale,image.naturalHeight*scale);
+  const rgba=context.getImageData(0,0,size,size).data,values=new Float32Array(3*size*size);
+  for(let i=0;i<size*size;i++)for(let c=0;c<3;c++)values[c*size*size+i]=rgba[i*4+c]/255;
+  canvas.width=canvas.height=1;
+  return values.buffer;
+}
+async function prepareForegroundPhoto(image,{mask,bounds,fullFrame}) {
   const size=896,canvas=document.createElement('canvas'),matte=document.createElement('canvas');
   canvas.width=canvas.height=size;matte.width=matte.height=320;
   const context=canvas.getContext('2d'),maskContext=matte.getContext('2d');
-  // Reverse the DINO processor's 256px resize and 224px center crop.
-  const scale=Math.min(1024/image.naturalWidth,1024/image.naturalHeight);
-  context.drawImage(image,(1024-image.naturalWidth*scale)/2-64,(1024-image.naturalHeight*scale)/2-64,image.naturalWidth*scale,image.naturalHeight*scale);
+  // Reconstruct the selected segmentation frame at higher resolution.
+  const frame=fullFrame?size:1024,offset=fullFrame?0:64;
+  const scale=Math.min(frame/image.naturalWidth,frame/image.naturalHeight);
+  context.drawImage(image,(frame-image.naturalWidth*scale)/2-offset,(frame-image.naturalHeight*scale)/2-offset,image.naturalWidth*scale,image.naturalHeight*scale);
   const rgba=maskContext.createImageData(320,320);
   for(let i=0;i<mask.length;i++){rgba.data[i*4]=rgba.data[i*4+1]=rgba.data[i*4+2]=255;rgba.data[i*4+3]=Math.round(Math.max(0,Math.min(1,mask[i]))*255);}
   maskContext.putImageData(rgba,0,0);context.globalCompositeOperation='destination-in';context.drawImage(matte,0,0,size,size);
@@ -184,7 +199,7 @@ async function prepareForegroundPhoto(image,{mask,bounds}) {
 }
 function recognizePhoto(id, views, signals, catalog, preview) {
   if(!photoWorker) {
-    photoWorker=new Worker('photo-recognition-worker.js?v=20261117-exposure');
+    photoWorker=new Worker('photo-recognition-worker.js?v=20261118-full-frame');
     photoWorker.onmessage=({data})=>{
       if(data.id===photoSearchId) {
         if(data.segmenting) photoStatus.textContent='Separating the item from its background...';
@@ -215,8 +230,9 @@ function recognizePhoto(id, views, signals, catalog, preview) {
     };
   }
   return new Promise((resolve,reject)=>{
+    const segmentation=segmentationView(preview);
     pendingPhotos.set(id,{resolve,reject,preview});
-    photoWorker.postMessage({id,views,signals,catalog:[...catalog.keys()]},views);
+    photoWorker.postMessage({id,views,segmentation,signals,catalog:[...catalog.keys()]},[...views,segmentation]);
   });
 }
 
